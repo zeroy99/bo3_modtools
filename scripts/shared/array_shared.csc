@@ -1,15 +1,74 @@
+#using scripts\codescripts\struct;
+
+#using scripts\shared\array_shared;
+#using scripts\shared\flag_shared;
+#using scripts\shared\flagsys_shared;
+#using scripts\shared\util_shared;
+
+#insert scripts\shared\shared.gsh;
 
 #namespace array;
 
 /@
 @/
-function filter( &array, b_keep_keys, func_filter, arg1, arg2, arg3, arg4, arg5  ) {}
+function filter( &array, b_keep_keys, func_filter, arg1, arg2, arg3, arg4, arg5  )
+{
+	a_new = [];
+	
+	foreach ( key, val in array )
+	{
+		if ( util::single_func( self, func_filter, val, arg1, arg2, arg3, arg4, arg5 ) )
+		{
+			if ( IsString( key ) || IsWeapon( key ) )
+			{
+				// by default, string keys are kept
+				if ( isdefined( b_keep_keys ) && !b_keep_keys )
+				{
+					a_new[ a_new.size ] = val;
+				}
+				else
+				{
+					a_new[ key ] = val;
+				}
+			}
+			else
+			{
+				// by default, int keys are not kept
+				if ( IS_TRUE( b_keep_keys ) )
+				{
+					a_new[ key ] = val;
+				}
+				else
+				{
+					a_new[ a_new.size ] = val;
+				}
+			}
+		}
+	}
+	
+	return a_new;
+}
 
 /@
 @/
-function remove_undefined( array, b_keep_keys ) {}
+function remove_undefined( array, b_keep_keys )
+{
+	if ( IsDefined( b_keep_keys ) )
+	{
+	 	ArrayRemoveValue( array, undefined, b_keep_keys );
+	}
+	else
+	{
+		ArrayRemoveValue( array, undefined );
+	}
+	
+	return array;
+}
 
-function get_touching( &array, b_keep_keys ) {}
+function get_touching( &array, b_keep_keys )
+{
+	return filter( array, b_keep_keys, &IsTouching );
+}
 
 /@
 "Name: array::remove_index( <array>, <index>, [b_keep_keys]  )"
@@ -21,7 +80,31 @@ function get_touching( &array, b_keep_keys ) {}
 "Example: a_new = array::remove_index( array, 3 );"
 "SPMP: both"
 @/
-function remove_index( array, index, b_keep_keys ) {}
+function remove_index( array, index, b_keep_keys )
+{
+	a_new = [];
+	
+	foreach ( key, val in array )
+	{
+		if( key == index )
+		{
+			continue;	
+		}
+		else
+		{
+			if ( IS_TRUE( b_keep_keys ) )
+			{
+				a_new[ key ] = val;
+			}
+			else
+			{
+				a_new[ a_new.size ] = val;
+			}	
+		}
+	}
+	
+	return a_new;
+}
 
 /@
 "Name: array::delete_all( <array> )"
@@ -31,7 +114,27 @@ function remove_index( array, index, b_keep_keys ) {}
 "Example: array::delete_all( GetAITeamArray( "axis" ) );"
 "SPMP: both"
 @/
-function delete_all( &array, is_struct ) {}
+function delete_all( &array, is_struct )
+{
+	foreach ( ent in array )
+	{
+		if ( isdefined( ent ) )
+		{
+			if ( IS_TRUE( is_struct ) )
+			{
+				ent struct::delete();
+			}
+			else if ( isdefined( ent.__vtable ) )
+			{
+				DELETE( ent );	// class
+			}
+			else
+			{
+				ent Delete();
+			}
+		}
+	}
+}
 
 /@
 "Name: array::notify_all( <array>, <notify> )"
@@ -42,7 +145,13 @@ function delete_all( &array, is_struct ) {}
 "Example: array::notify_all( soldiers, "fire" );"
 "SPMP: both"
 @/
-function notify_all( &array, str_notify ) {}
+function notify_all( &array, str_notify )
+{
+	foreach ( elem in array )
+	{
+		elem notify( str_notify );
+	}
+}
 
 /@
 "Name: thread_all( <entities>, <func>, [arg1], [arg2], [arg3], [arg4], [arg5], [arg6] )"
@@ -60,7 +169,68 @@ function notify_all( &array, str_notify ) {}
 "Example: array::thread_all( GetAITeamArray( "allies" ), &set_ignoreme, false );"
 "SPMP: both"
 @/
-function thread_all( &entities, func, arg1, arg2, arg3, arg4, arg5, arg6 ) {}
+function thread_all( &entities, func, arg1, arg2, arg3, arg4, arg5, arg6 )
+{
+	Assert( isdefined( entities ), "Undefined entity array passed to array::thread_all" );
+	Assert( isdefined( func ), "Undefined function passed to array::thread_all" );
+
+	if ( IsArray( entities ) )
+	{
+		if ( isdefined( arg6 ) )
+		{
+			foreach ( ent in entities )
+			{
+				ent thread [[ func ]]( arg1, arg2, arg3, arg4, arg5, arg6 );
+			}
+		}
+		else if ( isdefined( arg5 ) )
+		{
+			foreach ( ent in entities )
+			{
+				ent thread [[ func ]]( arg1, arg2, arg3, arg4, arg5 );
+			}
+		}
+		else if ( isdefined( arg4 ) )
+		{
+			foreach ( ent in entities )
+			{
+				ent thread [[ func ]]( arg1, arg2, arg3, arg4 );
+			}
+		}
+		else if ( isdefined( arg3 ) )
+		{
+			foreach ( ent in entities )
+			{
+				ent thread [[ func ]]( arg1, arg2, arg3 );
+			}
+		}
+		else if ( isdefined( arg2 ) )
+		{
+			foreach ( ent in entities )
+			{
+				ent thread [[ func ]]( arg1, arg2 );
+			}
+		}
+		else if ( isdefined( arg1 ) )
+		{
+			foreach ( ent in entities )
+			{
+				ent thread [[ func ]]( arg1 );
+			}
+		}
+		else
+		{
+			foreach ( ent in entities )
+			{
+				ent thread [[ func ]]();
+			}
+		}
+	}
+	else
+	{
+		util::single_thread( entities, func, arg1, arg2, arg3, arg4, arg5, arg6 );
+	}
+}
 
 /@
 "Name: thread_all_ents( <entities>, <func>, [arg1], [arg2], [arg3], [arg4], [arg5] )"
@@ -77,8 +247,27 @@ function thread_all( &entities, func, arg1, arg2, arg3, arg4, arg5, arg6 ) {}
 "Example: array::thread_all_ents( GetAITeamArray( "allies" ), &do_something, false );"
 "SPMP: both"
 @/
-function thread_all_ents( &entities, func, arg1, arg2, arg3, arg4, arg5 ) {}
-
+function thread_all_ents( &entities, func, arg1, arg2, arg3, arg4, arg5 )
+{
+	Assert( isdefined( entities ), "Undefined entity array passed to util::array_ent_thread" );
+	Assert( isdefined( func ), "Undefined function passed to util::array_ent_thread" );
+	
+	if ( IsArray( entities ) )
+	{
+		if ( entities.size )
+		{
+			keys = GetArrayKeys( entities );
+			for ( i = 0; i < keys.size; i++ )
+			{
+				util::single_thread( self, func, entities[keys[i]], arg1, arg2, arg3, arg4, arg5 );
+			}
+		}
+	}
+	else
+	{
+		util::single_thread( self, func, entities, arg1, arg2, arg3, arg4, arg5 );
+	}
+}
 
 /@
 "Name: run_all( <entities>, <func>, [arg1], [arg2], [arg3], [arg4], [arg5], [arg6] )"
@@ -96,7 +285,68 @@ function thread_all_ents( &entities, func, arg1, arg2, arg3, arg4, arg5 ) {}
 "Example: array::run_all( GetAITeamArray( "allies" ), &set_ignoreme, false );"
 "SPMP: both"
 @/
-function run_all( &entities, func, arg1, arg2, arg3, arg4, arg5, arg6 ) {}
+function run_all( &entities, func, arg1, arg2, arg3, arg4, arg5, arg6 )
+{
+	Assert( isdefined( entities ), "Undefined entity array passed to array::run_all" );
+	Assert( isdefined( func ), "Undefined function passed to array::run_all" );
+
+	if ( IsArray( entities ) )
+	{
+		if ( isdefined( arg6 ) )
+		{
+			foreach ( ent in entities )
+			{
+				ent [[ func ]]( arg1, arg2, arg3, arg4, arg5, arg6 );
+			}
+		}
+		else if ( isdefined( arg5 ) )
+		{
+			foreach ( ent in entities )
+			{
+				ent [[ func ]]( arg1, arg2, arg3, arg4, arg5 );
+			}
+		}
+		else if ( isdefined( arg4 ) )
+		{
+			foreach ( ent in entities )
+			{
+				ent [[ func ]]( arg1, arg2, arg3, arg4 );
+			}
+		}
+		else if ( isdefined( arg3 ) )
+		{
+			foreach ( ent in entities )
+			{
+				ent [[ func ]]( arg1, arg2, arg3 );
+			}
+		}
+		else if ( isdefined( arg2 ) )
+		{
+			foreach ( ent in entities )
+			{
+				ent [[ func ]]( arg1, arg2 );
+			}
+		}
+		else if ( isdefined( arg1 ) )
+		{
+			foreach ( ent in entities )
+			{
+				ent [[ func ]]( arg1 );
+			}
+		}
+		else
+		{
+			foreach ( ent in entities )
+			{
+				ent [[ func ]]();
+			}
+		}
+	}
+	else
+	{
+		util::single_func( entities, func, arg1, arg2, arg3, arg4, arg5, arg6 );
+	}
+}
 
 /@
 "Name: array::exclude( <array> , <array_exclude> )"
@@ -108,7 +358,24 @@ function run_all( &entities, func, arg1, arg2, arg3, arg4, arg5, arg6 ) {}
 "Example: newArray = array::exclude( array1, array2 );"
 "SPMP: both"
 @/
-function exclude( array, array_exclude ) {}
+function exclude( array, array_exclude )// returns "array" minus all members of array_exclude
+{
+	newarray = array;
+	
+	if ( IsArray( array_exclude ) )
+	{
+		for ( i = 0; i < array_exclude.size; i++ )
+		{
+			ArrayRemoveValue( newarray, array_exclude[ i ] );
+		}
+	}
+	else
+	{
+		ArrayRemoveValue( newarray, array_exclude );
+	}
+  
+	return newarray;
+}
 
 /@
 "Name: array::add( <array> , <item>, <allow_dupes> )"
@@ -120,7 +387,18 @@ function exclude( array, array_exclude ) {}
 "Example: array::add( nodes, new_node );"
 "SPMP: both"
 @/
-function add( &array, item, allow_dupes = true ) {}
+function add( &array, item, allow_dupes = true )
+{
+	if ( isdefined( item ) )
+	{
+		if ( allow_dupes || !IsInArray( array, item ) )
+		{
+			array[ array.size ] = item;
+		}
+	}
+
+	return array;
+}
 
 /@
 "Name: array::add_sorted( <array> , <item>, <allow_dupes> )"
@@ -133,7 +411,23 @@ function add( &array, item, allow_dupes = true ) {}
 "Example: array::add_sorted( a_numbers, 4 );"
 "SPMP: both"
 @/
-function add_sorted( &array, item, allow_dupes = true ) {}
+function add_sorted( &array, item, allow_dupes = true )
+{
+	if ( isdefined( item ) )
+	{
+		if ( allow_dupes || !IsInArray( array, item ) )
+		{
+			for ( i = 0; i <= array.size; i++ )
+			{
+				if ( ( i == array.size ) || ( item <= array[i] ) )
+				{
+					ArrayInsert( array, item, i );
+					break;
+				}
+			}
+		}
+	}
+}
 
 /@
 "Name: array::wait_till( <array>, <msg>, <n_timeout> )"
@@ -145,27 +439,115 @@ function add_sorted( &array, item, allow_dupes = true ) {}
 "Example: array::wait_till( guys, "at the hq" );"
 "SPMP: both"
 @/
-function wait_till( &array, msg, n_timeout ) {}
+function wait_till( &array, msg, n_timeout )
+{
+	TIMEOUT( n_timeout );
+	
+	s_tracker = SpawnStruct();
+	s_tracker._wait_count = 0;
+	
+	foreach ( ent in array )
+	{
+		if ( isdefined( ent ) )
+		{
+			ent thread util::timeout( n_timeout, &util::_waitlogic, s_tracker, msg );
+		}
+	}
+	
+	if ( s_tracker._wait_count > 0 )
+	{
+		s_tracker waittill( "waitlogic_finished" );
+	}
+}
 
 /@
 @/
-function flag_wait( &array, str_flag ) {}
+function flag_wait( &array, str_flag )
+{
+	for ( i = 0; i < array.size; i++ )
+	{
+		ent = array[i];		
+		if ( !ent flag::get( str_flag ) )
+		{
+			ent waittill( str_flag );
+			i = -1;
+		}
+	}
+}
 
 /@
 @/
-function flagsys_wait( &array, str_flag ) {}
+function flagsys_wait( &array, str_flag )
+{
+	for ( i = 0; i < array.size; i++ )
+	{
+		ent = array[i];		
+		if ( !ent flagsys::get( str_flag ) )
+		{
+			ent waittill( str_flag );
+			i = -1;
+		}
+	}
+}
 
 /@
 @/
-function flagsys_wait_any_flag( &array, ... ) {}
+function flagsys_wait_any_flag( &array, ... )
+{
+	for ( i = 0; i < array.size; i++ )
+	{
+		ent = array[i];
+
+		if ( isdefined( ent ) )
+		{
+			b_flag_set = false;
+			foreach ( str_flag in vararg )
+			{
+				if ( ent flagsys::get( str_flag ) )
+				{
+					b_flag_set = true;
+					break;					
+				}
+			}
+			
+			if ( !b_flag_set )
+			{			
+				ent util::waittill_any_array( vararg );
+				i = -1;
+			}
+		}
+	}
+}
 
 /@
 @/
-function flag_wait_clear( &array, str_flag ) {}
+function flag_wait_clear( &array, str_flag )
+{
+	for ( i = 0; i < array.size; i++ )
+	{
+		ent = array[i];		
+		if ( ent flag::get( str_flag ) )
+		{
+			ent waittill( str_flag );
+			i = -1;
+		}
+	}
+}
 
 /@
 @/
-function flagsys_wait_clear( &array, str_flag ) {}
+function flagsys_wait_clear( &array, str_flag )
+{
+	for ( i = 0; i < array.size; i++ )
+	{
+		ent = array[i];		
+		if ( ent flagsys::get( str_flag ) )
+		{
+			ent waittill( str_flag );
+			i = -1;
+		}
+	}
+}
 
 /@
 "Name: wait_any( <array>, <msg>, <n_timeout> )"
@@ -177,9 +559,51 @@ function flagsys_wait_clear( &array, str_flag ) {}
 "Example: array_wait_any( guys, "at the hq" );"
 "SPMP: both"
 @/
-function wait_any( array, msg, n_timeout ) {}
+function wait_any( array, msg, n_timeout )
+{
+	TIMEOUT( n_timeout );
+	
+	s_tracker = SpawnStruct();
 
-function flag_wait_any( array, str_flag ) {}
+	a_structs = [];
+	foreach ( ent in array )
+	{
+		if ( isdefined( ent ) )
+		{
+			s = SpawnStruct();
+			s thread util::timeout( n_timeout, &_waitlogic2, s_tracker, ent, msg );
+			ARRAY_ADD( a_structs, s );
+		}
+	}
+	
+	s_tracker endon( "array_wait" );
+		
+	wait_till( array, "death" );
+}
+
+function _waitlogic2( s_tracker, ent, msg )
+{
+	s_tracker endon( "array_wait" );
+	ent endon( "death" );
+	
+	ent waittill( msg );
+	s_tracker notify( "array_wait" );
+}
+
+function flag_wait_any( array, str_flag )
+{
+	self endon( "death" );
+	
+	foreach ( ent in array )
+	{
+		if ( ent flag::get( str_flag ) )
+		{
+			return ent;
+		}
+	}
+
+	wait_any( array, str_flag );
+}
 
 /@
 "Name: random( <array> )"
@@ -189,11 +613,26 @@ function flag_wait_any( array, str_flag ) {}
 "MandatoryArg: <array> : the array from which to pluck a random element"
 "SPMP: both"
 @/
-function random( array ) {}
+function random( array )
+{
+	keys = GetArrayKeys( array );
+	return array[ keys[RandomInt( keys.size )] ];
+}
 
 /@
 @/
-function randomize( array ) {}
+function randomize( array )
+{
+	for ( i = 0; i < array.size; i++ )
+	{
+		j = RandomInt( array.size );
+		temp = array[ i ];
+		array[ i ] = array[ j ];
+		array[ j ] = temp;
+	}
+
+	return array;
+}
 
 /@
 "Name: array::reverse( <array> )"
@@ -204,23 +643,96 @@ function randomize( array ) {}
 "Example: patrol_nodes = array::reverse( patrol_nodes );"
 "SPMP: both"
 @/
-function reverse( array ) {}
+function reverse( array )
+{
+	a_array2 = [];
+	for ( i = array.size - 1; i >= 0; i-- )
+	{
+		a_array2[ a_array2.size ] = array[ i ];
+	}
+
+	return a_array2;
+}
 
 /@
 @/
-function remove_keys( array ) {}
+function remove_keys( array )
+{
+	a_new = [];
+	
+	foreach ( _, val in array )
+	{
+		if ( isdefined( val ) )
+		{
+			a_new[ a_new.size ] = val;
+		}
+	}
+	
+	return a_new;
+}
 
 /@
 @/
-function swap( &array, index1, index2 ) {}
+function swap( &array, index1, index2 )
+{
+	assert( index1 < array.size, "index1 to swap out of range" );
+	assert( index2 < array.size, "index2 to swap out of range" );
 
-function pop( &array, index, b_keep_keys = true ) {}
+	temp = array[index1];
+	array[index1] = array[index2];
+	array[index2] = temp;
+}
 
-function pop_front( &array, b_keep_keys = true ) {}
+function pop( &array, index, b_keep_keys = true )
+{
+	if ( array.size > 0 )
+	{
+		if ( !isdefined( index ) )
+		{
+			keys = GetArrayKeys( array );
+			index = keys[ 0 ];
+		}
+		
+		if ( isdefined( array[index] ) )
+		{
+			ret = array[ index ];
+			
+			ArrayRemoveIndex( array, index, b_keep_keys );
+			
+			return ret;
+		}	
+	}
+}
 
-function push( &array, val, index ) {}
+function pop_front( &array, b_keep_keys = true )
+{
+	keys = GetArrayKeys( array );
+	index = keys[ keys.size - 1 ];
+	return pop( array, index, b_keep_keys );
+}
 
-function push_front( &array, val ) {}
+function push( &array, val, index )
+{
+	if ( !isdefined( index ) )
+	{
+		// use max free integer as index
+		index = 0;
+		foreach ( key in GetArrayKeys( array ) )
+		{
+			if ( IsInt( key ) && ( key >= index ) )
+			{
+				index = key + 1;
+			}
+		}
+	}
+	
+	ArrayInsert( array, val, index );
+}
+
+function push_front( &array, val )
+{
+	push( array, val, 0 );
+}
 
 /@
 "Name: get_closest( <org> , <array> , <dist> )"
@@ -233,7 +745,10 @@ function push_front( &array, val ) {}
 "Example: friendly = util::get_closest( GetPlayers( localclientnum )[0].origin, allies );"
 "SPMP: singleplayer"
 @/
-function get_closest( org, &array, dist = undefined) {}
+function get_closest( org, &array, dist = undefined)
+{
+	assert( 0, "Deprecated function. Use 'ArrayGetClosest' instead." );
+}
 
 /@
 "Name: getFarthest( <org> , <array> , <dist> )"
@@ -246,7 +761,20 @@ function get_closest( org, &array, dist = undefined) {}
 "Example: target = getFarthest( level.player.origin, targets );"
 "SPMP: singleplayer"
 @/ 
-function get_farthest( org, &array, dist = undefined ) {}
+function get_farthest( org, &array, dist = undefined )
+{
+	assert( 0, "Deprecated function. Use 'ArrayGetFarthest' instead." );
+}
+
+function closerFunc( dist1, dist2 )
+{
+	return dist1 >= dist2;
+}
+
+function fartherFunc( dist1, dist2 )
+{
+	return dist1 <= dist2;
+}
 
 /@
 "Name: get_all_farthest( <org> , <array> , <excluders> , <max> )"
@@ -258,7 +786,24 @@ function get_farthest( org, &array, dist = undefined ) {}
 "Example: allies_sort = get_all_farthest( originFC1.origin, allies );"
 "SPMP: singleplayer"
 @/
-function get_all_farthest( org, &array, excluders, max ) {}
+function get_all_farthest( org, &array, excluders, max )
+{
+	sorted_array = get_closest( org, array, excluders );
+	
+	if(isdefined( max ))
+	{
+		temp_array = [];
+		for( i=0; i < sorted_array.size; i++)
+		{
+			temp_array[temp_array.size] = sorted_array[sorted_array.size - i];
+		}
+		sorted_array = temp_array;
+	}
+	
+	sorted_array = array::reverse( sorted_array );
+		
+	return( sorted_array );
+}
 
 /@
 "Name: get_all_closest( <org> , <array> , <excluders> , <max>, <maxdist> )"
@@ -273,9 +818,80 @@ function get_all_farthest( org, &array, excluders, max ) {}
 "Example: allies_sort = get_all_closest( originFC1.origin, allies );"
 "SPMP: singleplayer"
 @/ 
-function get_all_closest( org, &array, excluders, max, maxdist ) {}
+function get_all_closest( org, &array, excluders, max, maxdist )
+{
+	// pass an array of entities to this function and it will return them in the order of closest
+	// to the origin you pass, you can also set max to limit how many ents get returned
+	if( !isdefined( max ) )
+		max = array.size; 
+	if( !isdefined( excluders ) )
+		excluders = [];
+	
+	maxdists2rd = undefined;
+	if( isdefined( maxdist ) )
+		maxdists2rd = maxdist * maxdist;
+		
+	// return the array, reordered from closest to farthest
+	dist = []; 
+	index = []; 
+	for( i = 0;i < array.size;i ++ )
+	{
+		if(!isdefined(array[i]))
+			continue;
+		
+		excluded = false; 
+		for( p = 0;p < excluders.size;p ++ )
+		{
+			if( array[ i ] != excluders[ p ] )
+				continue; 
+			excluded = true; 
+			break; 
+		}
+		if( excluded )
+			continue; 
+			
+		length = distancesquared( org, array[ i ].origin );
+		
+		if( isdefined( maxdists2rd ) && maxdists2rd < length )
+			continue;
+			
+		dist[ dist.size ] = length;
+		
+		
+		index[ index.size ] = i;
+	}
+		
+	for( ;; )
+	{
+		change = false; 
+		for( i = 0;i < dist.size - 1;i ++ )
+			{
+			if( dist[ i ] <= dist[ i + 1 ] )
+				continue; 
+			change = true; 
+			temp = dist[ i ];
+			dist[ i ] = dist[ i + 1 ];
+			dist[ i + 1 ] = temp;
+			temp = index[ i ];
+			index[ i ] = index[ i + 1 ];
+			index[ i + 1 ] = temp;
+		}
+		if( !change )
+			break; 
+		}
+	
+	newArray = []; 
+	if( max > dist.size )
+		max = dist.size; 
+	for( i = 0;i < max;i ++ )
+		newArray[ i ] = array[ index[ i ] ];
+	return newArray; 
+}
 
-function alphabetize( &array ) {}
+function alphabetize( &array )
+{
+	return sort_by_value( array, true );
+}
 
 /@
 function Name: sort_by_value( array, b_lowest_first = true )
@@ -288,7 +904,22 @@ function Example: list = array::sort_by_value( array );
 SPMP: singleplayer
 @/
 //Use ArraySort for distance based sorting of entities
-function sort_by_value( &array, b_lowest_first = false ) {}
+function sort_by_value( &array, b_lowest_first = false )
+{
+	return merge_sort( array, &_sort_by_value_compare_func, b_lowest_first );
+}
+
+function _sort_by_value_compare_func( val1, val2, b_lowest_first )
+{
+	if ( b_lowest_first )
+	{
+		return val1 < val2;
+	}
+	else
+	{
+		return val1 > val2;
+	}
+}
 
 /@
 function Name: sort_by_script_int( a_ents, b_lowest_first = true )
@@ -301,13 +932,98 @@ function Example: list = array::sort_by_script_int( a_ents );
 SPMP: singleplayer
 @/
 //Use ArraySort for distance based sorting of entities
-function sort_by_script_int( &a_ents, b_lowest_first = false ) {}
+function sort_by_script_int( &a_ents, b_lowest_first = false )
+{
+	return merge_sort( a_ents, &_sort_by_script_int_compare_func, b_lowest_first );
+}
 
+function _sort_by_script_int_compare_func( e1, e2, b_lowest_first )
+{
+	if ( b_lowest_first )
+	{
+		return e1.script_int < e2.script_int;
+	}
+	else
+	{
+		return e1.script_int > e2.script_int;
+	}
+}
 
-function merge_sort( &current_list, func_sort, param ) {}
+function merge_sort( &current_list, func_sort, param )
+{
+	if ( current_list.size <= 1 )
+	{
+		return current_list;
+	}
+		
+	left = [];
+	right = [];
+	
+	middle = current_list.size / 2;
+	
+	for ( x = 0; x < middle; x++ )
+	{
+		ARRAY_ADD( left, current_list[ x ] );
+	}
+	
+	for ( ; x < current_list.size; x++ )
+	{
+		ARRAY_ADD( right, current_list[ x ] );
+	}
+	
+	left = merge_sort( left, func_sort, param );
+	right = merge_sort( right, func_sort, param );
+	
+	result = merge( left, right, func_sort, param );
 
+	return result;
+}
 
-function merge( left, right, func_sort, param ) {}
+function merge( left, right, func_sort, param )
+{
+	result = [];
+
+	li = 0;
+	ri = 0;
+	while ( li < left.size && ri < right.size )
+	{
+		b_result = undefined;
+		
+		if ( isdefined( param ) )
+		{
+			b_result = [[ func_sort ]]( left[ li ], right[ ri ], param );
+		}
+		else
+		{
+			b_result = [[ func_sort ]]( left[ li ], right[ ri ] );
+		}
+		
+		if ( b_result )
+		{
+			result[ result.size ] = left[ li ];
+			li++;
+		}
+		else
+		{
+			result[ result.size ] = right[ ri ];
+			ri++;
+		}
+	}
+
+	while ( li < left.size )
+	{
+		result[ result.size ] = left[ li ];
+		li++;
+	}
+
+	while ( ri < right.size )
+	{
+		result[ result.size ] = right[ ri ];
+		ri++;
+	}
+
+	return result;
+}
 
 /@
 "Name: spread_all( <entities> , <process> , <var1> , <var2> , <var3> )"
@@ -323,7 +1039,25 @@ function merge( left, right, func_sort, param ) {}
 "SPMP: Both"
 @/
 
-function spread_all( &entities, func, arg1, arg2, arg3, arg4, arg5 ) {}
+function spread_all( &entities, func, arg1, arg2, arg3, arg4, arg5 )
+{
+	Assert( isdefined( entities ), "Undefined entity array passed to array::spread_all_ents" );
+	Assert( isdefined( func ), "Undefined function passed to array::spread_all_ents" );
+	
+	if ( IsArray( entities ) )
+	{
+		foreach ( ent in entities )
+		{
+			util::single_thread( ent, func, arg1, arg2, arg3, arg4, arg5 );
+			WAIT_ABOUT( .1 );
+		}
+	}
+	else
+	{
+		util::single_thread( entities, func, arg1, arg2, arg3, arg4, arg5 );
+		WAIT_ABOUT( .1 );
+	}
+}
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

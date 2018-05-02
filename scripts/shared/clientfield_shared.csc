@@ -1,3 +1,4 @@
+#insert scripts\shared\shared.gsh;
 
 #namespace clientfield;
 
@@ -16,10 +17,29 @@
 "Example: level clientfield::register( "generator_state", 1 );"
 "SPMP: singleplayer"
 @/
-function register( str_pool_name, str_name, n_version, n_bits, str_type, func_callback, b_host, b_callback_for_zero_when_new ) {}
+function register( str_pool_name, str_name, n_version, n_bits, str_type, func_callback, b_host, b_callback_for_zero_when_new )
+{
+	RegisterClientField( str_pool_name, str_name, n_version, n_bits, str_type, func_callback, b_host, b_callback_for_zero_when_new );
+}
 
-function get(field_name) {}
+function get(field_name)
+{
+	if(self == level)
+	{
+		return CodeGetWorldClientField(field_name);
+	}
+	else
+	{
+		return CodeGetClientField(self, field_name);
+	}
+}
 
-function get_to_player( field_name ) {}
+function get_to_player( field_name )
+{
+	return CodeGetPlayerStateClientField( self, field_name );
+}
 
-function get_player_uimodel( field_name ) {}
+function get_player_uimodel( field_name )
+{
+	return CodeGetUIModelClientField( self, field_name );
+}

@@ -42,6 +42,8 @@
 #define NOTETRACK_DROP_SHIELD			"drop_shield"
 #define NOTETRACK_HIDE_WEAPON			"hide_weapon"
 #define NOTETRACK_SHOW_WEAPON			"show_weapon"
+#define NOTETRACK_HIDE_AI				"hide_ai"
+#define NOTETRACK_SHOW_AI				"show_ai"
 #define NOTETRACK_ATTACH_KNIFE			"attach_knife"
 #define NOTETRACK_DETACH_KNIFE			"detach_knife"
 #define NOTETRACK_EXIT_ALIGN			"exit_align"
@@ -85,3 +87,4 @@
 #define AI_ANIM_POINT_RELATIVE						"point relative"
 #define AI_ANIM_SLIDE								"slide"
 #define AI_ANIM_NOGRAVITY							"nogravity"
+#define AI_ANIM_PRETRAVERSAL						"pre_traversal"

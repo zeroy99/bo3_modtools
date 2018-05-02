@@ -8,10 +8,6 @@
 #using scripts\shared\scoreevents_shared;
 #using scripts\shared\sound_shared;
 #using scripts\shared\util_shared;
-
-#insert scripts\shared\shared.gsh;
-#insert scripts\shared\version.gsh;
-
 #using scripts\mp\gametypes\_globallogic;
 #using scripts\mp\gametypes\_globallogic_audio;
 #using scripts\mp\gametypes\_globallogic_score;
@@ -19,10 +15,12 @@
 #using scripts\mp\gametypes\_hostmigration;
 #using scripts\mp\gametypes\_spawning;
 #using scripts\mp\gametypes\_spawnlogic;
-
 #using scripts\mp\_challenges;
 #using scripts\mp\_util;
 #using scripts\mp\teams\_teams;
+
+#insert scripts\shared\shared.gsh;
+#insert scripts\shared\version.gsh;
 
 /*
 	Domination
@@ -57,8 +55,6 @@
 			script_linkname flag2
 			script_linkto flag1 flag3
 			
-			Set scr_domdebug to 1 to see flag connections and what spawnpoints are considered connected to each flag.
-
 	Level script requirements
 	-------------------------
 		Team Definitions:
@@ -78,6 +74,24 @@
 			Valid settings:
 				soldiertypeset	seals
 */
+
+/*QUAKED mp_dom_spawn (0.5 0.5 1.0) (-16 -16 0) (16 16 72)
+Players spawn near their flags at one of these positions.*/
+
+/*QUAKED mp_dom_spawn_flag_a (0.5 0.5 1.0) (-16 -16 0) (16 16 72)
+Players spawn near their flags at one of these positions.*/
+
+/*QUAKED mp_dom_spawn_flag_b (0.5 0.5 1.0) (-16 -16 0) (16 16 72)
+Players spawn near their flags at one of these positions.*/
+
+/*QUAKED mp_dom_spawn_flag_c (0.5 0.5 1.0) (-16 -16 0) (16 16 72)
+Players spawn near their flags at one of these positions.*/
+
+/*QUAKED mp_dom_spawn_axis_start (1.0 0.0 1.0) (-16 -16 0) (16 16 72)
+Axis players spawn away from enemies and near their team at one of these positions at the start of a round.*/
+
+/*QUAKED mp_dom_spawn_allies_start (0.0 1.0 1.0) (-16 -16 0) (16 16 72)
+Allied players spawn away from enemies and near their team at one of these positions at the start of a round.*/
 
 #precache( "string", "OBJECTIVES_DOM" );
 #precache( "string", "OBJECTIVES_DOM_SCORE" );
@@ -124,6 +138,7 @@ function main()
 	level.onStartGameType =&onStartGameType;
 	level.onPlayerKilled =&onPlayerKilled;
 	level.onRoundSwitch =&onRoundSwitch;
+	level.onPrecacheGameType =&onPrecacheGameType;
 	level.onEndGame=&onEndGame;
 	level.onRoundEndGame =&onRoundEndGame;
 	
@@ -170,6 +185,12 @@ function main()
 	else
 		globallogic::setvisiblescoreboardcolumns( "score", "kills", "deaths" , "captures", "defends");
 }
+
+
+function onPrecacheGameType()
+{
+}
+
 
 function onStartGameType()
 {	
@@ -229,10 +250,12 @@ function onStartGameType()
 	}
 
 	flagSpawns = spawnlogic::get_spawnpoint_array( "mp_dom_spawn_flag_a" );
+	//assert( flagSpawns.size > 0 );
 	
 	level.startPos["allies"] = level.spawn_start[ "allies" ][0].origin;
 	level.startPos["axis"] = level.spawn_start[ "axis" ][0].origin;
 	
+			
 	if ( !util::isOneRound() && level.scoreRoundWinBased )
 	{
 		globallogic_score::resetTeamScores();
@@ -240,6 +263,7 @@ function onStartGameType()
 	
 	level.spawnsystem.sideSwitching = 0;
 	
+	level thread watchForBFlagCap();
 	updateGametypeDvars();
 	thread domFlags();
 	thread updateDomScores();
@@ -252,6 +276,12 @@ function onEndGame( winningTeam )
 	{
 		domFlag = level.domFlags[i];
 		domFlag gameobjects::allow_use( "none" );
+		if ( isdefined( domFlag.singleOwner ) && domFlag.singleOwner == true )
+		{
+			team = domFlag gameobjects::get_owner_team();	
+			label = domFlag gameobjects::get_label();
+			challenges::holdFlagEntireMatch( team,  label );
+		}
 	}
 }
 
@@ -283,15 +313,15 @@ function domFlags()
 	level.lastStatus["allies"] = 0;
 	level.lastStatus["axis"] = 0;
 	
-	level.flagModel["allies"] = "tag_origin"; 
-	level.flagModel["axis"] = "tag_origin";
-	level.flagModel["neutral"] = "tag_origin";
+	level.flagModel["allies"] = "tag_origin"; // teams::get_flag_model( "allies" );
+	level.flagModel["axis"] = "tag_origin"; // teams::get_flag_model( "axis" );
+	level.flagModel["neutral"] = "tag_origin"; // teams::get_flag_model( "neutral" );
 
 	primaryFlags = getEntArray( "flag_primary", "targetname" );
 	
 	if ( (primaryFlags.size) < 2 )
 	{
-/#	printLn( "^1Not enough domination flags found in level!" );	#/
+	/#	printLn( "^1Not enough domination flags found in level!" );	#/
 		callback::abort_level();
 		return;
 	}
@@ -311,14 +341,14 @@ function domFlags()
 			else
 			{
 			/#
-			util::error("Trigger not available for flag " + dom_flag.script_label + " with targetname " + dom_flag.target);
+			println("Trigger not available for flag " + dom_flag.script_label + " with targetname " + dom_flag.target);
 			#/
 			}
 		}
 		else
 		{
 			/#
-			util::error("Trigger not available for flag " + dom_flag.script_label);
+			println("Trigger not available for flag " + dom_flag.script_label);
 			#/
 		}
 
@@ -391,10 +421,6 @@ function domFlags()
 	}
 	
 	flagSetup();
-
-	/#
-	thread domDebug();
-	#/
 }
 
 function getUnownedFlagNearestStart( team, excludeFlag )
@@ -417,41 +443,6 @@ function getUnownedFlagNearestStart( team, excludeFlag )
 	}
 	return best;
 }
-
-/#
-function domDebug()
-{
-	while(1)
-	{
-		if (GetDvarString( "scr_domdebug") != "1") {
-			wait 2;
-			continue;
-		}
-		
-		while(1)
-		{
-			if (GetDvarString( "scr_domdebug") != "1")
-				break;
-			// show flag connections and each flag's spawnpoints
-			for (i = 0; i < level.flags.size; i++) {
-				for (j = 0; j < level.flags[i].adjflags.size; j++) {
-					line(level.flags[i].origin, level.flags[i].adjflags[j].origin, (1,1,1));
-				}
-				
-				for (j = 0; j < level.flags[i].nearbyspawns.size; j++) {
-					line(level.flags[i].origin, level.flags[i].nearbyspawns[j].origin, (.2,.2,.6));
-				}
-				
-				if ( level.flags[i] == level.bestSpawnFlag["allies"] )
-					print3d( level.flags[i].origin, "allies best spawn flag" );
-				if ( level.flags[i] == level.bestSpawnFlag["axis"] )
-					print3d( level.flags[i].origin, "axis best spawn flag" );
-			}
-			wait .05;
-		}
-	}
-}
-#/
 
 function onBeginUse( player )
 {
@@ -719,6 +710,11 @@ function onUseWithNeutralizingFlag( player )
 	{
 		thread give_neutralized_credit( touchList, string, oldTeam, isBFlag );
 	}
+	
+	if ( dominated_challenge_check() ) 
+	{
+		level thread totalDomination( team );
+	}
 }
 
 function onUseWithoutNeutralizingFlag( player )
@@ -762,6 +758,11 @@ function onUseWithoutNeutralizingFlag( player )
 	{
 		self flagCapturedFromTeam( team, oldTeam );
 	}
+	
+	if ( dominated_challenge_check() ) 
+	{
+		level thread totalDomination( team );
+	}
 	self update_spawn_influencers( team );
 }
 
@@ -778,49 +779,91 @@ function onUse( player )
 	level change_dom_spawns();
 }
 
+function totalDomination( team )
+{
+	level endon( "flag_captured" );
+	level endon( "game_ended" );
+	
+	wait ( 180 );
+	
+	challenges::totalDomination( team );
+}
+
+
+function watchForBFlagCap()
+{
+	level endon( "game_ended" );
+	level endon( "endWatchForBFlagCapAfterTime" );
+
+	level thread endWatchForBFlagCapAfterTime( 60 );
+	for (;;)
+	{
+		level waittill( "b_flag_captured", player );
+		player challenges::capturedBFirstMinute();
+	}
+}
+
+function endWatchForBFlagCapAfterTime( time )
+{
+	level endon( "game_ended" );
+	wait( 60 );
+	level notify( "endWatchForBFlagCapAfterTime" );
+}
+
 function give_capture_credit( touchList, string, lastOwnerTeam, isBFlag, neutralizing )
 {
 	time = getTime();
 	wait .05;
 	util::WaitTillSlowProcessAllowed();
 	
+	self updateCapsPerMinute(lastOwnerTeam);
+	
 	players = getArrayKeys( touchList );
 	for ( i = 0; i < players.size; i++ )
 	{
 		player_from_touchlist = touchList[players[i]].player;
-		if (lastOwnerTeam == "neutral" && neutralizing && IS_TRUE( self.hasBeenCaptured ) )
+		player_from_touchlist updateCapsPerMinute(lastOwnerTeam);
+		if ( !isScoreBoosting( player_from_touchlist, self ) )
 		{
-			scoreevents::processScoreEvent( "dom_point_secured_neutralizing", player_from_touchlist );
-		}
-		else if ( lastOwnerTeam == "neutral" )
-		{
-			if ( isBFlag )
+			player_from_touchlist challenges::capturedObjective( time, self.levelflag );
+			if (lastOwnerTeam == "neutral" && neutralizing && IS_TRUE( self.hasBeenCaptured ) )
 			{
-				scoreevents::processScoreEvent( "dom_point_neutral_b_secured", player_from_touchlist );
+				scoreevents::processScoreEvent( "dom_point_secured_neutralizing", player_from_touchlist );
+			}
+			else if ( lastOwnerTeam == "neutral" )
+			{
+				if ( isBFlag )
+				{
+					scoreevents::processScoreEvent( "dom_point_neutral_b_secured", player_from_touchlist );
+				}
+				else
+				{
+					scoreevents::processScoreEvent( "dom_point_neutral_secured", player_from_touchlist );
+				}
 			}
 			else
 			{
-				scoreevents::processScoreEvent( "dom_point_neutral_secured", player_from_touchlist );
+				scoreevents::processScoreEvent( "dom_point_secured", player_from_touchlist );
 			}
+			
+			self.hasBeenCaptured = true;
+			
+			player_from_touchlist RecordGameEvent("capture");
+			if ( isBFlag )
+			{
+				level notify( "b_flag_captured", player_from_touchlist );
+			}
+			if( isdefined(player_from_touchlist.pers["captures"]) )
+			{
+				player_from_touchlist.pers["captures"]++;
+				player_from_touchlist.captures = player_from_touchlist.pers["captures"];
+			}
+			demo::bookmark( "event", gettime(), player_from_touchlist );
+			player_from_touchlist AddPlayerStatWithGameType( "CAPTURES", 1 );
 		}
 		else
 		{
-			scoreevents::processScoreEvent( "dom_point_secured", player_from_touchlist );
 		}
-		
-		self.hasBeenCaptured = true;
-		
-		if ( isBFlag )
-		{
-			level notify( "b_flag_captured", player_from_touchlist );
-		}
-		if( isdefined(player_from_touchlist.pers["captures"]) )
-		{
-			player_from_touchlist.pers["captures"]++;
-			player_from_touchlist.captures = player_from_touchlist.pers["captures"];
-		}
-		demo::bookmark( "event", gettime(), player_from_touchlist );
-		player_from_touchlist AddPlayerStatWithGameType( "CAPTURES", 1 );
 
 		level thread popups::DisplayTeamMessageToAll( string, player_from_touchlist );
 	}
@@ -836,14 +879,22 @@ function give_neutralized_credit( touchList, string, lastOwnerTeam, isBFlag )
 	for ( i = 0; i < players.size; i++ )
 	{
 		player_from_touchlist = touchList[players[i]].player;
-		scoreevents::processScoreEvent( "dom_point_neutralized_neutralizing", player_from_touchlist );
-		
-		if( isdefined(player_from_touchlist.pers["neutralizes"]) )
+		player_from_touchlist updateCapsPerMinute(lastOwnerTeam);
+		if ( !isScoreBoosting( player_from_touchlist, self ) )
 		{
-			player_from_touchlist.pers["neutralizes"]++;
-			player_from_touchlist.captures = player_from_touchlist.pers["neutralizes"];
+			scoreevents::processScoreEvent( "dom_point_neutralized_neutralizing", player_from_touchlist );
+			
+			player_from_touchlist RecordGameEvent("neutralized");
+			if( isdefined(player_from_touchlist.pers["neutralizes"]) )
+			{
+				player_from_touchlist.pers["neutralizes"]++;
+				player_from_touchlist.captures = player_from_touchlist.pers["neutralizes"];
+			}
+			demo::bookmark( "event", gettime(), player_from_touchlist );
 		}
-		demo::bookmark( "event", gettime(), player_from_touchlist );
+		else
+		{
+		}
 
 		level thread popups::DisplayTeamMessageToAll( string, player_from_touchlist );
 	}
@@ -851,8 +902,6 @@ function give_neutralized_credit( touchList, string, lastOwnerTeam, isBFlag )
 
 function updateDomScores()
 {
-	//level.playingActionMusic = false;			
-
 	if ( level.roundScoreLimit && !level.timeLimit )
 	{
 		// Average time: 30 seconds, 6 intervals with 2 flags is 12 points
@@ -1072,12 +1121,19 @@ function onPlayerKilled( eInflictor, attacker, iDamage, sMeansOfDeath, weapon, v
 					attacker.dom_defends++;
 					if ( level.playerDefensiveMax >= attacker.dom_defends )
 					{
+						attacker thread challenges::killedBaseDefender( level.flags[index] );
 						if (!scoreeventprocessed)
 						{
 							scoreevents::processScoreEvent( "killed_defender", attacker, undefined, weapon );
 						}
+						self RecordKillModifier("defending");
 						break;
 					}
+					else
+					{
+					}
+					
+
 				}
 				if ( defendedFlag )
 				{
@@ -1091,11 +1147,18 @@ function onPlayerKilled( eInflictor, attacker, iDamage, sMeansOfDeath, weapon, v
 					{
 						attacker.pers["defends"]++;
 						attacker.defends = attacker.pers["defends"];
+						attacker thread challenges::killedBaseOffender( level.flags[index], weapon );
+						attacker RecordGameEvent("return");
+						attacker challenges::killedZoneAttacker( weapon );
 						if (!scoreeventprocessed)
 						{
 							scoreevents::processScoreEvent( "killed_attacker", attacker, undefined, weapon );
 						}
+						self RecordKillModifier("assaulting");
 						break;
+					}
+					else
+					{
 					}
 				}
 			}
@@ -1170,6 +1233,10 @@ function updateattackermultikills()
 
 	wait ( 4.0 );
 
+
+	if ( self.recentDomAttackerKillCount > 1 )
+		self challenges::domAttackerMultiKill( self.recentDomAttackerKillCount );
+	
 	self.recentDomAttackerKillCount = 0;
 }
 
@@ -1252,6 +1319,57 @@ function getSpawnsBoundingFlag( avoidflag )
 		
 		for (j = 0; j < flag.nearbyspawns.size; j++)
 			spawns[spawns.size] = flag.nearbyspawns[j];
+	}
+	
+	return spawns;
+}
+
+// gets an array of all spawnpoints which are near flags that are
+// owned by the given team, or that are adjacent to flags owned by the given team.
+function getOwnedAndBoundingFlagSpawns(team)
+{
+	spawns = [];
+
+	for (i = 0; i < level.flags.size; i++)
+	{
+		if ( level.flags[i] getFlagTeam() == team )
+		{
+			// add spawns near this flag
+			for (s = 0; s < level.flags[i].nearbyspawns.size; s++)
+				spawns[spawns.size] = level.flags[i].nearbyspawns[s];
+		}
+		else
+		{
+			for (j = 0; j < level.flags[i].adjflags.size; j++)
+			{
+				if ( level.flags[i].adjflags[j] getFlagTeam() == team )
+				{
+					// add spawns near this flag
+					for (s = 0; s < level.flags[i].nearbyspawns.size; s++)
+						spawns[spawns.size] = level.flags[i].nearbyspawns[s];
+					break;
+				}
+			}
+		}
+	}
+	
+	return spawns;
+}
+
+// gets an array of all spawnpoints which are near flags that are
+// owned by the given team
+function getOwnedFlagSpawns(team)
+{
+	spawns = [];
+
+	for (i = 0; i < level.flags.size; i++)
+	{
+		if ( level.flags[i] getFlagTeam() == team )
+		{
+			// add spawns near this flag
+			for (s = 0; s < level.flags[i].nearbyspawns.size; s++)
+				spawns[spawns.size] = level.flags[i].nearbyspawns[s];
+		}
 	}
 	
 	return spawns;
@@ -1354,7 +1472,7 @@ function flagSetup()
 		for(i = 0; i < maperrors.size; i++)
 			println(maperrors[i]);
 		println("^1------------------------------------");
-		util::error("Map errors. See above");
+		println("Map errors. See above");
 		#/
 		callback::abort_level();
 		
@@ -1410,24 +1528,25 @@ function update_spawn_influencers( team )
  
 function addSpawnPointsForFlag( team, flag_team, flagSpawnName ) 
 { 
-   // flag_team is the team that owns the flag
-   // team is the team we are looking to add spawns for
-   // we should add spawns for team only if the flag isn't owned by the enemy team (it may be neutral or owned by us)
-   
-   if ( game["switchedsides"] ) 
-        team = util::getOtherTeam( team ); 
+     // flag_team is the team that owns the flag
+     // team is the team we are looking to add spawns for
+     // we should add spawns for team only if the flag isn't owned by the enemy team (it may be neutral or owned by us)
+     
+     if ( game["switchedsides"] ) 
+          team = util::getOtherTeam( team ); 
 
-   otherTeam = util::getOtherTeam( team );
-   
-   if ( flag_team != otherTeam )
-   {
-        spawnlogic::add_spawn_points( team, flagSpawnName );
-   }
+     otherTeam = util::getOtherTeam( team );
+     
+     if ( flag_team != otherTeam )
+     {
+          spawnlogic::add_spawn_points( team, flagSpawnName );
+     }
 }
 
 //Changes what spawns are available to a team based on what Domination point they own
 function change_dom_spawns()
 {
+
 	spawnlogic::clear_spawn_points();	
 	spawnlogic::add_spawn_points( "allies", "mp_dom_spawn" );
 	spawnlogic::add_spawn_points( "axis", "mp_dom_spawn" );
@@ -1459,9 +1578,38 @@ function change_dom_spawns()
 	}
 
 	spawning::updateAllSpawnPoints();
+
 }
 
+function dominated_challenge_check()
+{
+	num_flags = level.flags.size;
+	allied_flags = 0;
+	axis_flags = 0;
 
+	for ( i = 0 ; i < num_flags ; i++ )
+	{
+		flag_team = level.flags[i] getFlagTeam();
+
+		if ( flag_team == "allies" )
+		{
+			allied_flags++;
+		}
+		else if ( flag_team == "axis" )
+		{
+			axis_flags++;
+		}
+		else
+		{
+			return false;
+		}
+
+		if ( ( allied_flags > 0 ) && ( axis_flags > 0 ) )
+			return false;
+	}
+
+	return true;
+}
 //This function checks to see if one team owns all three flags
 function dominated_check()
 {
@@ -1488,6 +1636,47 @@ function dominated_check()
 
 	return true;
 }
+
+function updateCapsPerMinute(lastOwnerTeam)
+{
+	if ( !isdefined( self.capsPerMinute ) )
+	{
+		self.numCaps = 0;
+		self.capsPerMinute = 0;
+	}
+	
+	// not including neutral flags as part of the boosting prevention
+	// to help with false positives at the start
+	if ( lastOwnerTeam == "neutral" )
+		return;
+		
+	self.numCaps++;
+	
+	minutesPassed = globallogic_utils::getTimePassed() / ( 60 * 1000 );
+	
+	// players use the actual time played
+	if ( IsPlayer( self ) && isdefined(self.timePlayed["total"]) )
+		minutesPassed = self.timePlayed["total"] / 60;
+		
+	self.capsPerMinute = self.numCaps / minutesPassed;
+	if ( self.capsPerMinute > self.numCaps )
+		self.capsPerMinute = self.numCaps;
+}
+
+function isScoreBoosting( player, flag )
+{
+	if ( !level.rankedMatch )
+		return false;
+		
+	if ( player.capsPerMinute > level.playerCaptureLPM )
+		return true;
+			
+	if ( flag.capsPerMinute > level.flagCaptureLPM )
+	  return true;
+	  
+ return false;
+}
+
 
 function onUpdateUseRate()
 {

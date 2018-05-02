@@ -1,3 +1,4 @@
+#insert scripts\shared\shared.gsh;
 
 #namespace math;
 
@@ -11,7 +12,19 @@
 "Example: clamped_val = clamp(8, 0, 5); // returns 5	*	clamped_val = clamp(-1, 0, 5); // returns 0"
 "SPMP: both"
 @/
-function clamp(val, val_min, val_max) {}
+function clamp(val, val_min, val_max)
+{
+	if (val < val_min)
+	{
+		val = val_min;
+	}
+	else if (val > val_max)
+	{
+		val = val_max;
+	}
+
+	return val;
+}
 
 /@
 "Name: linear_map(val, min_a, max_a, min_b, max_b)"
@@ -25,7 +38,10 @@ function clamp(val, val_min, val_max) {}
 "Example: fov = linear_map(speed, min_speed, max_speed, min_fov, max_fov);"
 "SPMP: both"
 @/
-function linear_map(num, min_a, max_a, min_b, max_b) {}
+function linear_map(num, min_a, max_a, min_b, max_b)
+{
+	return clamp(( (num - min_a) / (max_a - min_a) * (max_b - min_b) + min_b ), min_b, max_b);
+}
 
 /@
 "Name: lag(desired, curr, k, dt)"
@@ -38,7 +54,22 @@ function linear_map(num, min_a, max_a, min_b, max_b) {}
 "Example: speed = lag(max_speed, speed, 1, 0.05);"
 "SPMP: both"
 @/
-function lag(desired, curr, k, dt) {}
+function lag(desired, curr, k, dt)
+{
+    r = 0.0;
+
+    if (((k * dt) >= 1.0) || (k <= 0.0))
+    {
+        r = desired;
+    }
+    else
+    {
+        err = desired - curr;
+        r = curr + k * err * dt;
+    }
+
+    return r;
+}
 
 /@
 "Name: array_average( <array> )"
@@ -48,7 +79,20 @@ function lag(desired, curr, k, dt) {}
 "Example: array_average( numbers );"
 "SPMP: both"
 @/
-function array_average( array ) {}
+function array_average( array )
+{
+	assert( IsArray( array ) );
+	assert( array.size > 0 );
+
+	total = 0;
+
+	for ( i = 0; i < array.size; i++ )
+	{
+		total += array[i];
+	}
+
+	return ( total / array.size );
+}
 
 /@
 "Name: array_std_deviation( <array>, <mean> )"
@@ -59,7 +103,25 @@ function array_average( array ) {}
 "Example: array_std_deviation( numbers, avg );"
 "SPMP: both"
 @/
-function array_std_deviation( array, mean ) {}
+function array_std_deviation( array, mean )
+{
+	assert( IsArray( array ) );
+	assert( array.size > 0 );
+
+	tmp = [];
+	for ( i = 0; i < array.size; i++ )
+	{
+		tmp[i] = ( array[i] - mean ) * ( array[i] - mean );
+	}
+
+	total = 0;
+	for ( i = 0; i < tmp.size; i++ )
+	{
+		total = total + tmp[i];
+	}
+
+	return Sqrt( total / array.size );
+}
 
 // ----------------------------------------------------------------------------------------------------
 // -- Vectors -----------------------------------------------------------------------------------------
@@ -73,12 +135,34 @@ function array_std_deviation( array, mean ) {}
 "Example: if (vector_compare(self.origin, node.origin){print(\"yay, i'm on the node!\");}"
 "SPMP: both"
 @/
-function vector_compare(vec1, vec2) {}
+function vector_compare(vec1, vec2)
+{
+	return (abs(vec1[0] - vec2[0]) < .001) && (abs(vec1[1] - vec2[1]) < .001) && (abs(vec1[2] - vec2[2]) < .001);
+}
 
-function random_vector(max_length) {}
+function random_vector(max_length)
+{
+	return (RandomFloatRange(-1 * max_length, max_length), RandomFloatRange(-1 * max_length, max_length), RandomFloatRange(-1 * max_length, max_length));
+}
 
-function angle_dif(oldangle, newangle) {}
+function angle_dif(oldangle, newangle)
+{
+    outvalue=(oldangle-newangle)%360;
+     if (outvalue<0)
+          outvalue+=360;
+     if (outvalue>180)
+          outvalue=(outvalue-360)*-1;
+     return outvalue;
+}
 
-function sign( x ) {}
+function sign( x )
+{
+	if ( x >= 0 )
+		return 1;
+	return -1;
+}
 
-function cointoss() {}
+function cointoss()
+{
+	return RandomInt( 100 ) >= 50 ;
+}

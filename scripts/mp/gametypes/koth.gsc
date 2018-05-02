@@ -11,10 +11,6 @@
 #using scripts\shared\scoreevents_shared;
 #using scripts\shared\sound_shared;
 #using scripts\shared\util_shared;
-
-#insert scripts\shared\shared.gsh;
-#insert scripts\shared\version.gsh;
-
 #using scripts\mp\gametypes\_battlechatter;
 #using scripts\mp\gametypes\_globallogic;
 #using scripts\mp\gametypes\_globallogic_audio;
@@ -23,9 +19,11 @@
 #using scripts\mp\gametypes\_hostmigration;
 #using scripts\mp\gametypes\_spawning;
 #using scripts\mp\gametypes\_spawnlogic;
-
 #using scripts\mp\_challenges;
 #using scripts\mp\_util;
+
+#insert scripts\shared\shared.gsh;
+#insert scripts\shared\version.gsh;
 
 #define RANDOM_ZONE_LOCATIONS_OFF 0
 #define RANDOM_ZONE_LOCATIONS_ON 1
@@ -33,6 +31,9 @@
 
 #define OBJECTIVE_FLAG_NORMAL 0
 #define OBJECTIVE_FLAG_TARGET 1
+
+/*QUAKED mp_multi_team_spawn (1.0 0.0 0.0) (-16 -16 0) (16 16 72)
+Spawns used for use in some multi team game modes to open up other portions of the map for multi team scenarios.*/
 
 #precache( "string", "OBJECTIVES_KOTH" );
 #precache( "string", "OBJECTIVES_KOTH_SCORE" );
@@ -97,6 +98,8 @@ function main()
 	level.scorePerPlayer = GetGametypeSetting( "scorePerPlayer" );
 	level.timePausesWhenInZone = GetGametypeSetting( "timePausesWhenInZone" );
 	
+	level.iconoffset = (0,0,32);
+	
 	level.onRespawnDelay =&getRespawnDelay;
 
 	gameobjects::register_allowed_gameobject( level.gameType );
@@ -120,6 +123,7 @@ function main()
 	/#
 		// HQ radio triggers are not scoped to exclude koth right now
 		// going to delete them just so if we render triggers we dont see all these
+		// TODO in the future is to get them into the automatic game type delete system
 		trigs = getentarray("radiotrigger", "targetname");
 		foreach( trig in trigs )
 		{
@@ -197,6 +201,7 @@ function onStartGameType()
 		game["defenders"] = oldAttackers;
 	}
 	
+	
 	globallogic_score::resetTeamScores();
 	
 	foreach( team in level.teams )
@@ -229,6 +234,7 @@ function onStartGameType()
 	// now that the game objects have been deleted place the influencers
 	spawning::create_map_placed_influencers();
 	
+	// TODO: HQ spawnpoints
 	level.spawnMins = ( 0, 0, 0 );
 	level.spawnMaxs = ( 0, 0, 0 );
 	foreach( team in level.teams )
@@ -263,6 +269,7 @@ function onStartGameType()
 		callback::abort_level();
 		return;
 	}
+	
 	
 	thread SetupZones();
 
@@ -499,6 +506,9 @@ function KothMainLoop()
 		sound::play_on_players( "mpl_hq_cap_us" );
 
 		level.zone.gameobject gameobjects::enable_object();
+		// Attach the objective to the visuals since it is at the right position and we can't attch it to the koth_zone_center script_origin
+		Objective_OnEntity( level.zone.gameobject.objectiveID, level.zone.objectiveAnchor );
+		
 		level.zone.gameobject.captureCount = 0;
 		
 		if ( level.zoneAutoMoveTime )
@@ -515,6 +525,16 @@ function KothMainLoop()
 		KothCaptureLoop();
 		
 		ownerTeam = level.zone.gameobject gameobjects::get_owner_team();
+		
+		if ( level.zone.gameobject.captureCount == 1 )
+		{
+		// Copy touch list so there aren't any threading issues
+		touchList = [];
+		touchKeys = GetArrayKeys( level.zone.gameobject.touchList[ownerTeam] );
+		for ( i = 0 ; i < touchKeys.size ; i++ )
+			touchList[touchKeys[i]] = level.zone.gameobject.touchList[ownerTeam][touchKeys[i]];
+			thread give_held_credit( touchList );		
+		}
 		
 		pause_time();
 		
@@ -540,11 +560,13 @@ function KothMainLoop()
 	}
 }
 
+
 function hideTimerDisplayOnGameEnd()
 {
 	level waittill("game_ended");
 	setMatchFlag( "bomb_timer_a", 0 );
 }
+
 
 function forceSpawnTeam( team )
 {
@@ -598,10 +620,12 @@ function onBeginUse( player )
 	}
 }
 
+
 function onEndUse( team, player, success )
 {
 	player notify( "event_ended" );
 }
+
 
 function onZoneCapture( player )
 {
@@ -640,6 +664,18 @@ function onZoneCapture( player )
 			if ( !isdefined( self.lastCaptureTeam ) || ( self.lastCaptureTeam != team ) ) // If retaking this point after being contested, don't play VO again
 			{
 				globallogic_audio::leader_dialog( "kothSecured", team, undefined, "gamemode_objective", undefined, "kothActiveDialogBuffer" );
+				for ( index = 0; index < level.players.size; index++ )
+				{
+					player = level.players[index];
+					
+					if ( player.pers["team"] == team )
+					{
+						if ( player.lastKilltime + 500 > getTime() )
+						{
+							player challenges::killedLastContester();	
+						}
+					}
+				}
 			}
 			thread sound::play_on_players( game["objective_gained_sound"], team );
 		}
@@ -665,9 +701,15 @@ function onZoneCapture( player )
 	
 	self updateTeamClientField();
 	
+	player RecordGameEvent( "hardpoint_captured" );
+	
 	level notify( "zone_captured" );
 	level notify( "zone_captured" + capture_team );
 	player notify( "event_ended" );
+}
+
+function track_capture_time()
+{
 }
 
 function give_capture_credit( touchList, string, captureTime, capture_team, lastCaptureTeam )
@@ -680,23 +722,56 @@ function give_capture_credit( touchList, string, captureTime, capture_team, last
 	{
 		player = touchList[players[i]].player;
 
-		if ( level.kothStartTime + 3000 > captureTime && level.kothCapTeam == capture_team ) 
+		player updateCapsPerMinute( lastCaptureTeam );
+
+		if ( !isScoreBoosting( player ) )
 		{
-			scoreevents::processScoreEvent( "quickly_secure_point", player );
+			player challenges::capturedObjective( captureTime, self.trigger );
+			if ( level.kothStartTime + 3000 > captureTime && level.kothCapTeam == capture_team ) 
+			{
+				scoreevents::processScoreEvent( "quickly_secure_point", player );
+			}
+		
+			scoreevents::processScoreEvent( "koth_secure", player );
+			player RecordGameEvent("capture");
+
+			level thread popups::DisplayTeamMessageToAll( string, player );
+
+			if( isdefined(player.pers["captures"]) )
+			{
+				player.pers["captures"]++;
+				player.captures = player.pers["captures"];
+			}		
+				
+			if ( level.kothStartTime + 500 > captureTime ) 
+			{
+				player challenges::immediateCapture();
+			}
+
+			demo::bookmark( "event", gettime(), player );
+			player AddPlayerStatWithGameType( "CAPTURES", 1 );
 		}
-	
-		scoreevents::processScoreEvent( "koth_secure", player );
-
-		level thread popups::DisplayTeamMessageToAll( string, player );
-
-		if( isdefined(player.pers["captures"]) )
+		else
 		{
-			player.pers["captures"]++;
-			player.captures = player.pers["captures"];
-		}		
+		}
+	}
+}
 
-		demo::bookmark( "event", gettime(), player );
-		player AddPlayerStatWithGameType( "CAPTURES", 1 );
+function give_held_credit( touchList, team )
+{
+	wait .05;
+	util::WaitTillSlowProcessAllowed();
+
+	players = getArrayKeys( touchList );
+	for ( i = 0; i < players.size; i++ )
+	{
+		player = touchList[players[i]].player;
+			
+		//scoreevents::processScoreEvent( "koth_held", player );
+
+		// do not know if we want the following
+		//player RecordGameEvent("held");
+
 	}
 }
 
@@ -706,6 +781,7 @@ function onZoneDestroy( player )
 
 	/#print( "zone destroyed" );#/
 	scoreevents::processScoreEvent( "zone_destroyed", player );	
+	player RecordGameEvent("destroy");	
 	player AddPlayerStatWithGameType( "DESTRUCTIONS", 1 );
 		
 	if( isdefined(player.pers["destructions"]) )
@@ -752,6 +828,8 @@ function onZoneUnoccupied()
 	level.zone.gameobject.wasLeftUnoccupied = true;
 	level.zone.gameobject.isContested = false;
 
+	level.zone.gameobject RecordGameEventNonPlayer( "hardpoint_empty" );
+		
 	resume_time();
 	
 	self updateTeamClientField();
@@ -765,6 +843,8 @@ function onZoneContested()
 
 	self updateTeamClientField();
 
+	self RecordGameEventNonPlayer( "hardpoint_contested" );
+	
 	resume_time();
 
 	foreach( team in level.teams )
@@ -788,6 +868,8 @@ function onZoneUncontested( lastClaimTeam )
 	self gameobjects::set_claim_team( lastClaimTeam );
 	
 	self updateTeamClientField();
+	
+	self RecordGameEventNonPlayer( "hardpoint_uncontested" );
 }
 
 function MoveZoneAfterTime( time )
@@ -805,13 +887,17 @@ function MoveZoneAfterTime( time )
 		if ( !isdefined( level.zone.gameobject.wasLeftUnoccupied ) || level.zone.gameobject.wasLeftUnoccupied == false )
 		{
 			zoneOwningTeam = level.zone.gameobject gameobjects::get_owner_team();
+			challenges::controlZoneEntirely( zoneOwningTeam );
 		}
 	}
 
 	level.zoneDestroyedByTimer = true;
+	
+	level.zone.gameobject RecordGameEventNonPlayer( "hardpoint_moved" );
 
 	level notify( "zone_moved" );
 }
+
 
 function awardCapturePoints( team, lastCaptureTeam )
 {
@@ -897,6 +983,7 @@ function CompareZoneIndexes( zone_a, zone_b )
 	return false;
 }
 
+
 function getZoneArray()
 {
   zones = getentarray( "koth_zone_center", "targetname" );
@@ -933,6 +1020,11 @@ function SetupZones()
 
 	zones = getZoneArray();
 	
+//	if ( zones.size < 2 )
+//	{
+//		maperrors[maperrors.size] = "There are not at least 2 entities with targetname \"zone\"";
+//	}
+	
 	trigs = getentarray("koth_zone_trigger", "targetname");
 	for ( i = 0; i < zones.size; i++ )
 	{
@@ -962,11 +1054,17 @@ function SetupZones()
 				maperrors[maperrors.size] = "Zone at " + zone.origin + " is not inside any \"zonetrigger\" trigger";
 				continue;
 			}
+			
+			// possible fallback (has been tested)
+			//zone.trig = spawn( "trigger_radius", zone.origin, 0, 128, 128 );
+			//errored = false;
 		}
 		
 		assert( !errored );
 		
 		zone.trigorigin = zone.trig.origin;
+		
+		zone.objectiveAnchor = Spawn( "script_model", zone.origin ); // We need a script_model to attach the objective to
 		
 		visuals = [];
 		visuals[0] = zone;
@@ -988,6 +1086,7 @@ function SetupZones()
 		zone.gameObject gameobjects::set_model_visibility( false );
 		zone.trig.useObj = zone.gameObject;
 		zone.trig.remote_control_player_can_trigger = true;
+		zone setUpNearbySpawns();
 		zone createZoneSpawnInfluencer();
 	}
 	
@@ -999,7 +1098,7 @@ function SetupZones()
 			println(maperrors[i]);
 		println("^1------------------------------------");
 		
-		util::error("Map errors. See above");
+		println("Map errors. See above");
 		#/
 		callback::abort_level();
 		
@@ -1020,8 +1119,8 @@ function setupZoneExclusions()
 {
 	if ( !isdefined( level.levelkothDisable ) ) 
 		return;
-
-  foreach( nullZone in level.levelkothDisable )
+		
+  	foreach( nullZone in level.levelkothDisable )
 	{
 		mindist = 10000000000;
 		foundZone = undefined;
@@ -1047,6 +1146,49 @@ function setupZoneExclusions()
 		}
 	}
 
+}
+
+function setUpNearbySpawns()
+{
+	spawns = level.spawn_all;
+	
+	for ( i = 0; i < spawns.size; i++ )
+	{
+		spawns[i].distsq = distanceSquared( spawns[i].origin, self.origin );
+	}
+	
+	// sort by distsq
+	for ( i = 1; i < spawns.size; i++ )
+	{
+		thespawn = spawns[i];
+		for ( j = i - 1; j >= 0 && thespawn.distsq < spawns[j].distsq; j-- )
+			spawns[j + 1] = spawns[j];
+		spawns[j + 1] = thespawn;
+	}
+	
+	first = [];
+	second = [];
+	third = [];
+	outer = [];
+	
+	thirdSize = spawns.size / 3;
+	for ( i = 0; i <= thirdSize; i++ )
+	{
+		first[ first.size ] = spawns[i];
+	}
+	for ( ; i < spawns.size; i++ )
+	{
+		outer[ outer.size ] = spawns[i];
+		if ( i <= (thirdSize*2) )
+			second[ second.size ] = spawns[i];
+		else			
+			third[ third.size ] = spawns[i];
+	}
+	
+	self.gameObject.nearSpawns = first;
+	self.gameObject.midSpawns = second;
+	self.gameObject.farSpawns = third;
+	self.gameObject.outerSpawns = outer;
 }
 
 function GetFirstZone()
@@ -1257,6 +1399,7 @@ function onRoundSwitch()
 	game["switchedsides"] = !game["switchedsides"];
 }
 
+
 function onPlayerKilled( eInflictor, attacker, iDamage, sMeansOfDeath, weapon, vDir, sHitLoc, psOffsetTime, deathAnimDuration )
 {
 	if ( !isPlayer( attacker ) || (level.captureTime && !self.touchTriggers.size && !attacker.touchTriggers.size) || attacker.pers["team"] == self.pers["team"] )
@@ -1295,10 +1438,13 @@ function onPlayerKilled( eInflictor, attacker, iDamage, sMeansOfDeath, weapon, v
 				if ( !medalGiven ) 
 				{
 					attacker medals::offenseGlobalCount();
+					attacker thread challenges::killedBaseOffender(level.zone.trig, weapon);
 					
 					medalGiven = true;
 				}
+				//scoreevents::processScoreEvent( "killed_defender", attacker, undefined, weapon );// TFLAME 9/3/12 - Changing these events to "hardpoint_kill" as attacker / defender changes so often in Hardpoint
 				scoreevents::processScoreEvent( "hardpoint_kill", attacker, undefined, weapon );
+				self RecordKillModifier("defending");
 				scoreEventProcessed = true;
 			}
 			else
@@ -1313,8 +1459,13 @@ function onPlayerKilled( eInflictor, attacker, iDamage, sMeansOfDeath, weapon, v
 
 					attacker medals::defenseGlobalCount();
 					medalGiven = true;
+					attacker thread challenges::killedBaseDefender(level.zone.trig);
+					attacker RecordGameEvent("defending");
 				}
+				attacker challenges::killedZoneAttacker( weapon );
+				//scoreevents::processScoreEvent( "killed_attacker", attacker, undefined, weapon ); // TFLAME 9/3/12 - Changing these events to "hardpoint_kill" as attacker / defender changes so often in Hardpoint
 				scoreevents::processScoreEvent( "hardpoint_kill", attacker, undefined, weapon );
+				self RecordKillModifier("assaulting");
 				scoreEventProcessed = true;
 			}
 		}		
@@ -1343,10 +1494,15 @@ function onPlayerKilled( eInflictor, attacker, iDamage, sMeansOfDeath, weapon, v
 
 					attacker medals::defenseGlobalCount();
 					medalGiven = true;
+					attacker thread challenges::killedBaseDefender(level.zone.trig);
+					attacker RecordGameEvent("defending");
 				}
 				if ( scoreEventProcessed == false )
 				{
+					attacker challenges::killedZoneAttacker( weapon );
+					//scoreevents::processScoreEvent( "killed_attacker", attacker, undefined, weapon );// TFLAME 9/3/12 - Changing these events to "hardpoint_kill" as attacker / defender changes so often in Hardpoint
 					scoreevents::processScoreEvent( "hardpoint_kill", attacker, undefined, weapon );
+					self RecordKillModifier("assaulting");
 				}
 			}
 			else
@@ -1355,10 +1511,13 @@ function onPlayerKilled( eInflictor, attacker, iDamage, sMeansOfDeath, weapon, v
 				{
 					attacker medals::offenseGlobalCount();
 					medalGiven = true;
+					attacker thread challenges::killedBaseOffender(level.zone.trig, weapon);
 				}
 				if ( scoreEventProcessed == false )
 				{
+					//scoreevents::processScoreEvent( "killed_defender", attacker, undefined, weapon );// TFLAME 9/3/12 - Changing these events to "hardpoint_kill" as attacker / defender changes so often in Hardpoint
 					scoreevents::processScoreEvent( "hardpoint_kill", attacker, undefined, weapon );
+					self RecordKillModifier("defending");
 				}
 			}		
 		}
@@ -1414,10 +1573,47 @@ function onEndGame( winningTeam )
 
 function createZoneSpawnInfluencer()
 {
-	// this affects both teams
+		// this affects both teams
 	self spawning::create_influencer( "koth_large", self.gameobject.curOrigin, 0 );
 	self spawning::create_influencer( "koth_small", self.gameobject.curOrigin, 0 );
 
 	// turn it off for now
 	self spawning::enable_influencers(false);
+}
+
+function updateCapsPerMinute(lastOwnerTeam)
+{
+	if ( !isdefined( self.capsPerMinute ) )
+	{
+		self.numCaps = 0;
+		self.capsPerMinute = 0;
+	}
+	
+	// not including neutral flags as part of the boosting prevention
+	// to help with false positives at the start
+	if ( !isdefined ( lastOwnerTeam ) || lastOwnerTeam == "neutral" )
+		return;
+		
+	self.numCaps++;
+	
+	minutesPassed = globallogic_utils::getTimePassed() / ( 60 * 1000 );
+	
+	// players use the actual time played
+	if ( IsPlayer( self ) && isdefined(self.timePlayed["total"]) )
+		minutesPassed = self.timePlayed["total"] / 60;
+		
+	self.capsPerMinute = self.numCaps / minutesPassed;
+	if ( self.capsPerMinute > self.numCaps )
+		self.capsPerMinute = self.numCaps;
+}
+
+function isScoreBoosting( player )
+{
+	if ( !level.rankedMatch )
+		return false;
+		
+	if ( player.capsPerMinute > level.playerCaptureLPM )
+		return true;
+
+	return false;
 }

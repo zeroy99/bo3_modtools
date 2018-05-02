@@ -1,3 +1,5 @@
+#insert scripts\shared\shared.gsh;
+
 #namespace clientfield;
 
 /@
@@ -12,7 +14,10 @@
 "Example: level clientfield::register( "generator_state", 1 );"
 "SPMP: both"
 @/
-function register( str_pool_name, str_name, n_version, n_bits, str_type ) {}
+function register( str_pool_name, str_name, n_version, n_bits, str_type )
+{
+	RegisterClientField( str_pool_name, str_name, n_version, n_bits, str_type );
+}
 
 /@
 "Name: set( <str_field_name>, <n_value> )"
@@ -24,7 +29,17 @@ function register( str_pool_name, str_name, n_version, n_bits, str_type ) {}
 "Example: level clientfield::set( "generator_state", 1 );"
 "SPMP: both"
 @/
-function set( str_field_name, n_value ) {}
+function set( str_field_name, n_value )
+{
+	if( self == level )
+	{
+		CodeSetWorldClientField( str_field_name, n_value );
+	}
+	else
+	{
+		CodeSetClientField(self, str_field_name, n_value );
+	}
+}
 
 
 /@
@@ -37,7 +52,10 @@ function set( str_field_name, n_value ) {}
 "Example: player clientfield::set_to_player( "is_speaking", 1 );"
 "SPMP: both"
 @/
-function set_to_player( str_field_name, n_value ) {}
+function set_to_player( str_field_name, n_value )
+{
+	CodeSetPlayerStateClientField( self, str_field_name, n_value );
+}
 
 
 /@
@@ -50,7 +68,10 @@ function set_to_player( str_field_name, n_value ) {}
 "Example: player clientfield::set_player_uimodel( "hudItems.killcamAllowRespawn", 1 );"
 "SPMP: both"
 @/
-function set_player_uimodel( str_field_name, n_value ) {}
+function set_player_uimodel( str_field_name, n_value )
+{
+	CodeSetUIModelClientField( self, str_field_name, n_value );
+}
 
 
 /@
@@ -62,7 +83,10 @@ function set_player_uimodel( str_field_name, n_value ) {}
 "Example: player clientfield::get_player_uimodel( "hudItems.killcamAllowRespawn" );"
 "SPMP: both"
 @/
-function get_player_uimodel( str_field_name ) {}
+function get_player_uimodel( str_field_name )
+{
+	return CodeGetUIModelClientField( self, str_field_name );
+}
 
 /@
 "Name: increment( <str_field_name> )"
@@ -74,7 +98,20 @@ function get_player_uimodel( str_field_name ) {}
 "Example: level clientfield::increment( "generator_state" );"
 "SPMP: both"
 @/
-function increment( str_field_name, n_increment_count = 1 ) {}
+function increment( str_field_name, n_increment_count = 1 )
+{
+	for ( i = 0; i < n_increment_count; i++ )
+	{
+		if ( self == level )
+		{
+			CodeIncrementWorldClientField( str_field_name );
+		}
+		else
+		{
+			CodeIncrementClientField( self, str_field_name );
+		}
+	}
+}
 
 /@
 "Name: increment_uimodel( <str_field_name> )"
@@ -86,7 +123,26 @@ function increment( str_field_name, n_increment_count = 1 ) {}
 "Example: level clientfield::increment_uimodel( "hudItems.damageNotifies" );"
 "SPMP: both"
 @/
-function increment_uimodel( str_field_name, n_increment_count = 1 ) {}
+function increment_uimodel( str_field_name, n_increment_count = 1 )
+{
+	if ( self == level )
+	{
+		foreach ( player in level.players )
+		{
+			for ( i = 0; i < n_increment_count; i++ )
+			{
+				CodeIncrementUIModelClientField( player, str_field_name );
+			}
+		}
+	}
+	else
+	{
+		for ( i = 0; i < n_increment_count; i++ )
+		{
+			CodeIncrementUIModelClientField( self, str_field_name );
+		}
+	}
+}
 
 
 /@
@@ -99,7 +155,13 @@ function increment_uimodel( str_field_name, n_increment_count = 1 ) {}
 "Example: player clientfield::increment_to_player( "is_speaking" );"
 "SPMP: both"
 @/
-function increment_to_player( str_field_name, n_increment_count = 1 ) {} 
+function increment_to_player( str_field_name, n_increment_count = 1 )
+{
+	for ( i = 0; i < n_increment_count; i++ )
+	{
+		CodeIncrementPlayerStateClientField( self, str_field_name );
+	}
+}
 
 
 /@
@@ -111,7 +173,17 @@ function increment_to_player( str_field_name, n_increment_count = 1 ) {}
 "Example: n_generator_state = level clientfield::get( "generator_state" );"
 "SPMP: both"
 @/
-function get( str_field_name ) {}
+function get( str_field_name )
+{
+	if( self == level )
+	{
+		return CodeGetWorldClientField( str_field_name );
+	}
+	else
+	{
+		return CodeGetClientField( self, str_field_name );
+	}
+}
 
 
 /@
@@ -123,4 +195,7 @@ function get( str_field_name ) {}
 "Example: n_speaking_state = player clientfield::get_to_player( "is_speaking" );"
 "SPMP: both"
 @/
-function get_to_player( field_name ) {}
+function get_to_player( field_name )
+{
+	return CodeGetPlayerStateClientField( self, field_name );
+}

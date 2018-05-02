@@ -1,3 +1,7 @@
+
+function init() {}
+function delete() {}
+
 /@
 "Name: get( <kvp_value> , [kvp_key] )"
 "Summary: Returns a struct with the specified kvp."

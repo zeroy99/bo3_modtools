@@ -126,6 +126,7 @@ function main()
 	scene::add_scene_func("p7_fxanim_zm_factory_bridge_rt_bundle", &bridge_disconnect , "init" );
 	scene::add_scene_func("p7_fxanim_zm_factory_bridge_rt_bundle", &bridge_connect , "done" );	
 
+	level.randomize_perk_machine_location = true; // set before zm_usermap::main 
 	level.dog_rounds_allowed=1; // set before zm_usermap::main
 	
 	zm_usermap::main();

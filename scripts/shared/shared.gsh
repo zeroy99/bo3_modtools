@@ -132,6 +132,7 @@
 #define PHYSICS_TRACE_MASK_WATER		(1 << 2)
 #define PHYSICS_TRACE_MASK_CLIP			(1 << 3)
 #define PHYSICS_TRACE_MASK_VEHICLE_CLIP	(1 << 4)
+#define PHYSICS_TRACE_MASK_PLAYER	(1 << 5)
 
 // Navmesh materials
 #define NAVMESH_MATERIAL_NONE			0

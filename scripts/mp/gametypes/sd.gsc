@@ -12,11 +12,7 @@
 #using scripts\shared\util_shared;
 #using scripts\mp\gametypes\_dogtags;
 #using scripts\mp\gametypes\_globallogic_spawn;
-
 #using scripts\shared\abilities\gadgets\_gadget_resurrect;
-
-#insert scripts\shared\shared.gsh;
-
 #using scripts\mp\gametypes\_battlechatter;
 #using scripts\mp\gametypes\_globallogic;
 #using scripts\mp\gametypes\_globallogic_audio;
@@ -27,9 +23,14 @@
 #using scripts\mp\gametypes\_spawning;
 #using scripts\mp\gametypes\_spawnlogic;
 #using scripts\mp\gametypes\_spectating;
-
 #using scripts\mp\_challenges;
 #using scripts\mp\_util;
+
+#insert scripts\shared\shared.gsh;
+
+// Rallypoints should be destroyed on leaving your team/getting killed
+// Compass icons need to be looked at
+// Doesn't seem to be setting angle on spawn so that you are facing your rallypoint
 
 /*
 	Search and Destroy
@@ -100,6 +101,12 @@
 			Setting script_noteworthy on a bombzone trigger to an exploder group can be used to trigger additional effects.
 */
 
+/*QUAKED mp_sd_spawn_attacker (0.0 1.0 0.0) (-16 -16 0) (16 16 72)
+Attacking players spawn randomly at one of these positions at the beginning of a round.*/
+
+/*QUAKED mp_sd_spawn_defender (1.0 0.0 0.0) (-16 -16 0) (16 16 72)
+Defending players spawn randomly at one of these positions at the beginning of a round.*/
+
 #define CARRY_ICON_X 130
 #define CARRY_ICON_Y -60
 	
@@ -142,6 +149,7 @@
 #precache( "string", "MP_BOMB_DEFUSED" );
 #precache( "string", "bomb" );
 #precache( "triggerstring", "PLATFORM_HOLD_TO_DEFUSE_EXPLOSIVES" );
+#precache( "triggerstring", "PLATFORM_HOLD_TO_PLANT_EXPLOSIVES" );
 
 function main()
 {
@@ -167,8 +175,11 @@ function main()
 	level.onOneLeftEvent =&onOneLeftEvent;
 	level.onTimeLimit =&onTimeLimit;
 	level.onRoundSwitch =&onRoundSwitch;
-	level.getTeamKillPenalty = &sd_getTeamKillPenalty;
-
+	level.getTeamKillPenalty =&sd_getTeamKillPenalty;
+	level.getTeamKillScore =&sd_getTeamKillScore;
+	level.isKillBoosting =&sd_isKillBoosting;
+	level.figure_out_gametype_friendly_fire = &figureOutGameTypeFriendlyFire;
+	
 	level.endGameOnScoreLimit = false;
 	
 	gameobjects::register_allowed_gameobject( level.gameType );
@@ -202,6 +213,19 @@ function sd_getTeamKillPenalty( eInflictor, attacker, sMeansOfDeath, weapon )
 	
 	return teamkill_penalty;
 }
+
+function sd_getTeamKillScore( eInflictor, attacker, sMeansOfDeath, weapon )
+{
+	teamkill_score = rank::getScoreInfoValue( "team_kill" );
+	
+	if ( ( isdefined( self.isDefusing ) && self.isDefusing ) || ( isdefined( self.isPlanting ) && self.isPlanting ) )
+	{
+		teamkill_score = teamkill_score * level.teamKillScoreMultiplier;
+	}
+	
+	return int(teamkill_score);
+}
+
 
 function onRoundSwitch()
 {
@@ -318,7 +342,8 @@ function onStartGameType()
 
 	spawnpoint = spawnlogic::get_random_intermission_point();
 	setDemoIntermissionPoint( spawnpoint.origin, spawnpoint.angles );
-		
+	
+	
 	level.spawn_start = [];
 	
 	level.spawn_start["axis"] = spawnlogic::get_spawnpoint_array( "mp_sd_spawn_defender" );
@@ -328,6 +353,7 @@ function onStartGameType()
 	
 	thread bombs();
 }
+
 
 function onSpawnPlayer(predictedSpawn)
 {
@@ -381,6 +407,8 @@ function onPlayerKilled(eInflictor, attacker, iDamage, sMeansOfDeath, weapon, vD
 		if ( game["defenders"] == self.pers["team"] )
 		{
 			attacker medals::offenseGlobalCount();
+			attacker thread challenges::killedBaseDefender( currentObjective );
+			self RecordKillModifier("defending");
 			scoreevents::processScoreEvent( "killed_defender", attacker, self, weapon );
 		}
 		else
@@ -392,10 +420,25 @@ function onPlayerKilled(eInflictor, attacker, iDamage, sMeansOfDeath, weapon, vD
 			}
 
 			attacker medals::defenseGlobalCount();
+			attacker thread challenges::killedBaseOffender( currentObjective, weapon );
+			self RecordKillModifier("assaulting");
 			scoreevents::processScoreEvent( "killed_attacker", attacker, self, weapon );
 		}
 	}
+	
+	if ( isPlayer( attacker ) && attacker.pers["team"] != self.pers["team"] && isdefined( self.isBombCarrier ) && self.isBombCarrier == true )
+	{
+		self RecordKillModifier("carrying");
+		
+		attacker RecordGameEvent("kill_carrier");
 	}
+
+	if( self.isPlanting == true )
+		self RecordKillModifier("planting");
+
+	if( self.isDefusing == true )
+		self RecordKillModifier("defusing");
+}
 
 
 function checkAllowSpectating()
@@ -512,6 +555,7 @@ function warnLastPlayer( team )
 
 }
 
+
 function giveLastAttackerWarning( team )
 {
 	self endon("death");
@@ -529,10 +573,12 @@ function giveLastAttackerWarning( team )
 		enemyTeam = game["attackers"];
 	}
 
+	
 	if ( level.aliveCount[enemyTeam] > 2 )
 	{
 		self.lastManSDDefeat3Enemies = true;
 	}
+
 
 	while(1)
 	{
@@ -551,6 +597,7 @@ function giveLastAttackerWarning( team )
 	self playlocalsound ("mus_last_stand");	
 }
 
+
 function updateGametypeDvars()
 {
 	level.plantTime = GetGametypeSetting( "plantTime" );
@@ -559,6 +606,7 @@ function updateGametypeDvars()
 	level.multiBomb = GetGametypeSetting( "multiBomb" );
 
 	level.teamKillPenaltyMultiplier = GetGametypeSetting( "teamKillPenalty" );
+	level.teamKillScoreMultiplier = GetGametypeSetting( "teamKillScore" );
 	
 	level.playerKillsMax = GetGametypeSetting( "playerKillsMax" );
 	level.totalKillsMax = GetGametypeSetting( "totalKillsMax" );
@@ -573,14 +621,14 @@ function bombs()
 	trigger = getEnt( "sd_bomb_pickup_trig", "targetname" );
 	if ( !isdefined( trigger ) )
 	{
-		/#util::error("No sd_bomb_pickup_trig trigger found in map.");#/
+		/#println("No sd_bomb_pickup_trig trigger found in map.");#/
 		return;
 	}
 	
 	visuals[0] = getEnt( "sd_bomb", "targetname" );
 	if ( !isdefined( visuals[0] ) )
 	{
-		/#util::error("No sd_bomb script_model found in map.");#/
+		/#println("No sd_bomb script_model found in map.");#/
 		return;
 	}
 
@@ -639,8 +687,12 @@ function bombs()
 		bombZone.onCantUse =&onCantUse;
 		bombZone.useWeapon = GetWeapon( "briefcase_bomb" );
 		bombZone.visuals[0].killCamEnt = spawn( "script_model", bombZone.visuals[0].origin + (0,0,128) );
+		
+		if ( isdefined( level.bomb_zone_fixup ) )
+			[[ level.bomb_zone_fixup ]]( bombZone );
+		
 		if ( !level.multiBomb )
-		bombZone.trigger SetInvisibleToAll();
+			bombZone.trigger SetInvisibleToAll();
 		
 		for ( i = 0; i < visuals.size; i++ )
 		{
@@ -715,8 +767,7 @@ function onBeginUse( player )
 			}
 		}
 	}
-	
-  player playSound( "fly_bomb_raise_plr" );
+		player playSound( "fly_bomb_raise_plr" );
 }
 
 function onEndUse( team, player, result )
@@ -789,6 +840,7 @@ function onUsePlantObject( player )
 		globallogic_audio::leader_dialog( "bombPlanted" );
 
 		scoreevents::processScoreEvent( "planted_bomb", player );
+		player RecordGameEvent("plant");
 	}
 }
 
@@ -829,6 +881,7 @@ function onUseDefuseObject( player )
 	{
 		scoreevents::processScoreEvent( "defused_bomb", player );
 	}
+	player RecordGameEvent("defuse");
 }
 
 
@@ -862,6 +915,8 @@ function onPickup( player )
 {
 	player.isBombCarrier = true;
 
+	player RecordGameEvent("pickup"); 
+
 	self gameobjects::set_3d_icon( "friendly", "waypoint_defend" );
 
 	if ( !level.bombDefused )
@@ -871,6 +926,7 @@ function onPickup( player )
 			player AddPlayerStatWithGameType( "PICKUPS", 1 );
 		}
 			
+		//thread sound::play_on_players( "mus_sd_pickup"+"_"+level.teamPostfix[player.pers["team"]], player.pers["team"] );
 		// New Music System
 		team = self gameobjects::get_owner_team();
 		otherTeam = util::getOtherTeam( team );
@@ -878,6 +934,7 @@ function onPickup( player )
 		globallogic_audio::leader_dialog( "bombFriendlyTaken", game["attackers"] );
 		/#print( "bomb taken" );#/
 	}		
+	//sound::play_on_players( game["bomb_recovered_sound"], game["attackers"] );
 	player playsound ( "fly_bomb_pickup_plr" );
 
 	for ( i = 0; i < level.bombZones.size; i++ )
@@ -904,12 +961,6 @@ function bombPlantedMusicDelay()
 	//wait for 30 seconds until explosion
 	
 	time = (level.bombtimer - 30);
-/#
-	if( GetDvarint( "debug_music" ) > 0 )
-	{		
-		println ("Music System - waiting to set TIME_OUT: " + time );
-	}
-#/
 	if (time > 1)
 	{
 		wait (time);
@@ -946,6 +997,7 @@ function bombPlanted( destroyedObj, player )
 		SetMatchFlag( "bomb_timer_b", 1 );
 	}
 	
+
 	if ( !level.multiBomb )
 	{
 		level.sdBomb gameobjects::allow_carry( "none" );
@@ -975,12 +1027,7 @@ function bombPlanted( destroyedObj, player )
 	}
 	destroyedObj gameobjects::allow_use( "none" );
 	destroyedObj gameobjects::set_visible_team( "none" );
-	/*
-	destroyedObj gameobjects::set_2d_icon( "friendly", undefined );
-	destroyedObj gameobjects::set_2d_icon( "enemy", undefined );
-	destroyedObj gameobjects::set_3d_icon( "friendly", undefined );
-	destroyedObj gameobjects::set_3d_icon( "enemy", undefined );
-	*/
+
 	label = destroyedObj gameobjects::get_label();
 	
 	// create a new object to defuse with.
@@ -1036,6 +1083,7 @@ function bombPlanted( destroyedObj, player )
 		scoreevents::processScoreEvent( "bomb_detonated", player );
 		player AddPlayerStatWithGameType( "DESTRUCTIONS", 1 );
 		player AddPlayerStatWithGameType( "captures", 1 ); // counts towards Destroyer challenge
+		player RecordGameEvent("destroy");
 	}
 	else
 		destroyedObj.visuals[0] radiusDamage( explosionOrigin, 512, 200, 20, undefined, "MOD_EXPLOSIVE", GetWeapon( "briefcase_bomb" ) );
@@ -1087,4 +1135,36 @@ function bombDefused( defusedObject, player )
 	setGameEndTime( 0 );
 	
 	sd_endGame( game["defenders"], game["strings"]["bomb_defused"] );
+}
+
+function sd_isKillBoosting()
+{
+	roundsPlayed = util::getRoundsPlayed();
+
+	if ( level.playerKillsMax == 0 )
+		return false;
+		
+	if ( game["totalKills"] > ( level.totalKillsMax * (roundsPlayed + 1) ) )
+		return true;
+		
+	if ( self.kills > ( level.playerKillsMax * (roundsPlayed + 1)) )
+		return true;
+		
+	if ( level.teambased && (self.team == "allies" || self.team == "axis" ))
+	{
+		if ( game["totalKillsTeam"][self.team] > ( level.playerKillsMax * (roundsPlayed + 1)) )
+			return true;
+	}
+	
+	return false;
+}
+
+function figureOutGameTypeFriendlyFire( victim )
+{
+	if ( level.hardcoreMode && level.friendlyfire > 0 && isdefined( victim ) && ( victim.isPlanting === true || victim.isDefusing === true ) )
+	{
+		return 2; // FF 2 = reflect; design wants reflect friendly fire whenever a player is planting or defusing in SD.
+	}
+
+	return level.friendlyfire;
 }

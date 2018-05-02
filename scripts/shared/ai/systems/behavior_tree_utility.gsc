@@ -1,9 +1,4 @@
+#insert scripts\shared\ai\systems\behavior_tree.gsh;
 
 #namespace BehaviorTreeNetwork;	
-
-#namespace BehaviorTreeNetworkUtility;
-
-function RegisterBehaviorTreeScriptAPI( functionName, functionPtr ) {}
-
-function RegisterBehaviorTreeAction( actionName, startFuncPtr, updateFuncPtr, terminateFuncPtr ) {}
 

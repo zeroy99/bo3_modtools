@@ -50,6 +50,7 @@ function give_start_weapon( switch_to_weapon ) {}
 
 function is_magic_bullet_shield_enabled( ent ) {}
 
+function get_non_destroyed_chunks( barrier, barrier_chunks ) {}
 
 
 
