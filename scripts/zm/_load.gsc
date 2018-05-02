@@ -1,0 +1,6 @@
+
+
+#namespace load;
+
+function main() {}
+
