@@ -141,6 +141,9 @@ function init_widows_wine()
 
 	zm_utility::register_melee_weapon_for_level( WIDOWS_WINE_BOWIE_KNIFE );
 	level.w_widows_wine_bowie_knife = GetWeapon( WIDOWS_WINE_BOWIE_KNIFE );
+	
+	zm_utility::register_melee_weapon_for_level( WIDOWS_WINE_SICKLE_KNIFE );
+	level.w_widows_wine_sickle_knife = GetWeapon( WIDOWS_WINE_SICKLE_KNIFE );
 }
 
 //--------------------------------------------------------------------------
@@ -181,6 +184,12 @@ function widows_wine_perk_activate()
 			// Give the widow's wine bowie knife
 			self GiveWeapon( level.w_widows_wine_bowie_knife );
 			self zm_utility::set_player_melee_weapon( level.w_widows_wine_bowie_knife );
+		}
+		else if( self.w_widows_wine_prev_knife.name == "sickle_knife" )
+		{
+			// Give the widow's wine sickle knife
+			self GiveWeapon( level.w_widows_wine_sickle_knife );
+			self zm_utility::set_player_melee_weapon( level.w_widows_wine_sickle_knife );
 		}
 		else
 		{
@@ -310,7 +319,7 @@ function widows_wine_zombie_death_watch( attacker )
 			{
 				chance = WW_POWERUP_DROP_CHANCE_WEBBING;
 			}
-			else if ( isdefined( self.damageweapon ) && ( self.damageweapon == level.w_widows_wine_knife || self.damageweapon == level.w_widows_wine_bowie_knife ) )
+			else if ( isdefined( self.damageweapon ) && ( self.damageweapon == level.w_widows_wine_knife || self.damageweapon == level.w_widows_wine_bowie_knife  || self.damageweapon == level.w_widows_wine_sickle_knife ) )
 			{
 				chance = WW_POWERUP_DROP_CHANCE_MELEE;
 			}
@@ -441,7 +450,7 @@ function widows_wine_cocoon_zombie( e_player )
 		self thread widows_wine_cocoon_zombie_score( e_player, WIDOWS_WINE_COCOON_DURATION, WIDOWS_WINE_COCOON_MAX_SCORE );
 	}
 	
-	self util::waittill_any_timeout( WIDOWS_WINE_COCOON_DURATION, "death" );
+	self util::waittill_any_timeout( WIDOWS_WINE_COCOON_DURATION, "death", "widows_wine_cocoon" );
 
 	if (!IsDefined(self))
 		return; 
@@ -492,7 +501,7 @@ function widows_wine_slow_zombie( e_player )
 		self ASMSetAnimationRate( widows_wine_slow_fraction_rate );
 		self clientfield::set( CF_WIDOWS_WINE_WRAP, 1 );	// turn on wrap FX
 	}
-	self util::waittill_any_timeout( WIDOWS_WINE_SLOW_DURATION, "death" );
+	self util::waittill_any_timeout( WIDOWS_WINE_SLOW_DURATION, "death", "widows_wine_slow" );
 
 	if (!IsDefined(self))
 		return; 
@@ -610,10 +619,19 @@ function widows_wine_perk_lost( b_pause, str_perk, str_result )
 	}
 	grenade = self zm_utility::get_player_lethal_grenade(); 
 	self GiveStartAmmo( grenade );
-	
-	if( self.w_widows_wine_prev_knife.name == "bowie_knife" )
+
+	// widows wine knife can be bypassed by better melee weapon, ie. one inch punch
+	if( isdefined( self.current_melee_weapon ) && !IsSubStr( self.current_melee_weapon.name, "widows_wine" ) )
+	{
+		self.w_widows_wine_prev_knife = self.current_melee_weapon;
+	}
+	else if( self.w_widows_wine_prev_knife.name == "bowie_knife" )
 	{
 		self TakeWeapon( level.w_widows_wine_bowie_knife );
+	}
+	else if( self.w_widows_wine_prev_knife.name == "sickle_knife" )
+	{
+		self TakeWeapon( level.w_widows_wine_sickle_knife );
 	}
 	else
 	{
@@ -633,40 +651,22 @@ function widows_wine_perk_lost( b_pause, str_perk, str_result )
 
 function widows_wine_override_wallbuy_purchase( weapon, wallbuy ) 
 {
+	// Can not buy ammo for Widows Wine from wall.
 	if ( zm_utility::is_lethal_grenade( weapon ) )
 	{
-		ammo_cost = zm_weapons::get_ammo_cost( weapon );
-		cost = zm_weapons::get_weapon_cost( weapon );
-		
-		if ( self zm_score::can_player_purchase( ammo_cost ) ) // if the player does have this then give him ammo.
+		wallbuy zm_utility::play_sound_on_ent( "no_purchase" );
+		if ( isdefined( level.custom_generic_deny_vo_func ) )
 		{
-			if ( wallbuy.first_time_triggered == false )
-			{
-				wallbuy zm_weapons::show_all_weapon_buys( self, cost, ammo_cost, true );
-			}
-			
-			if ( self getammocount( self.current_lethal_grenade ) < self.current_lethal_grenade.maxAmmo )
-			{
-				self zm_score::minus_to_player_score( ammo_cost ); 
-				self zm_utility::play_sound_on_ent( "purchase" ); 
-				self GiveMaxAmmo( self.current_lethal_grenade );
-			}
+			self [[level.custom_generic_deny_vo_func]]();
 		}
 		else
 		{
-			wallbuy zm_utility::play_sound_on_ent( "no_purchase" );
-			if ( isDefined( level.custom_generic_deny_vo_func ) )
-			{
-				self [[level.custom_generic_deny_vo_func]]();
-			}
-			else
-			{
-				self zm_audio::create_and_play_dialog( "general", "outofmoney" );
-			}
+			self zm_audio::create_and_play_dialog( "general", "sigh" );
 		}
 
 		return true; 
 	}
+	
 	return false; 
 }
 
@@ -704,9 +704,13 @@ function widows_wine_override_melee_wallbuy_purchase( vo_dialog_id, flourish_wea
 				self zm_score::minus_to_player_score( cost ); 
 				
 
-				assert( weapon.name == "bowie_knife" ); 
+				assert( weapon.name == "bowie_knife" || weapon.name == "sickle_knife" ); 
 				self.w_widows_wine_prev_knife = weapon;
 				if( self.w_widows_wine_prev_knife.name == "bowie_knife" )
+				{
+					self thread zm_melee_weapon::give_melee_weapon( vo_dialog_id, flourish_weapon, weapon, ballistic_weapon, ballistic_upgraded_weapon, flourish_fn, wallbuy );
+				}
+				else if( self.w_widows_wine_prev_knife.name == "sickle_knife" )
 				{
 					self thread zm_melee_weapon::give_melee_weapon( vo_dialog_id, flourish_weapon, weapon, ballistic_weapon, ballistic_upgraded_weapon, flourish_fn, wallbuy );
 				}

@@ -157,6 +157,9 @@
 #define LOCOMOTION_SPEED_RUN			"locomotion_speed_run"
 #define LOCOMOTION_SPEED_SPRINT			"locomotion_speed_sprint"
 #define LOCOMOTION_SPEED_SUPER_SPRINT	"locomotion_speed_super_sprint"
+#define LOCOMOTION_SPEED_JUMP_PAD_SUPER_SPRINT	"locomotion_speed_jump_pad_super_sprint"
+#define LOCOMOTION_SPEED_BURNED			"locomotion_speed_burned"
+#define LOCOMOTION_SPEED_SLIDE			"locomotion_speed_slide"
 
 #define	HAS_LEGS_TYPE					"_has_legs"
 #define	HAS_LEGS_YES					"has_legs_yes"
@@ -225,6 +228,27 @@
 #define MECHZ_PART_FACEPLATE			"mechz_faceplate"
 #define MECHZ_PART_POWERCORE			"mechz_powercore"
 #define MECHZ_PART_GUN					"mechz_gun"	
+
+#define WHIRLWIND_SPEED					"_whirlwind_speed"
+#define WHIRLWIND_NORMAL				"whirlwind_normal"
+#define WHIRLWIND_FAST					"whirlwind_fast"
+
+#define QUAD_WALL_CRAWL					"_quad_wall_crawl"
+#define QUAD_WALL_CRAWL_START			"quad_wall_crawl_start"
+#define QUAD_WALL_CRAWL_THEATER			"quad_wall_crawl_theater"
+
+#define QUAD_PHASE_DIRECTION			"_quad_phase_direction"
+#define QUAD_PHASE_LEFT					"quad_phase_left"
+#define QUAD_PHASE_RIGHT				"quad_phase_right"
+#define QUAD_PHASE_FORWARD				"quad_phase_forward"
+
+#define QUAD_PHASE_DISTANCE				"_quad_phase_distance"
+#define QUAD_PHASE_SHORT				"quad_phase_short"
+#define QUAD_PHASE_LONG					"quad_phase_long"
+	
+#define BLACKHOLEBOMB_PULL_STATE		"_zombie_blackholebomb_pull_state"
+#define BLACKHOLEBOMB_PULL_SLOW			"bhb_pull_slow"
+#define BLACKHOLEBOMB_PULL_FAST			"bhb_pull_fast"
 	
 // -------------------------------------------- BLACKBOARD DEFINES --------------------//
 

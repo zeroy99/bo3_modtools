@@ -336,7 +336,17 @@ function run_spawn_functions()
 			util::single_thread(self, func[ "function" ], func[ "param1" ], func[ "param2" ], func[ "param3" ], func[ "param4" ] );
 		}
 
+		/#
+			self.saved_spawn_functions = self.spawn_funcs;
+		#/
+
 		self.spawn_funcs = undefined;
+
+		/#
+			// keep them around in developer mode, for debugging
+			self.spawn_funcs = self.saved_spawn_functions;
+			self.saved_spawn_functions = undefined;
+		#/
 
 		self.spawn_funcs = undefined;
 	}
@@ -681,6 +691,29 @@ function watch_for_poi_death()
 	}
 }
 
+function debug_draw_new_attractor_positions()
+{
+	self endon( "death" );
+
+	while ( 1 )
+	{
+		foreach( attract in self.attractor_positions )
+		{
+			passed = BulletTracePassed( attract[0] + (0, 0, 24), self.origin + (0, 0, 24), false, self );
+			if ( passed )
+			{
+				/# debugstar( attract[0], 6, (1,1,1) ); #/
+			}
+			else
+			{
+				/# debugstar( attract[0], 6, (1,0,0) ); #/
+			}
+		}
+		
+		WAIT_SERVER_FRAME;
+	}
+}
+
 function create_zombie_point_of_interest_attractor_positions( num_attract_dists, attract_dist )
 {
 	self endon( "death" );
@@ -704,8 +737,20 @@ function create_zombie_point_of_interest_attractor_positions( num_attract_dists,
 	}
 	for ( i = 0; i < self.num_poi_attracts; i++ )
 	{
-		self.attractor_positions[i][0] = queryResult.data[i].origin;
-		self.attractor_positions[i][1] = self;
+		if ( IS_TRUE( level.validate_poi_attractors ) )
+		{
+			passed = BulletTracePassed( queryResult.data[i].origin + (0, 0, 24), self.origin + (0, 0, 24), false, self );
+			if ( passed )
+			{
+				self.attractor_positions[i][0] = queryResult.data[i].origin;
+				self.attractor_positions[i][1] = self;
+			}
+		}
+		else
+		{
+			self.attractor_positions[i][0] = queryResult.data[i].origin;
+			self.attractor_positions[i][1] = self;
+		}
 	}
 	
 	if( !IsDefined( self.attractor_positions ) )
@@ -732,6 +777,8 @@ function create_zombie_point_of_interest_attractor_positions( num_attract_dists,
 	
 	self notify( "attractor_positions_generated" );
 	level notify( "attractor_positions_generated" );
+
+//	self thread debug_draw_new_attractor_positions();
 }
 
 function generated_radius_attract_positions( forward, offset, num_positions, attract_radius )
@@ -799,10 +846,48 @@ function generated_radius_attract_positions( forward, offset, num_positions, att
 
 function debug_draw_attractor_positions()
 {
+	/#
+	while( true )
+	{
+		while( !isDefined( self.attractor_positions ) )
+		{
+			WAIT_SERVER_FRAME;
+			continue;
+		}
+		for( i = 0; i < self.attractor_positions.size; i++ )
+		{
+			Line( self.origin, self.attractor_positions[i][0], (1, 0, 0), true, 1 );
+		}
+		WAIT_SERVER_FRAME;
+		if( !IsDefined( self ) )
+		{
+			return;
+		}
+	}
+	#/
 }
 
 function debug_draw_claimed_attractor_positions()
 {
+	/#
+	while( true )
+	{
+		while( !isDefined( self.claimed_attractor_positions ) )
+		{
+			WAIT_SERVER_FRAME;
+			continue;
+		}
+		for( i = 0; i < self.claimed_attractor_positions.size; i++ )
+		{
+			Line( self.origin, self.claimed_attractor_positions[i][0], (0, 1, 0), true, 1 );
+		}
+		WAIT_SERVER_FRAME;
+		if( !IsDefined( self ) )
+		{
+			return;
+		}
+	}
+	#/
 }
 
 function get_zombie_point_of_interest( origin, poi_array )
@@ -942,13 +1027,14 @@ function activate_zombie_point_of_interest()
 	self.poi_active = true;
 }
 
-function deactivate_zombie_point_of_interest()
+function deactivate_zombie_point_of_interest( dont_remove )
 {
 	if( self.script_noteworthy != "zombie_poi" )
 	{
 		return;
 	}
 
+	self.attractor_array = array::remove_undefined( self.attractor_array );
 	for( i = 0; i < self.attractor_array.size; i++ )
 	{
 		self.attractor_array[i] notify( "kill_poi" );
@@ -958,6 +1044,11 @@ function deactivate_zombie_point_of_interest()
 	self.claimed_attractor_positions = [];
 	
 	self.poi_active = false;
+
+	if ( IS_TRUE( dont_remove ) )
+	{
+		return;
+	}
 	
 	//Remove from list
 	if ( isdefined( self ) )
@@ -1107,6 +1198,14 @@ function add_poi_attractor( zombie_poi )
 		
 		if( !isDefined( best_pos ) )
 		{
+			if ( IS_TRUE( level.validate_poi_attractors ) )
+			{
+				valid_pos = [];
+				valid_pos[0] = zombie_poi.origin;
+				valid_pos[1] = zombie_poi;
+				return valid_pos;
+			}
+			
 			return undefined;
 		}
 		
@@ -1390,7 +1489,10 @@ function get_closest_valid_player( origin, ignore_player )
 		}
 		
 		if( IS_TRUE(level.allow_zombie_to_target_ai) || IS_TRUE(player.allow_zombie_to_target_ai) )
+		{
+			AIProfile_EndEntry();
 			return player;
+		}
 
 		// make sure they're not a zombie or in last stand
 		//if( !is_player_valid( player, true ) )
@@ -1771,23 +1873,35 @@ function non_destroyed_grate_order( origin, chunks_grate )
 					}
 					if(  ( grate_order2[i].state == "repaired" )  )
 					{
+						/#
+						IPrintLnBold(" pull bar2 ");
+						#/
 						grate_order3[i] thread show_grate_pull(); 
 						return grate_order2[i];
 						
 					}
 					else if( ( grate_order3[i].state == "repaired" ) )
 					{
+						/#
+						IPrintLnBold(" pull bar3 ");
+						#/
 						grate_order4[i] thread show_grate_pull();
 						return grate_order3[i];
 						 
 					}
 					else if( ( grate_order4[i].state == "repaired" ) )
 					{
+						/#
+						IPrintLnBold(" pull bar4 ");
+						#/
 						grate_order5[i] thread show_grate_pull();
 						return grate_order4[i];
 					}
 					else if( ( grate_order5[i].state == "repaired" ) )
 					{
+						/#
+						IPrintLnBold(" pull bar5 ");
+						#/
 						grate_order6[i] thread show_grate_pull();
 						return grate_order5[i];
 					}
@@ -2257,7 +2371,7 @@ function in_playable_area()
 
 	if( !IsDefined( playable_area ) )
 	{
-
+	/#	println( "No playable area playable_area found! Assume EVERYWHERE is PLAYABLE" );	#/
 		return true;
 	}
 	
@@ -2696,31 +2810,49 @@ function grate_order_destroyed( chunks_repair_grate )
 			
 				if( ( grate_repair_order6[i].state == "destroyed" )  )
 					{
-							// Here I will tell the other board to replace		
+							/#
+							IPrintLnBold(" Fix grate6 ");
+							#/
+								// Here I will tell the other board to replace		
 							return grate_repair_order6[i];
 					}
 					if(  ( grate_repair_order5[i].state == "destroyed" )  )
 					{
+						/#
+						IPrintLnBold(" Fix grate5 ");
+						#/
 						grate_repair_order6[i] thread show_grate_repair();		
 						return grate_repair_order5[i];
 					}
 					else if( ( grate_repair_order4[i].state == "destroyed" ) )
 					{
+						/#
+						IPrintLnBold(" Fix grate4 ");
+						#/
 						grate_repair_order5[i] thread show_grate_repair();	
 						return grate_repair_order4[i];
 					}
 					else if( ( grate_repair_order3[i].state == "destroyed" ) )
 					{
+						/#
+						IPrintLnBold(" Fix grate3 ");
+						#/
 						grate_repair_order4[i] thread show_grate_repair();	
 						return grate_repair_order3[i];
 					}
 					else if( ( grate_repair_order2[i].state == "destroyed" ) )
 					{
+						/#
+						IPrintLnBold(" Fix grate2 ");
+						#/
 						grate_repair_order3[i] thread show_grate_repair();	
 						return grate_repair_order2[i];
 					}
 					else if( ( grate_repair_order1[i].state == "destroyed" ) )
 					{
+						/#
+						IPrintLnBold(" Fix grate1 ");
+						#/
 						grate_repair_order2[i] thread show_grate_repair();	
 						// I need to return nothing here.
 						//return undefined();
@@ -2805,6 +2937,9 @@ function get_zombie_hint( ref )
 		return level.zombie_hints[ref]; 
 	}
 
+/#
+	println( "UNABLE TO FIND HINT STRING " + ref ); 
+#/
 	return level.zombie_hints["undefined"]; 
 }
 
@@ -3071,46 +3206,244 @@ function get_table_var( table, var_name, value, is_float, column )
 
 function hudelem_count()
 {
+/#
+	max = 0; 
+	curr_total = 0; 
+	while( 1 )
+	{
+		if( level.hudelem_count > max )
+		{
+			max = level.hudelem_count; 
+		}
+		
+		println( "HudElems: " + level.hudelem_count + "[Peak: " + max + "]" ); 
+		WAIT_SERVER_FRAME; 
+	}
+#/
 }
 
 function debug_round_advancer()
 {
+/#
+	while( 1 )
+	{
+		zombs = zombie_utility::get_round_enemy_array(); 
+		
+		for( i = 0; i < zombs.size; i++ )
+		{
+			zombs[i] dodamage( zombs[i].health + 666, ( 0, 0, 0 ) ); 
+			wait 0.5; 
+		}
+	}	
+#/
 }
 
 function print_run_speed( speed )
 {
+/#
+	self endon( "death" ); 
+	while( 1 )
+	{
+		print3d( self.origin +( 0, 0, 64 ), speed, ( 1, 1, 1 ) ); 
+		WAIT_SERVER_FRAME; 
+	}
+#/
 }
 
 function draw_line_ent_to_ent( ent1, ent2 )
 {
+/#
+	if( GetDvarInt( "zombie_debug" ) != 1 )
+	{
+		return; 
+	}
+
+	ent1 endon( "death" ); 
+	ent2 endon( "death" ); 
+
+	while( 1 )
+	{
+		line( ent1.origin, ent2.origin ); 
+		WAIT_SERVER_FRAME; 
+	}
+#/
 }
 
 function draw_line_ent_to_pos( ent, pos, end_on )
 {
+/#
+	if( GetDvarInt( "zombie_debug" ) != 1 )
+	{
+		return; 
+	}
+
+	ent endon( "death" ); 
+
+	ent notify( "stop_draw_line_ent_to_pos" ); 
+	ent endon( "stop_draw_line_ent_to_pos" ); 
+
+	if( IsDefined( end_on ) )
+	{
+		ent endon( end_on ); 
+	}
+
+	while( 1 )
+	{
+		line( ent.origin, pos ); 
+		WAIT_SERVER_FRAME; 
+	}
+#/
 }
 
 function debug_print( msg )
 {
+/#
+	if( GetDvarInt( "zombie_debug" ) > 0 )
+	{
+		println( "######### ZOMBIE: " + msg ); 
+	}
+#/
 }
 
 function debug_blocker( pos, rad, height )
 {
+/#
+	self notify( "stop_debug_blocker" );
+	self endon( "stop_debug_blocker" );
+	
+	for( ;; )
+	{
+		if( GetDvarInt( "zombie_debug" ) != 1 )
+		{
+			return;
+		}
+
+		WAIT_SERVER_FRAME; 
+		drawcylinder( pos, rad, height ); 
+		
+	}
+#/
 }
 
 function drawcylinder( pos, rad, height )
 {
+/#
+	currad = rad; 
+	curheight = height; 
+
+	for( r = 0; r < 20; r++ )
+	{
+		theta = r / 20 * 360; 
+		theta2 = ( r + 1 ) / 20 * 360; 
+
+		line( pos +( cos( theta ) * currad, sin( theta ) * currad, 0 ), pos +( cos( theta2 ) * currad, sin( theta2 ) * currad, 0 ) ); 
+		line( pos +( cos( theta ) * currad, sin( theta ) * currad, curheight ), pos +( cos( theta2 ) * currad, sin( theta2 ) * currad, curheight ) ); 
+		line( pos +( cos( theta ) * currad, sin( theta ) * currad, 0 ), pos +( cos( theta ) * currad, sin( theta ) * currad, curheight ) ); 
+	}
+#/
 }
 
 function print3d_at_pos( msg, pos, thread_endon, offset )
 {
+/#
+	self endon( "death" ); 
+
+	if( IsDefined( thread_endon ) )
+	{
+		self notify( thread_endon ); 
+		self endon( thread_endon ); 
+	}
+
+	if( !IsDefined( offset ) )
+	{
+		offset = ( 0, 0, 0 ); 
+	}
+
+	while( 1 )
+	{
+		print3d( self.origin + offset, msg ); 
+		WAIT_SERVER_FRAME; 
+	}
+#/
 }
 
 function debug_breadcrumbs()
 {
+/#
+	self endon( "disconnect" ); 
+	self notify("stop_debug_breadcrumbs");
+	self endon("stop_debug_breadcrumbs");
+	
+
+	while( 1 )
+	{
+		if( GetDvarInt( "zombie_debug" ) != 1 )
+		{
+			wait( 1 ); 
+			continue; 
+		}
+
+		for( i = 0; i < self.zombie_breadcrumbs.size; i++ )
+		{
+			drawcylinder( self.zombie_breadcrumbs[i], 5, 5 );
+		}
+
+		WAIT_SERVER_FRAME; 
+	}
+#/
 }
+
+/#
+function debug_attack_spots_taken()
+{
+// this section was totally commented out.
+	self notify("stop_debug_breadcrumbs");
+	self endon("stop_debug_breadcrumbs");
+	
+	while( 1 )
+	{
+		if( GetDvarInt( "zombie_debug" ) != 2 )
+		{
+			wait( 1 ); 
+			continue; 
+		}
+
+		WAIT_SERVER_FRAME;
+		count = 0;
+		for( i = 0; i < self.attack_spots_taken.size; i++ )
+		{
+			if( self.attack_spots_taken[i] )
+			{
+				count++;
+				circle(self.attack_spots[i], 12, (1,0,0), false, true, 1);
+			}
+			else
+			{
+				circle(self.attack_spots[i], 12, (0,1,0), false, true, 1);
+			}
+		}
+
+		msg = "" + count + " / " + self.attack_spots_taken.size;
+		print3d( self.origin, msg );
+	}
+
+}
+#/
 
 function float_print3d( msg, time )
 {
+/#
+	self endon( "death" );
+
+	time = GetTime() + ( time * 1000 );
+	offset = ( 0, 0, 72 );
+	while( GetTime() < time )
+	{
+		offset = offset + ( 0, 0, 2 );
+		print3d( self.origin + offset, msg, ( 1, 1, 1 ) );
+		WAIT_SERVER_FRAME;
+	}
+#/
 }
 function do_player_vo(snd, variation_count)
 {
@@ -3181,7 +3514,7 @@ function play_sound_2D(sound)
 
 function include_weapon( weapon_name, in_box )
 {
-
+/#	println( "ZM >> include_weapon = " + weapon_name );	#/
 	if( !isDefined( in_box ) )
 	{
 		in_box = true;
@@ -3240,6 +3573,13 @@ function print3d_ent( text, color, scale, offset, end_msg, overwrite )
 
 	// This way you can change the message dynamically by changing the var
 	self._debug_print3d_msg = text;
+	/#
+	while ( !IS_TRUE( level.disable_print3d_ent ) )
+	{
+		print3d( self.origin+offset, self._debug_print3d_msg, color, scale );
+		WAIT_SERVER_FRAME;
+	}
+	#/
 }
 
 //
@@ -3519,6 +3859,13 @@ function decrement_ignoreme()
 function increment_is_drinking()
 {
 	//self endon( "death" );
+	/#
+	if( IS_TRUE(level.devgui_dpad_watch) ) 
+	{
+		self.is_drinking++;
+		return;
+	}
+	#/	
 	
 	if( !isdefined(self.is_drinking) )
 		self.is_drinking = 0;
@@ -4182,7 +4529,18 @@ function has_hero_weapon()
 
 function give_start_weapon( b_switch_weapon )
 {
-	self zm_weapons::weapon_give( level.start_weapon, false, false, true, b_switch_weapon );
+	DEFAULT( self.hasCompletedSuperEE, self zm_stats::get_global_stat( "DARKOPS_GENESIS_SUPER_EE" ) > 0 );
+	
+	if( self.hasCompletedSuperEE )
+	{
+		self zm_weapons::weapon_give( level.start_weapon, false, false, true, false );
+		self GiveMaxAmmo( level.start_weapon );
+		self zm_weapons::weapon_give( level.super_ee_weapon, false, false, true, b_switch_weapon );
+	}
+	else
+	{
+		self zm_weapons::weapon_give( level.start_weapon, false, false, true, b_switch_weapon );
+	}
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -4308,13 +4666,13 @@ function giveachievement_wrapper( achievement, all_players )
 		{
 			players[i] GiveAchievement( achievement );
 			
-			has_achievement = players[i] zm_stats::get_global_stat( achievement_lower );
+			has_achievement = false; // T7 DLC5 TODO: players[i] zm_stats::get_global_stat( achievement_lower );
 			if(!IS_TRUE(has_achievement))
 			{	
 				global_counter++;
 			}
 			
-			players[i] zm_stats::increment_client_stat( achievement_lower,false );
+			// T7 DLC5 TODO: players[i] zm_stats::increment_client_stat( achievement_lower,false );
 			
 			if( issplitscreen() && i == 0 || !issplitscreen() )
 			{
@@ -4329,19 +4687,19 @@ function giveachievement_wrapper( achievement, all_players )
 	{
 		if ( !IsPlayer( self ) )
 		{
-	
+		/#	println( "^1self needs to be a player for util::giveachievement_wrapper()" );	#/
 			return;
 		}
 
 		self GiveAchievement( achievement );
 		
 		//test the stat before updating it from 0 to 1
-		has_achievement = self zm_stats::get_global_stat( achievement_lower );
+		has_achievement = false; // T7 DLC5 TODO: self zm_stats::get_global_stat( achievement_lower );
 		if(!IS_TRUE(has_achievement))
 		{	
 			global_counter++;
 		}
-		self zm_stats::increment_client_stat( achievement_lower,false );
+		// T7 DLC5 TODO: self zm_stats::increment_client_stat( achievement_lower,false );
 		
 		if(isDefined(level.achievement_sound_func))
 		{
@@ -4603,6 +4961,9 @@ function track_players_intersection_tracker()
 				if ( abs(distance_apart) > 18 )
 					continue;
 					
+/#
+				IPrintLnBold( "PLAYERS ARE TOO FRIENDLY!!!!!" );
+#/
 				players[i] dodamage( 1000, (0, 0, 0) );
 				players[j] dodamage( 1000, (0, 0, 0) );
 
@@ -4962,7 +5323,7 @@ function general_vox_timer(timer,type)
 {
 	level endon("end_game");
 	
-
+	/#	println( "ZM >> VOX TIMER STARTED FOR  " + type + " ( " + timer + ")" );	#/
 	
 	while(timer > 0 )
 	{
@@ -4970,7 +5331,7 @@ function general_vox_timer(timer,type)
 		timer--;
 	}
 	level.votimer[type] = timer;
-
+	/#	println( "ZM >> VOX TIMER ENDED FOR  " + type + " ( " + timer + ")" );	#/
 	
 	
 }
@@ -5255,7 +5616,7 @@ function link_nodes(a, b, bDontUnlinkOnMigrate = false)
 		}
 	}
 	
-//
+//	/# println("Linking node at " + a.origin + " to node at " + b.origin); #/
 	
 	LinkNodes(a,b);
 }
@@ -5296,7 +5657,7 @@ function unlink_nodes(a,b, bDontLinkOnMigrate = false)
 		}
 	}
 	
-//
+//	/# println("Unlinking node at " + a.origin + " from node at " + b.origin); #/
 	
 	UnlinkNodes(a,b);
 }
@@ -5354,7 +5715,7 @@ function delete_spawned_path_nodes()
 	//for(i = 0; i < level._spawned_path_nodes.size; i ++)
 	for(i = level._spawned_path_nodes.size - 1; i > -1; i --)		
 	{
-	
+		/# println("Deleting spawned path node @ " + level._spawned_path_nodes[i].origin); #/
 		DeletePathNode(level._spawned_path_nodes[i].node);
 		level._spawned_path_nodes[i].node = undefined;
 	}*/
@@ -5371,7 +5732,7 @@ function respawn_path_nodes()
 	{
 		node_struct = level._spawned_path_nodes[i];
 		
-	
+		/# println("Re-spawning spawned path node @ " + node_struct.origin); #/
 		node_struct.node = spawn_path_node_internal(node_struct.origin, node_struct.angles, node_struct.k1, node_struct.v1, node_struct.k2, node_struct.v2);
 	}
 }
@@ -5393,11 +5754,11 @@ function link_changes_internal_internal(list, func)
 				
 				if(IS_TRUE(list[keys[i]].ignore_on_migrate[node_keys[j]]))
 				{
-				
+					/# println("Node at " + keys[i] + " to node at " + node_keys[j] + " - IGNORED"); #/
 				}
 				else
 				{
-				
+					/# println("Node at " + keys[i] + " to node at " + node_keys[j]); #/
 					[[func]](node, list[keys[i]].links[node_keys[j]]);
 				}
 			}
@@ -5409,13 +5770,13 @@ function link_changes_internal(func_for_link_list, func_for_unlink_list)
 {
 	if(isdefined(level._link_node_list))
 	{
-	
+		/# println("Link List"); #/
 		link_changes_internal_internal(level._link_node_list, func_for_link_list);
 	}
 	
 	if(isdefined(level._unlink_node_list))
 	{
-	
+		/# println("UnLink List"); #/
 		link_changes_internal_internal(level._unlink_node_list, func_for_unlink_list);
 	}
 }
@@ -5438,6 +5799,10 @@ function unlink_nodes_wrapper(a, b)
 
 function undo_link_changes()
 {
+	/# 	println("***");
+		println("***");
+		println("*** Undoing link changes"); #/
+			
 	link_changes_internal( &unlink_nodes_wrapper, &link_nodes_wrapper);
 		
 	delete_spawned_path_nodes();
@@ -5446,6 +5811,10 @@ function undo_link_changes()
 
 function redo_link_changes()
 {
+	/# 	println("***");
+		println("***");
+		println("*** Redoing link changes"); #/
+
 	respawn_path_nodes();
 			
 	link_changes_internal( &link_nodes_wrapper, &unlink_nodes_wrapper);
@@ -5523,7 +5892,7 @@ function can_player_purchase_perk()
 	}
 
 	// you can always buy one more if you currently have unquenchable
-	if ( self bgb::is_enabled( "zm_bgb_unquenchable" ) )
+	if ( self bgb::is_enabled( "zm_bgb_unquenchable" ) || self bgb::is_enabled( "zm_bgb_soda_fountain" ) )
 	{
 		return true;
 	}
@@ -5548,6 +5917,11 @@ function give_player_all_perks( b_exclude_quick_revive = false ) // self == play
 		if( !self HasPerk( str_perk ) )
 		{
 			self zm_perks::give_perk( str_perk, false );
+				
+			if ( isdefined( level.perk_bought_func ) )
+			{
+				self [[ level.perk_bought_func ]]( str_perk );
+			}	
 		}
 	}
 }
@@ -5565,6 +5939,14 @@ function get_player_index( player )
 	assert( IsPlayer( player ) );
 	assert( IsDefined( player.characterIndex ) );
 	
+/#
+	// used for testing to switch player's VO in-game from devgui
+	if ( player.entity_num == 0 && GetDvarString( "zombie_player_vo_overwrite" ) != "" )
+	{
+		new_vo_index = GetDvarInt( "zombie_player_vo_overwrite" );
+		return new_vo_index;
+	}
+#/
 	return player.characterIndex;
 }
 
@@ -5598,7 +5980,7 @@ function zombie_goto_round( n_target_round )
 
 	level.zombie_total = 0;
 	zombie_utility::ai_calculate_health( n_target_round );
-	level.round_number = n_target_round - 1;
+	zm::set_round_number( n_target_round - 1 );
 	
 	// kill all active zombies
 	zombies = zombie_utility::get_round_enemy_array();
@@ -5854,3 +6236,21 @@ function is_facing( facee, requiredDot = 0.5, b_2d = true )
 	dotProduct = VectorDot( v_unit_forward_computed, v_unit_to_facee_computed );
 	return ( dotProduct > requiredDot ); // reviver is facing player within given dot tolerance.
 }
+
+//Returns true if the player is in a solo game that cannot be hotjoined
+function is_solo_ranked_game()
+{
+	return ( level.players.size == 1 && GetDvarInt( "zm_private_rankedmatch", 0 ) );
+}
+
+function upload_zm_dash_counters( force_upload = false ) {}
+
+function upload_zm_dash_counters_end_game() {}
+
+function increment_zm_dash_counter( counter_name, amount ) {}
+
+function zm_dash_stats_game_start() {}
+
+function zm_dash_stats_game_end() {}
+
+function zm_dash_stats_wait_for_consumable_use() {}

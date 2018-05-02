@@ -24,6 +24,7 @@
 #precache( "client_fx", "weapon/fx_ability_firefly_chase_1p" );
 #precache( "client_fx", "weapon/fx_hero_firefly_attack_limb" );
 #precache( "client_fx", "weapon/fx_hero_firefly_attack_limb_reaper" );
+//#precache( "client_fx", "weapon/fx_hero_firefly_start" );
 #precache( "client_fx", "weapon/fx_hero_firefly_start_entity" );
 
 function init_shared()
@@ -256,7 +257,7 @@ function watch_for_gib_notetracks( localClientNum )
 	leg_gib = 0;
 	while( 1 )
 	{
-		notetrack = self util::waittill_any_return( "gib_leftarm", "gib_leftleg", "gib_rightarm", "gib_rightleg");
+		notetrack = self util::waittill_any_return( "gib_leftarm", "gib_leftleg", "gib_rightarm", "gib_rightleg", "entityshutdown" );
 		
 		switch( noteTrack )
 		{

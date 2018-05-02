@@ -1,16 +1,18 @@
 #using scripts\codescripts\struct;
+
 #using scripts\shared\callbacks_shared;
 #using scripts\shared\clientfield_shared;
 #using scripts\shared\system_shared;
 #using scripts\shared\util_shared;
 #using scripts\shared\vehicle_shared;
-#using scripts\shared\visionset_mgr_shared;
-#using scripts\mp\_util;
-#using scripts\mp\_vehicle;
 
 #insert scripts\shared\shared.gsh;
 #insert scripts\shared\version.gsh;
 #insert scripts\mp\killstreaks\_killstreaks.gsh;
+#using scripts\shared\visionset_mgr_shared;
+
+#using scripts\mp\_util;
+#using scripts\mp\_vehicle;
 
 #precache( "client_fx", "killstreaks/fx_agr_emp_stun" );
 

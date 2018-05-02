@@ -1,4 +1,5 @@
 #using scripts\codescripts\struct;
+
 #using scripts\shared\callbacks_shared;
 #using scripts\shared\challenges_shared;
 #using scripts\shared\clientfield_shared;
@@ -20,6 +21,7 @@
 #using scripts\shared\vehicleriders_shared;
 #using scripts\shared\flag_shared;
 #using scripts\shared\flagsys_shared;
+
 #using scripts\mp\_challenges;
 #using scripts\mp\_util;
 #using scripts\mp\gametypes\_battlechatter;
@@ -209,6 +211,7 @@ function init()
 	registerCrateType( "supplydrop", "killstreak", "drone_strike", 75, &"KILLSTREAK_DRONE_STRIKE_CRATE", &"PLATFORM_DRONE_STRIKE_GAMBLER", &giveCrateKillstreak );
 	registerCrateType( "supplydrop", "killstreak", "helicopter_comlink", 30, &"KILLSTREAK_HELICOPTER_CRATE", &"PLATFORM_HELICOPTER_GAMBLER", &giveCrateKillstreak );
 	registerCrateType( "supplydrop", "killstreak", "emp", 5, &"KILLSTREAK_EMP_CRATE", &"PLATFORM_EMP_GAMBLER", &giveCrateKillstreak );
+//	registerCrateType( "supplydrop", "killstreak", "helicopter_player_gunner", 2, &"KILLSTREAK_HELICOPTER_GUNNER_CRATE", &"PLATFORM_HELICOPTER_GUNNER_GAMBLER",&giveCrateKillstreak );
 	registerCrateType( "supplydrop", "killstreak", "raps", 20, &"KILLSTREAK_RAPS_CRATE", &"PLATFORM_RAPS_GAMBLER", &giveCrateKillstreak );
 	registerCrateType( "supplydrop", "killstreak", "dart", 75, &"KILLSTREAK_DART_CRATE", &"PLATFORM_DART_GAMBLER", &giveCrateKillstreak );
 	registerCrateType( "supplydrop", "killstreak", "sentinel", 20, &"KILLSTREAK_SENTINEL_CRATE", &"PLATFORM_SENTINEL_GAMBLER", &giveCrateKillstreak );
@@ -225,6 +228,7 @@ function init()
 	registerCrateType( "inventory_supplydrop", "killstreak", "satellite", 20, &"KILLSTREAK_SATELLITE_CRATE", &"PLATFORM_SATELLITE_GAMBLER", &giveCrateKillstreak );
 	registerCrateType( "inventory_supplydrop", "killstreak", "helicopter_comlink", 30, &"KILLSTREAK_HELICOPTER_CRATE", &"PLATFORM_HELICOPTER_GAMBLER", &giveCrateKillstreak );
 	registerCrateType( "inventory_supplydrop", "killstreak", "emp", 5, &"KILLSTREAK_EMP_CRATE", &"PLATFORM_EMP_GAMBLER", &giveCrateKillstreak );
+//	registerCrateType( "inventory_supplydrop", "killstreak", "helicopter_player_gunner", 2, &"KILLSTREAK_HELICOPTER_GUNNER_CRATE", &"PLATFORM_HELICOPTER_GUNNER_GAMBLER", &giveCrateKillstreak );
 	registerCrateType( "inventory_supplydrop", "killstreak", "raps", 20, &"KILLSTREAK_RAPS_CRATE", &"PLATFORM_RAPS_GAMBLER", &giveCrateKillstreak );
 	registerCrateType( "inventory_supplydrop", "killstreak", "dart", 75, &"KILLSTREAK_DART_CRATE", &"PLATFORM_DART_GAMBLER", &giveCrateKillstreak );
 	registerCrateType( "inventory_supplydrop", "killstreak", "sentinel", 20, &"KILLSTREAK_SENTINEL_CRATE", &"PLATFORM_SENTINEL_GAMBLER", &giveCrateKillstreak );
@@ -245,10 +249,12 @@ function init()
 	registerCrateType( "gambler", "killstreak", "remote_missile", 100, &"KILLSTREAK_REMOTE_MISSILE_CRATE", undefined, &giveCrateKillstreak );
 	registerCrateType( "gambler", "killstreak", "planemortar", 80, &"KILLSTREAK_PLANE_MORTAR_CRATE", undefined, &giveCrateKillstreak );
 	registerCrateType( "gambler", "killstreak", "autoturret", 100, &"KILLSTREAK_AUTO_TURRET_CRATE", undefined, &giveCrateKillstreak );
+//	registerCrateType( "gambler", "killstreak", "helicopter_guard", 0, &"KILLSTREAK_HELICOPTER_GUARD_CRATE", undefined, &giveCrateKillstreak );
 	registerCrateType( "gambler", "killstreak", "satellite", 30, &"KILLSTREAK_SATELLITE_CRATE", undefined, &giveCrateKillstreak );
 	registerCrateType( "gambler", "killstreak", "ai_tank_drop", 40, &"KILLSTREAK_AI_TANK_CRATE", undefined, &giveCrateKillstreak );
 	registerCrateType( "gambler", "killstreak", "helicopter_comlink", 45, &"KILLSTREAK_HELICOPTER_CRATE", undefined, &giveCrateKillstreak );
 	registerCrateType( "gambler", "killstreak", "emp", 10, &"KILLSTREAK_EMP_CRATE", undefined, &giveCrateKillstreak );
+//	registerCrateType( "gambler", "killstreak", "helicopter_player_gunner", 8, &"KILLSTREAK_HELICOPTER_GUNNER_CRATE", undefined, &giveCrateKillstreak );
 	registerCrateType( "gambler", "killstreak", "raps", 35, &"KILLSTREAK_RAPS_CRATE", undefined, &giveCrateKillstreak );
 	registerCrateType( "gambler", "killstreak", "dart", 75, &"KILLSTREAK_DART_CRATE", undefined, &giveCrateKillstreak );		
 	registerCrateType( "gambler", "killstreak", "sentinel", 35, &"KILLSTREAK_SENTINEL_CRATE", undefined, &giveCrateKillstreak );		
@@ -262,6 +268,10 @@ function init()
 	{
 		finalizeCrateCategory( categoryKey );
 	}
+
+	/#
+		level thread supply_drop_dev_gui();
+	#/
 }
 
 function finalizeCrateCategory( category )
@@ -334,7 +344,7 @@ function setCategoryTypeWeight( category, type, weight )
 			
 			if ( isdefined( finalIndex ) && (( finalIndex + 1 ) != crateName ) )
 			{
-				/#println("Crate type declaration must be contiguous");#/
+				/#util::error("Crate type declaration must be contiguous");#/
 				callback::abort_level();
 				
 				return;
@@ -352,6 +362,14 @@ function setCategoryTypeWeight( category, type, weight )
 
 function registerCrateType( category, type, name, weight, hint, hint_gambler, giveFunction, landFunctionOverride )
 {
+/#
+	// do not register a crate for any scorestreak that does not exist
+	//if ( !killstreaks::is_registered(name) )
+	//{
+	//	return;
+	//}
+#/
+		
 	itemName = level.killstreaks[name].menuName;
 		
 	if( IsItemRestricted( itemName ) )
@@ -448,6 +466,13 @@ function getRandomCrateType( category, gambler_crate_name )
 
 		break;
 	}
+
+	/#
+	if( isdefined(level.dev_gui_supply_drop) && level.dev_gui_supply_drop != "random" && level.dev_gui_supply_drop != "" )
+	{
+		typeKey = level.dev_gui_supply_drop;
+	}
+	#/
 
 	return level.crateTypes[category][typeKey];
 }
@@ -574,7 +599,7 @@ function useSupplyDropMarker( package_contents_id, context )
 	while( true )
 	{
 		player AllowMelee( false );
-		notifyString = self util::waittill_any_return( "weapon_change", trigger_event );
+		notifyString = self util::waittill_any_return( "weapon_change", trigger_event, "disconnect", "spawned_player" );
 		player AllowMelee( true );
 
 		if ( !isdefined( notifyString ) || ( notifyString != trigger_event ) ) 
@@ -602,7 +627,7 @@ function useSupplyDropMarker( package_contents_id, context )
 	if ( isdefined( self ) )
 	{
 		// don't take the supplyDropWeapon until the throwing (firing) state is completed
-		notifyString = self util::waittill_any_return( "weapon_change", "death" );
+		notifyString = self util::waittill_any_return( "weapon_change", "death", "disconnect", "spawned_player" );
 		
 		self TakeWeapon( supplyDropWeapon );
 	
@@ -659,13 +684,16 @@ function IsLocationGood( location, context )
 		//trace = physicstrace( location + ( 0,0, 5000 ), location + ( 0, 0, 10 ), ( -radius, -radius, 0 ), ( radius, radius, radius ), undefined, mask );
 		trace = physicstrace( location + ( 0,0, 5000 ), location + ( 0, 0, 10 ), ( -radius, -radius, 0 ), ( radius, radius, 2 * radius ), undefined, mask );
 	
+		///#Box( location, (-radius, -radius, 10 ), ( radius, radius, 5000 ), 0, ( 0, 0.7, 0 ), 0.6, false, 1 );#/
 	
 		if( trace["fraction"] < 1 )
 		{
+			///#sphere( location, radius, ( 1, 0, 0 ), 1, true, 10, 1 );#/
 			return false;
 		}
 		else
 		{
+			///#sphere( location, radius, ( 0, 0, 1 ), 1, true, 10, 1 );#/
 		}
 	}
 	
@@ -681,6 +709,27 @@ function IsLocationGood( location, context )
 	if ( isValidPoint && Distance2DSquared( location, closestPoint ) > SQR( context.max_dist_from_location ) )
 		isValidPoint = false;
 
+
+/# 
+	if ( GetDVarInt( "scr_supply_drop_valid_location_debug", 0 ) )
+	{
+		if ( !isValidPoint )
+		{
+			// debug draw closest valid location on nav mesh (red)
+			otherClosestPoint = GetClosestPointOnNavMesh( location, GetDVarFloat( "scr_supply_drop_valid_location_radius_debug", 96 ), context.dist_from_boundary );
+			if ( isdefined( otherClosestPoint ) )
+			{
+				sphere( otherClosestPoint, context.max_dist_from_location, ( 1, 0, 0 ), 0.8, false, 20, 1 );
+			}
+		}
+		else
+		{
+			// debug draw valid location on nav mesh (green)
+			sphere( closestPoint, context.max_dist_from_location, ( 0, 1, 0 ), 0.8, false, 20, 1 );
+			util::drawcylinder( closestPoint, context.radius, 8000, 1.0/60.0, undefined, ( 0, 0.9, 0 ), 0.7 );
+		}
+	}
+#/
 
 	return isValidPoint;
 }
@@ -1628,7 +1677,10 @@ function get_height( e_ignore )
 	const height_diff = 10;
 	trace = GroundTrace( self.origin + (0,0,height_diff), self.origin + ( 0, 0, -10000 ), false, e_ignore, false );
 	
-
+	/#
+	recordLine( self.origin + (0,0,height_diff), trace[ "position" ], ORANGE, "Animscript", self );
+	#/
+	
 	return Distance( self.origin, trace[ "position" ] );
 }
 
@@ -1830,6 +1882,13 @@ function dropCrate( origin, angle, killstreak, owner, team, killcamEnt, killstre
 	trace = GroundTrace( crate.origin + ( 0, 0, -100 ), crate.origin + ( 0, 0, -10000 ), false, crate, false );
 	v_target_location = trace["position"];	
 
+/#
+	if ( GetDvarInt( "scr_supply_drop_valid_location_debug", 0 ) )
+	{
+		util::drawcylinder( v_target_location, context.radius, 8000, 99999999, "stop_heli_drop_valid_location_dropped_cylinder", ( 0, 0, 0.9 ), 0.8 );
+	}	
+#/
+		
 	crate crateControlledDrop(killstreak, v_target_location );	
 	
 	crate thread hacker_tool::registerWithHackerTool( level.carePackageHackerToolRadius, level.carePackageHackerToolTimeMs );
@@ -2178,6 +2237,8 @@ function is_touching_crate() // self == crate
 	//crate_bottom_point = self GetPointInBounds( 0.0, 0.0, -1.0 );
 	crate_bottom_point = self.origin;
 	
+	// /# sphere( crate_bottom_point, 10, ( 1.0, 0, 0 ), 1.0, true, 20, 120 ); #/
+		
 	foreach( player in level.players )
 	{		
 		if( isdefined( player ) && IsAlive( player ) )
@@ -2186,6 +2247,8 @@ function is_touching_crate() // self == crate
 			stance_z_offset = ( ( stance == "stand" ) ? 40 : ( ( stance == "crouch" ) ? 18 : 6 ) );
 			player_test_point = player.origin + ( 0, 0, stance_z_offset );
 			
+			// /# sphere( player_test_point, 10, ( 0, 0, 1.0 ), 1.0, true, 20, 120 ); #/
+				
 			if (  ( player_test_point[2] < crate_bottom_point[2] ) && self IsTouching( player, extraBoundary ) )
 			{
 				attacker = ( isdefined( self.owner ) ? self.owner : self );
@@ -2304,6 +2367,9 @@ function crateUseThink() // self == crate
 	while( isdefined(self) )
 	{
 		self waittill("trigger", player );
+	
+		if ( !isdefined( self ) )
+			break;
 		
 		if ( !isAlive( player ) )
 			continue;
@@ -2332,7 +2398,7 @@ function crateUseThink() // self == crate
 			useEnt Delete();
 		}
 		
-		if ( result )
+		if ( result && isdefined( self ) )
 		{
 			scoreevents::giveCrateCaptureMedal( self, player );
 			self notify("captured", player, false );
@@ -2348,6 +2414,9 @@ function crateUseThinkOwner() // self == crate
 	{
 		self waittill("trigger", player );
 		
+		if ( !isdefined( self ) )
+			break;
+
 		if ( !isAlive( player ) )
 			continue;
 			
@@ -2362,7 +2431,7 @@ function crateUseThinkOwner() // self == crate
 			
 		result = self useHoldThink( player, level.crateOwnerUseTime );
 
-		if ( result )
+		if ( result && isdefined( self ) && isdefined( player ) )
 		{
 			self notify("captured", player, false );
 		}
@@ -2672,6 +2741,19 @@ function getHeliStart( drop_origin, drop_direction )
 	
 	start_origin = drop_origin + ( AnglesToForward( direction ) * dist );
 	start_origin += ( (randomfloat(2) - 1)*pathRandomness, (randomfloat(2) - 1)*pathRandomness, 0 );
+/#
+	if ( GetDvarInt( "scr_noflyzones_debug", 0 ) ) 
+	{
+		if ( level.noFlyZones.size )
+		{
+			index = RandomIntRange( 0, level.noFlyZones.size );
+			delta = drop_origin - level.noFlyZones[index].origin;
+			delta = ( delta[0] + RandomInt(10), delta[1] + RandomInt(10), 0 );
+			delta = VectorNormalize( delta );
+			start_origin = drop_origin + ( delta * dist );
+		}
+	}
+#/
 	return start_origin;
 }
 
@@ -2754,6 +2836,9 @@ function supplyDropHeliStartPath(goal, goal_offset)
 				direction = ( goalPath.path[goalPath.path.size - 1] - goalPath.start );
 			}
 			goalPath.path[goalPath.path.size - 1] = addOffsetOntoPoint(goalPath.path[goalPath.path.size - 1], direction, goal_offset);
+/#
+			sphere( goalPath.path[goalPath.path.size - 1], 10, (0,0,1), 1, true, 10, 1000 );
+#/
 			return goalPath;
 		}
 		
@@ -2892,6 +2977,19 @@ function heliDeliverCrate( origin, weapon, owner, team, killstreak_id, package_c
 		return;
 	}
 
+/#	
+	if ( GetDvarInt( "scr_supply_drop_valid_location_debug", 0 ) )
+	{
+		level notify( "stop_heli_drop_valid_location_marked_cylinder" );
+		level notify( "stop_heli_drop_valid_location_arrived_at_goal_cylinder" );
+		level notify( "stop_heli_drop_valid_location_dropped_cylinder" );
+		util::drawcylinder( origin, context.radius, 8000, 99999999, "stop_heli_drop_valid_location_marked_cylinder", ( 0.4, 0, 0.4 ), 0.8 );
+	}
+#/
+	
+	if ( !isdefined( context.marker ) )
+		return;
+
 	context.markerFXHandle = SpawnFx( level.killstreakCoreBundle.fxMarkedLocation, context.marker.origin + ( 0, 0, 5 ), ( 0, 0, 1 ), ( 1, 0, 0 ) );
 	context.markerFXHandle.team = owner.team;
 	TriggerFX( context.markerFXHandle );
@@ -2920,6 +3018,9 @@ function heliDeliverCrate( origin, weapon, owner, team, killstreak_id, package_c
 
 	heli_drop_goal = ( drop_origin[0], drop_origin[1], drop_height ); //  + rear_hatch_offset_world;
 	
+/#
+	sphere( heli_drop_goal, 10, (0,1,0), 1, true, 10, 1000 );
+#/
 
 	goalPath = undefined;
 	
@@ -3036,6 +3137,27 @@ function heliDeliverCrate( origin, weapon, owner, team, killstreak_id, package_c
 
 	// wait 0.1;
 	
+/#
+	if ( GetDvarInt( "scr_supply_drop_valid_location_debug", 0 ) )
+	{		
+		if ( isdefined( context.dropOffset ) )
+		{
+			chopper_drop_point = chopper.origin - RotatePoint( context.dropOffset, chopper.angles );
+		}
+		else
+		{
+			chopper_drop_point = chopper GetChopperDropPoint( context );
+		}
+		
+		trace = GroundTrace( chopper_drop_point + ( 0, 0, -100 ), chopper_drop_point + ( 0, 0, -10000 ), false, undefined, false );
+		debug_drop_location = trace["position"];
+		
+		util::drawcylinder( debug_drop_location, context.radius, 8000, 99999999, "stop_heli_drop_valid_location_arrived_at_goal_cylinder", ( 1.0, 0.6, 0.0 ), 0.9 );
+
+		IPrintLn( "Goal notified at 2D distance: " + Distance2D( chopper_drop_point, heli_drop_goal ) );
+	}
+#/
+
 	on_target = false;
 	last_distance_from_goal_squared = SQR( 9999999.0 );
 	continue_waiting = true;
@@ -3055,15 +3177,35 @@ function heliDeliverCrate( origin, weapon, owner, team, killstreak_id, package_c
 		continue_waiting = ( ( current_distance_from_goal_squared < last_distance_from_goal_squared ) && ( current_distance_from_goal_squared > SQR( SUPPY_DROP_ON_TARGET_DISTANCE ) ) );
 		last_distance_from_goal_squared = current_distance_from_goal_squared;
 
-    
+		/#
+			if ( GetDvarInt( "scr_supply_drop_valid_location_debug", 0 ) )
+			{
+		    	sphere( chopper_drop_point, 8, ( 1, 0, 0 ), 0.9, false, 20, 1 );
+			}
+		#/
+	    
 		if ( continue_waiting )
 		{
+			/#
+				if ( GetDvarInt( "scr_supply_drop_valid_location_debug", 0 ) )
+				{
+					IPrintLn( "--- 2D distance: " + Distance2D( chopper_drop_point, heli_drop_goal ) );
+				}
+			#/
+				
 	    	WAIT_SERVER_FRAME;
 		}
 		
 		remaining_tries--;
 	}
 	
+/#
+	if ( GetDvarInt( "scr_supply_drop_valid_location_debug", 0 ) )
+	{
+		IPrintLn( "Crate Dropped at 2D distance: " + Distance2D( chopper_drop_point, heli_drop_goal ) );
+	}
+#/
+
 	chopper notify("drop_crate", chopper.origin, chopper.angles, chopper.owner);
 	chopper.dropTime = GetTime();
 	chopper playsound ("veh_supply_drop");
@@ -3273,3 +3415,21 @@ function refCountDecChopper( team, killstreak_id )
 	self notify( "cleanup_marker" );
 }
 
+/#
+//Adds functionality so we can drop specific supply drops when we want for development purposes
+function supply_drop_dev_gui()
+{	
+	//Init my dvar
+	SetDvar("scr_supply_drop_gui", "");
+
+	while(1)
+	{
+		wait(0.5);
+
+		//Grab my dvar every frame
+		devgui_string = GetDvarString( "scr_supply_drop_gui");
+
+		level.dev_gui_supply_drop = devgui_string;
+	}
+}
+#/

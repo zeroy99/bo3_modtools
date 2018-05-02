@@ -40,3 +40,85 @@
 #insert scripts\shared\version.gsh;
 
 #namespace ZombieQuad;
+
+function autoexec init()
+{
+	// INIT BEHAVIORS
+	InitZombieBehaviorsAndASM();
+
+	// INIT BLACKBOARD	
+	spawner::add_archetype_spawn_function( ARCHETYPE_ZOMBIE_QUAD, &ZombieQuad::ArchetypeQuadBlackboardInit );
+	
+	// INIT QUAD ON SPAWN
+	spawner::add_archetype_spawn_function( ARCHETYPE_ZOMBIE_QUAD, &ZombieQuad::quadSpawnSetup );	
+}
+
+function ArchetypeQuadBlackboardInit()
+{
+	// CREATE BLACKBOARD
+	Blackboard::CreateBlackBoardForEntity( self );
+	
+	// USE UTILITY BLACKBOARD
+	self AiUtility::RegisterUtilityBlackboardAttributes();
+
+	// CREATE INTERFACE
+	ai::CreateInterfaceForEntity( self );
+	
+	// CREATE QUAD BLACKBOARD
+	BB_REGISTER_ATTRIBUTE( LOCOMOTION_SPEED_TYPE,	LOCOMOTION_SPEED_WALK,	&ZombieBehavior::BB_GetLocomotionSpeedType );
+
+	BB_REGISTER_ATTRIBUTE( QUAD_WALL_CRAWL, 		undefined,				undefined );
+	BB_REGISTER_ATTRIBUTE( QUAD_PHASE_DIRECTION, 	undefined,				undefined );
+	BB_REGISTER_ATTRIBUTE( QUAD_PHASE_DISTANCE, 	undefined,				undefined );
+	
+	// REGISTER ANIMSCRIPTED CALLBACK
+	self.___ArchetypeOnAnimscriptedCallback = &ArchetypeQuadOnAnimscriptedCallback;
+	
+	// ENABLE DEBUGGING IN ODYSSEY
+	ENABLE_BLACKBOARD_DEBUG_TRACKING(self);
+	
+}
+
+function private ArchetypeQuadOnAnimscriptedCallback( entity )
+{
+	// UNREGISTER THE BLACKBOARD
+	entity.__blackboard = undefined;
+	
+	// REREGISTER BLACKBOARD
+	entity ArchetypeQuadBlackboardInit();
+}
+
+function private InitZombieBehaviorsAndASM()
+{
+	// ------- ZOMBIE MOCOMP -----------//
+	ASM_REGISTER_MOCOMP( "mocomp_teleport_traversal@zombie_quad", &quadTeleportTraversalMocompStart, undefined, undefined );
+}
+
+//*****************************************************************************
+//*****************************************************************************
+
+function quadSpawnSetup()
+{
+	self SetPitchOrient();
+}
+
+//*****************************************************************************
+//*****************************************************************************
+
+function quadTeleportTraversalMocompStart( entity, mocompAnim, mocompAnimBlendOutTime, mocompAnimFlag, mocompDuration )
+{
+	entity OrientMode( "face angle", entity.angles[1] );
+	entity AnimMode( AI_ANIM_MOVE_CODE );
+
+	if ( IsDefined( entity.traverseEndNode ) )
+	{
+		/#
+			Print3D( entity.traverseStartNode.origin, ".", RED, 1, 1, 60 );
+			Print3D( entity.traverseEndNode.origin, ".", GREEN, 1, 1, 60 );
+			Line( entity.traverseStartNode.origin, entity.traverseEndNode.origin, GREEN, 1, false, 60 );
+		#/
+
+		entity ForceTeleport( entity.traverseEndNode.origin, entity.traverseEndNode.angles, false );
+	}
+}
+

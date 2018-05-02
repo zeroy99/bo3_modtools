@@ -263,6 +263,7 @@ function player_add_points( event, mod, hit_location ,is_dog, zombie_team, damag
 			case "thundergun_fling":
 			case "riotshield_fling":
 				player_points = mod;
+				scoreevents::processScoreEvent( "kill", self, undefined, damage_weapon );
 				break;
 				
 	 		case "hacker_transfer":
@@ -565,12 +566,6 @@ function minus_to_player_score( points )
 	self.pers["score"] = self.score;
 	self IncrementPlayerStat("scoreSpent", points);
 	level notify( "spent_points", self, points );
-	
-	// roll bgb token drop chance
-	if( IS_TRUE( level.bgb_in_use ) && level.onlineGame )
-	{
-		self bgb_token::award_check( points );
-	}
 }
 
 

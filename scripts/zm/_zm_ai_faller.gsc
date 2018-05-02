@@ -1,10 +1,15 @@
 #using scripts\codescripts\struct;
 
 #using scripts\shared\laststand_shared;
+#using scripts\shared\math_shared;
 #using scripts\shared\util_shared;
 
 #insert scripts\shared\shared.gsh;
 
+#using scripts\shared\ai\systems\animation_state_machine_mocomp;
+#using scripts\shared\ai\systems\animation_state_machine_notetracks;
+#using scripts\shared\ai\systems\animation_state_machine_utility;
+#using scripts\shared\ai\systems\behavior_tree_utility;
 #using scripts\shared\ai\zombie_shared;
 #using scripts\shared\ai\zombie_utility;
 
@@ -12,10 +17,105 @@
 #using scripts\zm\_zm_spawner;
 #using scripts\zm\_zm_utility;
 
+#insert scripts\shared\ai\systems\animation_state_machine.gsh;
+#insert scripts\shared\ai\systems\behavior.gsh;
+#insert scripts\shared\ai\systems\behavior_tree.gsh;
+
 #define DEFAULT_DIST_SQ_VISIBLE		( 1000 * 1000 )
 #define FALLER_DIST_SQ_VISIBLE		( 1500 * 1500 )
 
+#define ASM_FALLER_MELEE_NOTETRACK			"faller_melee"
+#define ASM_FALLER_DEATHOUT_NOTETRACK		"deathout"
+
 #namespace zm_ai_faller;
+
+function autoexec init()
+{
+	// INIT BEHAVIORS
+	InitFallerBehaviorsAndASM();
+
+	ASM_REGISTER_NOTETRACK_HANDLER( ASM_FALLER_MELEE_NOTETRACK, &zm_ai_faller::handle_fall_notetracks );
+	ASM_REGISTER_NOTETRACK_HANDLER( ASM_FALLER_DEATHOUT_NOTETRACK, &zm_ai_faller::handle_fall_death_notetracks );
+}
+
+function private InitFallerBehaviorsAndASM()
+{
+	BT_REGISTER_ACTION( "fallerDropAction", 			&fallerDropAction, &fallerDropActionUpdate, &fallerDropActionTerminate );
+
+	BT_REGISTER_API( "shouldFallerDrop", &shouldFallerDrop );
+
+	BT_REGISTER_API( "isFallerInCeiling", &isFallerInCeiling );
+	BT_REGISTER_API( "fallerCeilingDeath", &fallerCeilingDeath );
+
+	ASM_REGISTER_MOCOMP( "mocomp_drop@faller", &mocompFallerDrop, undefined, undefined );
+	ASM_REGISTER_MOCOMP( "mocomp_ceiling_death@faller", &mocompCeilingDeath, undefined, undefined );
+}
+
+//*****************************************************************************
+//*****************************************************************************
+
+function fallerDropAction( entity, asmStateName )
+{	
+	AnimationStateNetworkUtility::RequestState( entity, asmStateName );
+
+	return BHTN_RUNNING;
+}
+
+function fallerDropActionUpdate( entity, asmStateName )
+{
+	ground_pos = zm_utility::groundpos_ignore_water_new( entity.origin );
+	if( entity.origin[2] - ground_pos[2] < 20)
+	{
+		return BHTN_SUCCESS;
+	}
+
+	return BHTN_RUNNING;
+}
+
+function fallerDropActionTerminate( entity, asmStateName )
+{	
+	entity.faller_drop = false;
+
+	return BHTN_SUCCESS;
+}
+
+function shouldFallerDrop( entity )
+{
+	if ( IS_TRUE( entity.faller_drop ) )
+	{
+		return true;
+	}
+
+	return false;
+}
+
+function isFallerInCeiling( entity )
+{
+	if ( IS_TRUE( entity.in_the_ceiling ) && !IS_TRUE( entity.normal_death ) )
+	{
+		return true;
+	}
+
+	return false;
+}
+
+function fallerCeilingDeath( entity )
+{
+
+}
+
+function private mocompFallerDrop( entity, mocompAnim, mocompAnimBlendOutTime, mocompAnimFlag, mocompDuration )
+{
+	entity AnimMode( AI_ANIM_USE_BOTH_DELTAS_NOGRAVITY, false );
+}
+
+function private mocompCeilingDeath( entity, mocompAnim, mocompAnimBlendOutTime, mocompAnimFlag, mocompDuration )
+{
+	entity AnimMode( AI_ANIM_USE_BOTH_DELTAS_NOCLIP, false );
+}
+
+//*****************************************************************************
+//*****************************************************************************
 
 function zombie_faller_delete()
 {
@@ -89,6 +189,23 @@ function do_zombie_fall(spot)
 {
 	self endon("death");
 
+	if ( !IS_TRUE( level.faller_init ) )
+	{
+		level.faller_init = true;
+
+		faller_anim = self AnimMappingSearch( IString( "anim_faller_emerge" ) );
+		level.faller_emerge_time = GetAnimLength( faller_anim );
+
+		faller_anim = self AnimMappingSearch( IString( "anim_faller_attack_01" ) );
+		level.faller_attack_01_time = GetAnimLength( faller_anim );
+
+		faller_anim = self AnimMappingSearch( IString( "anim_faller_attack_02" ) );
+		level.faller_attack_02_time = GetAnimLength( faller_anim );
+
+		faller_anim = self AnimMappingSearch( IString( "anim_faller_fall" ) );
+		level.faller_fall_time = GetAnimLength( faller_anim );
+	}
+
 	self.zombie_faller_location = spot;
 	//NOTE: multiple zombie fallers could be waiting in the same spot now, need to have spawners detect this 
 	//		and not use the spot again until the previous zombie has died or dropped down
@@ -154,8 +271,8 @@ function zombie_faller_do_fall()
 	self endon("death");
 	
 	// first play the emerge, then the fall anim
-	self AnimScripted( "fall_anim", self.origin, self.zombie_faller_location.angles, "zm_faller_emerge" );
-	self zombie_shared::DoNoteTracks( "emerge_anim",&handle_fall_notetracks, self.zombie_faller_location );
+	self AnimScripted( "fall_anim", self.origin, self.zombie_faller_location.angles, "ai_zm_dlc5_zombie_ceiling_emerge_01" );
+	wait( level.faller_emerge_time );
 
 	//NOTE: now we don't fall until we've attacked at least once from the ceiling
 	self.zombie_faller_wait_start = GetTime();
@@ -166,8 +283,17 @@ function zombie_faller_do_fall()
 	{
 		if ( self zombie_fall_should_attack(self.zombie_faller_location) )
 		{
-			self AnimScripted( "fall_anim", self.origin, self.zombie_faller_location.angles, "zm_faller_attack" );
-			self zombie_shared::DoNoteTracks( "attack_anim",&handle_fall_notetracks, self.zombie_faller_location );
+			if ( math::cointoss() )
+			{
+				self AnimScripted( "fall_anim", self.origin, self.zombie_faller_location.angles, "ai_zm_dlc5_zombie_ceiling_attack_01" );
+				wait( level.faller_attack_01_time );
+			}
+			else
+			{
+				self AnimScripted( "fall_anim", self.origin, self.zombie_faller_location.angles, "ai_zm_dlc5_zombie_ceiling_attack_02" );
+				wait( level.faller_attack_02_time );
+			}
+
 			//50/50 chance that we'll stay up here and attack again or drop down
 			if ( !(self zombie_faller_always_drop()) && randomfloat(1) > 0.5 )
 			{
@@ -199,8 +325,16 @@ function zombie_faller_do_fall()
 			else
 			{
 				//NOTE: instead of playing a looping idle, they just flail and attack over and over
-				self AnimScripted( "fall_anim", self.origin, self.zombie_faller_location.angles, "zm_faller_attack" );
-				self zombie_shared::DoNoteTracks( "attack_anim",&handle_fall_notetracks, self.zombie_faller_location );
+				if ( math::cointoss() )
+				{
+					self AnimScripted( "fall_anim", self.origin, self.zombie_faller_location.angles, "ai_zm_dlc5_zombie_ceiling_attack_01" );
+					wait( level.faller_attack_01_time );
+				}
+				else
+				{
+					self AnimScripted( "fall_anim", self.origin, self.zombie_faller_location.angles, "ai_zm_dlc5_zombie_ceiling_attack_02" );
+					wait( level.faller_attack_02_time );
+				}
 			}
 		}
 	}
@@ -210,11 +344,12 @@ function zombie_faller_do_fall()
 	spot = self.zombie_faller_location;
 	self zombie_faller_enable_location();
 	
-	self AnimScripted( "fall_anim", self.origin, spot.angles, "zm_faller_fall" );
-	self zombie_shared::DoNoteTracks( "fall_anim",&handle_fall_notetracks, spot );
+	self AnimScripted( "fall_anim", self.origin, spot.angles, "ai_zm_dlc5_zombie_ceiling_dropdown_01" );
+	wait( level.faller_fall_time );
 
 	// rsh040711 - set the death func back to normal
 	self.deathFunction = &zm_spawner::zombie_death_animscript;
+	self.normal_death = true;
 
 	self notify("fall_anim_finished");
 	spot notify("stop_zombie_fall_fx");
@@ -230,12 +365,14 @@ function zombie_faller_do_fall()
 	
 	if ( physDist > 0 )
 	{
+		self.faller_drop = true;
+
 		//high enough above the ground to play some of the falling loop before we can play the land
-		self animcustom(&zombie_fall_loop );
-		self waittill("faller_on_ground");
+		//self animcustom(&zombie_fall_loop );
+		//self waittill("faller_on_ground");
 
 		//play land
-		self animcustom(&zombie_land );
+		//self animcustom(&zombie_land );
 		self waittill( "zombie_land_done" );
 	}
 	
@@ -497,7 +634,7 @@ function zombie_faller_death_wait(endon_notify)
 	self zombie_faller_enable_location();
 }
 
-function zombie_fall_death_func()
+function zombie_fall_death_func( eInflictor, attacker, iDamage, sMeansOfDeath, weapon, vDir, sHitLoc, psOffsetTime )
 {
 	// rsh040711 - set noclip so death anim can translate through the ceiling
 	self animmode( "noclip" );
@@ -597,31 +734,37 @@ function stop_zombie_fall_dust_fx(zombie)
 	self notify("stop_zombie_fall_dust_fx");
 }
 
-function handle_fall_notetracks(note, spot)
+function handle_fall_death_notetracks( entity )
+{
+	//self.deathFunction =&faller_death_ragdoll;
+	//self.zombie_fall_death_out = true;
+	//self notify("zombie_fall_death_out");
+	self.in_the_ceiling = false;
+}
+
+function handle_fall_notetracks( entity )
 {
 	// the anim notetracks control which death anim to play
 	// default to "deathin" (still in the ground)
 
-	if (note == "deathout" )
-	{
-		self.deathFunction =&faller_death_ragdoll;
+	//if (note == "deathout" )
+	//{
+	//	self.deathFunction =&faller_death_ragdoll;
 		//self.zombie_fall_death_out = true;
 		//self notify("zombie_fall_death_out");
-	}
-	else if ( note == "fire" )
+	//}
+
+	// attack all players beneath us
+	victims = zombie_fall_get_vicitims( entity.zombie_faller_location );
+	for ( i = 0; i < victims.size; i++ )
 	{
-		// attack all players beneath us
-		victims = zombie_fall_get_vicitims(spot);
-		for ( i = 0; i < victims.size; i++ )
-		{
-			victims[i] DoDamage( self.meleeDamage, self.origin, self, self, "none", "MOD_MELEE" );
-			//damaged someone!
-			self.zombie_faller_should_drop = true;
-		}
+		victims[i] DoDamage( entity.meleeDamage, entity.origin, self, self, "none", "MOD_MELEE" );
+		//damaged someone!
+		entity.zombie_faller_should_drop = true;
 	}
 }
 
-function faller_death_ragdoll()
+function faller_death_ragdoll( eInflictor, attacker, iDamage, sMeansOfDeath, weapon, vDir, sHitLoc, psOffsetTime )
 {
 	self StartRagdoll();
 	self launchragdoll((0, 0, -1));

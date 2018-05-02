@@ -109,7 +109,7 @@ function private _kill_on_ent_death( s_beam, ent_1, ent_2 )
 	s_beam endon( "kill" );
 	self endon( "death" );
 	
-	util::waittill_any_ents( ent_1, "entityshutdown", ent_2, "entityshutdown" );
+	util::waittill_any_ents( ent_1, "entityshutdown", ent_2, "entityshutdown", s_beam, "kill", self, "death" );
 	
 	if ( isdefined( self ) )
 	{

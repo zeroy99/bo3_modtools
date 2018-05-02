@@ -39,6 +39,10 @@ function __init__()
 	clientfield::register( "actor", "octobomb_zombie_explode_fx",		VERSION_TU8, 1, "counter" );
 	clientfield::register( "toplayer", 	"octobomb_state",		VERSION_SHIP, 3, "int" );
 	clientfield::register( "missile", "octobomb_spit_fx",		VERSION_SHIP, 2, "int" );
+	
+	/#
+		level thread octobomb_devgui();
+	#/
 }
 
 function __main__()
@@ -176,7 +180,8 @@ function hide_owner( owner )
 
 	self thread show_owner_on_attack( owner );
 	
-	evt = self util::waittill_any_return( "explode", "death", "grenade_dud");
+	evt = self util::waittill_any_ex( "explode", "death", "grenade_dud", owner, "hide_owner" );
+	/# println( "ZMCLONE: Player visible again because of "+evt ); #/
 
 	owner notify("show_owner");
 	
@@ -1044,13 +1049,70 @@ function octobomb_exists()
 	return zm_weapons::is_weapon_included( level.w_octobomb );
 }
 
+// devgui so we can test the Octobomb
+// let the player give themselves the magic jar or the octobomb itself
+function octobomb_devgui()
+{
+    for( i = 0; i < 4; i++ )
+    {
+        // devgui to give the octobomb to individual players
+        level thread setup_devgui_func( "ZM/Weapons/Offhand/Octobomb/Give" + i,        "zod_give_octobomb",    i, &devgui_octobomb_give );
+    }
+    // devgui to give the octobomb to ALL players
+    level thread setup_devgui_func( "ZM/Weapons/Offhand/Octobomb/Give to All",    "zod_give_octobomb",     4, &devgui_octobomb_give );    
+}
+
+function private setup_devgui_func( str_devgui_path, str_dvar, n_value, func, n_base_value )
+{
+	if( !isdefined( n_base_value ) )
+	{
+		n_base_value = -1;
+	}
+	
+	SetDvar( str_dvar, n_base_value );
+
+	AddDebugCommand( "devgui_cmd \"" + str_devgui_path + "\" \"" + str_dvar + " " + n_value + "\"\n" );
+	
+	// now watch the dvar
+	while ( true )
+	{
+		n_dvar = GetDvarInt( str_dvar );
+		if ( n_dvar > n_base_value )
+		{
+			// call the target func, then reset the dvar
+			[[ func ]]( n_dvar );
+			SetDvar( str_dvar, n_base_value );
+		}
+		
+		util::wait_network_frame();
+	}
+}
+
+function devgui_octobomb_give( n_player_index )
+{
+    players = GetPlayers();
+    
+    player = players[ n_player_index ];
+    if( isdefined( player ) ) // give the activating player the octobomb
+    {
+        octobomb_give( player );
+    }
+    else if( n_player_index === 4 ) // give all players the octobomb
+    {
+        foreach( player in players )
+        {
+        	octobomb_give( player );
+        }
+    }
+}
+
 function octobomb_give( player )
 {
-    player clientfield::set_to_player( "octobomb_state", 3 );
+        player clientfield::set_to_player( "octobomb_state", 3 );
 
-    weapon = GetWeapon( STR_WEAP_OCTOBOMB );
-    player TakeWeapon( weapon ); // take away if it's already there, to make sure it replenishes properly
-    player zm_weapons::weapon_give( weapon, undefined, undefined, true );
+        weapon = GetWeapon( STR_WEAP_OCTOBOMB );
+        player TakeWeapon( weapon ); // take away if it's already there, to make sure it replenishes properly
+        player zm_weapons::weapon_give( weapon, undefined, undefined, true );
 }
 
 

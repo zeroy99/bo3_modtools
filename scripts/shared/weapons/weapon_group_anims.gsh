@@ -5,6 +5,12 @@
 
 #define KNUCKLES_ENDGAME_ARRAY			array( KNUCKLES_ENDGAME_1, KNUCKLES_ENDGAME_2, KNUCKLES_ENDGAME_3 )
 
+#define BOXING_ENDGAME_1				"pb_boxing_gloves_endgame_1stplace_idle"
+#define BOXING_ENDGAME_2				"pb_boxing_gloves_endgame_2ndplace_idle"
+#define BOXING_ENDGAME_3				"pb_boxing_gloves_endgame_3rdplace_idle"
+
+#define BOXING_ENDGAME_ARRAY			array( BOXING_ENDGAME_1, BOXING_ENDGAME_2, BOXING_ENDGAME_3 )
+
 #define WRENCH_LOBBY					"pb_cac_wrench_showcase"
 #define WRENCH_ENDGAME_1				"pb_wrench_endgame_1stplace_idle"
 #define WRENCH_ENDGAME_2				"pb_wrench_endgame_2ndplace_idle"
@@ -13,6 +19,8 @@
 #define WRENCH_ENDGAME_ARRAY			array( WRENCH_ENDGAME_1, WRENCH_ENDGAME_2, WRENCH_ENDGAME_3 )
 
 #define IMPROVISE_LOBBY					"pb_cac_improvise_showcase"
+
+#define SHOTGUN_OLYMPIA_LOBBY			"pb_cac_shotgun_olympia_showcase"
 
 #define SWORD_LOBBY						"pb_cac_sword_showcase"
 #define SWORD_ENDGAME_1					"pb_sword_endgame_1stplace_idle"
@@ -40,6 +48,38 @@
 #define BRAWLER_ENDGAME_3				"pb_brawler_endgame_3rdplace_idle"
 
 #define BRAWLER_ENDGAME_ARRAY			array( BRAWLER_ENDGAME_1, BRAWLER_ENDGAME_2, BRAWLER_ENDGAME_3 )
+
+
+#define PROSTHETIC_LOBBY				"pb_cac_prosthetic_arm_showcase"
+#define PROSTHETIC_ENDGAME_1			"pb_prosthetic_arm_endgame_1stplace_idle"
+#define PROSTHETIC_ENDGAME_2			"pb_prosthetic_arm_endgame_2ndplace_idle"
+#define PROSTHETIC_ENDGAME_3			"pb_prosthetic_arm_endgame_3rdplace_idle"
+
+#define PROSTHETIC_ENDGAME_ARRAY		array( PROSTHETIC_ENDGAME_1, PROSTHETIC_ENDGAME_2, PROSTHETIC_ENDGAME_3 )
+
+
+#define CHAINSAW_LOBBY					"pb_cac_chainsaw_showcase"
+#define CHAINSAW_ENDGAME_1				"pb_chainsaw_endgame_1stplace_idle"
+#define CHAINSAW_ENDGAME_2				"pb_chainsaw_endgame_1stplace_idle"
+#define CHAINSAW_ENDGAME_3				"pb_chainsaw_endgame_1stplace_idle"
+
+#define CHAINSAW_ENDGAME_ARRAY			array( CHAINSAW_ENDGAME_1, CHAINSAW_ENDGAME_2, CHAINSAW_ENDGAME_3 )
+
+
+#define SMG_PPSH_LOBBY					"pb_cac_smg_ppsh_showcase"
+#define SMG_PPSH_ENDGAME_1				"pb_smg_ppsh_endgame_1stplace_idle"
+#define SMG_PPSH_ENDGAME_2				"pb_smg_ppsh_endgame_1stplace_idle"
+#define SMG_PPSH_ENDGAME_3				"pb_smg_ppsh_endgame_1stplace_idle"
+
+#define SMG_PPSH_ENDGAME_ARRAY			array( SMG_PPSH_ENDGAME_1, SMG_PPSH_ENDGAME_2, SMG_PPSH_ENDGAME_3 )
+
+
+#define KNIFE_BALLISTIC_LOBBY			"pb_cac_b_knife_showcase"
+#define KNIFE_BALLISTIC_ENDGAME_1		"pb_b_knife_endgame_1stplace_idle"
+#define KNIFE_BALLISTIC_ENDGAME_2		"pb_b_knife_endgame_2ndplace_idle"
+#define KNIFE_BALLISTIC_ENDGAME_3		"pb_b_knife_endgame_3rdplace_idle"
+
+#define KNIFE_BALLISTIC_ENDGAME_ARRAY	array( KNIFE_BALLISTIC_ENDGAME_1, KNIFE_BALLISTIC_ENDGAME_2, KNIFE_BALLISTIC_ENDGAME_3 )
 
 
 #define KNIFE_LOBBY						"pb_cac_knife_showcase"
@@ -136,11 +176,16 @@
 	"weapon_launcher_alt", LAUNCHER_ALT_ENDGAME_ARRAY, \
 	"weapon_knife", KNIFE_ENDGAME_ARRAY, \
 	"weapon_knuckles", KNUCKLES_ENDGAME_ARRAY, \
+	"weapon_boxing", BOXING_ENDGAME_ARRAY, \
 	"weapon_wrench", WRENCH_ENDGAME_ARRAY, \
 	"weapon_sword", SWORD_ENDGAME_ARRAY, \
 	"weapon_nunchucks", NUNCHUCKS_ENDGAME_ARRAY, \
 	"weapon_mace", MACE_ENDGAME_ARRAY, \
-	"brawler", BRAWLER_ENDGAME_ARRAY )
+	"brawler", BRAWLER_ENDGAME_ARRAY, \
+	"weapon_prosthetic", PROSTHETIC_ENDGAME_ARRAY, \
+	"weapon_chainsaw", CHAINSAW_ENDGAME_ARRAY, \
+	"weapon_smg_ppsh", SMG_PPSH_ENDGAME_ARRAY, \
+	"weapon_knife_ballistic", KNIFE_BALLISTIC_ENDGAME_ARRAY )
 
 
 #define WEAPON_GROUP_FRONTEND_ANIMS		associativeArray( \
@@ -160,5 +205,10 @@
 	"weapon_sword", SWORD_LOBBY, \
 	"weapon_nunchucks", NUNCHUCKS_LOBBY, \
 	"weapon_mace", SWORD_LOBBY, \
-	"brawler", BRAWLER_LOBBY )
+	"brawler", BRAWLER_LOBBY, \
+	"weapon_prosthetic", PROSTHETIC_LOBBY, \
+	"weapon_chainsaw", CHAINSAW_LOBBY, \
+	"weapon_smg_ppsh", SMG_PPSH_LOBBY, \
+	"weapon_knife_ballistic", KNIFE_BALLISTIC_LOBBY, \
+	"weapon_shotgun_olympia", SHOTGUN_OLYMPIA_LOBBY )
 

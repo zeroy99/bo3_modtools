@@ -319,7 +319,8 @@ function spawnClones() // self is player
 						"",
 						true );
 						
-
+		/# RecordCircle( validSpawns.validpositions[i], 2, ORANGE, "Animscript", clone ); #/
+	
 		_ConfigureClone( clone, self, AnglesToForward( validSpawns.validAngles[i] ), validspawns.spawnTimes[i] );
 		self._clone[self._clone.size] = clone;
 		insertClone( clone );
@@ -427,6 +428,8 @@ function private _UpdateClonePathing() // self is clone
 				self._clone_goal_max_dist = CLONE_MAX_SEARCH_RADIUS;
 			}
 		}
+		//util::drawcylinder( self._goal_center_point, self._clone_goal_max_dist, 10, .5, "stop_notify_asdf" );
+		//util::debug_sphere( self._clone_goal, 10, ( 1, 0, 1 ), 1, 1 );
 		wait( .5 );
 	}
 }

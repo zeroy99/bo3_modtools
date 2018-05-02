@@ -1095,7 +1095,16 @@ function remove_when_done( killstreak, hasKillstreakBeenUsed, isFromInventory )
 {
 	self endon( "disconnect" );
 	
-	self waittill( "killstreak_done", successful, killstreakType );
+	continue_wait = true;
+	
+	while( continue_wait )
+	{
+		self waittill( "killstreak_done", successful, killstreakType );
+		
+		if ( killstreakType == killstreak )
+			continue_wait = false;
+	}
+	
 	if ( successful )
 	{	
 		// good place to hook into killstreak usage
@@ -2704,7 +2713,7 @@ function OnDamagePerWeapon( killstreak_ref,
 	if( !isValidAttacker )
 	{
 		return 0;
-	}	
+	}
 	
 	if( weapon.isEmp && type == "MOD_GRENADE_SPLASH" )
 	{		
@@ -3191,4 +3200,9 @@ function is_ricochet_protected( player )
 	}
 		
 	return false;
+}
+
+function is_killstreak_start_blocked()
+{
+	return ( isdefined( self.dart_thrown_time ) && ( GetTime() - self.dart_thrown_time < 1500 ) );
 }

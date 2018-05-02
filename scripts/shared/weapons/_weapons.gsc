@@ -144,8 +144,11 @@ function update_last_held_weapon_timings( newTime )
 				weaponPickedUp = true;
 			}
 
-			self AddWeaponStat( self.currentWeapon, "timeUsed", totalTime, self.class_num, weaponPickedUp );
-			self.currentWeaponStartTime = newTime;
+			if ( isdefined( self.class_num ) )
+			{
+				self AddWeaponStat( self.currentWeapon, "timeUsed", totalTime, self.class_num, weaponPickedUp );
+				self.currentWeaponStartTime = newTime;
+			}
 		}
 	}
 }
@@ -258,8 +261,6 @@ function track()
 
 		if( event == "weapon_change" )
 		{
-			self bb::commit_weapon_data( spawnid, currentWeapon, currentTime );
-
 			newWeapon = self getCurrentWeapon();
 			if( newWeapon != level.weaponNone && newWeapon != currentWeapon )
 			{
@@ -274,7 +275,6 @@ function track()
 		{
 			if( event != "disconnect" && isdefined( self ) )
 			{
-				self bb::commit_weapon_data( spawnid, currentWeapon, currentTime );
 				update_timings( newTime );
 			}
 			
@@ -315,21 +315,37 @@ function drop_for_death( attacker, sWeapon, sMeansOfDeath )
 	
 	if ( !isdefined( weapon ) )
 	{
+		/#
+		if ( GetDvarString( "scr_dropdebug") == "1" )
+			println( "didn't drop weapon: not defined" );
+		#/
 		return;
 	}
 
 	if ( weapon == level.weaponNone )
 	{
+		/#
+		if ( GetDvarString( "scr_dropdebug") == "1" )
+			println( "didn't drop weapon: weapon == none" );
+		#/
 		return;
 	}
 	
 	if ( !self hasWeapon( weapon ) )
 	{
+		/#
+		if ( GetDvarString( "scr_dropdebug") == "1" )
+			println( "didn't drop weapon: don't have it anymore (" + weapon.name + ")" );
+		#/
 		return;
 	}
 
 	if ( !(self AnyAmmoForWeaponModes( weapon )) )
 	{
+		/#
+		if ( GetDvarString( "scr_dropdebug") == "1" )
+			println( "didn't drop weapon: no ammo for weapon modes" );
+		#/
 		return;
 	}
 	
@@ -348,6 +364,10 @@ function drop_for_death( attacker, sWeapon, sMeansOfDeath )
 	//Check if the weapon has ammo
 	if( !clip_and_stock_ammo && !IS_TRUE( weapon.unlimitedammo ) )
 	{
+		/#
+		if ( GetDvarString( "scr_dropdebug") == "1" )
+			println( "didn't drop weapon: no ammo" );
+		#/
 		return;
 	}
 	
@@ -368,6 +388,11 @@ function drop_for_death( attacker, sWeapon, sMeansOfDeath )
 		return;
 	}
 	
+	/#
+	if ( GetDvarString( "scr_dropdebug") == "1" )
+		println( "dropped weapon: " + weapon.name );
+	#/
+
 	drop_limited_weapon( weapon, self, item );
 	
 	self.droppedDeathWeapon = true;
@@ -435,6 +460,10 @@ function watch_pickup()
 
 		}
 	}
+	/#
+	if ( GetDvarString( "scr_dropdebug") == "1" )
+		println( "picked up weapon: " + weapon.name + ", " + isdefined( self.ownersattacker ) );
+	#/
 	
 	assert( isdefined( player.tookWeaponFrom ) );
 	assert( isdefined( player.pickedUpWeaponKills ) );
@@ -487,20 +516,6 @@ function watch_usage()
 	self endon( "disconnect" );
 	level endon ( "game_ended" );
 	
-	// need to know if we used a killstreak weapon
-	self.usedKillstreakWeapon = [];
-	self.usedKillstreakWeapon["minigun"] = false;
-	self.usedKillstreakWeapon["m32"] = false;
-	self.usedKillstreakWeapon["m202_flash"] = false;
-	self.usedKillstreakWeapon["m220_tow"] = false;
-	self.usedKillstreakWeapon["mp40_blinged"] = false;
-	self.killstreakType = [];
-	self.killstreakType["minigun"] = "minigun";
-	self.killstreakType["m32"] = "m32";
-	self.killstreakType["m202_flash"] = "m202_flash";
-	self.killstreakType["m220_tow"] = "m220_tow";
-	self.killstreakType["mp40_blinged"] = "mp40_blinged_drop";
-	
 	for ( ;; )
 	{	
 		self waittill ( "weapon_fired", curWeapon );
@@ -541,8 +556,6 @@ function watch_usage()
 			{
 				self.pers["held_killstreak_ammo_count"][curWeapon]--;
 			}
-			
-			self.usedKillstreakWeapon[ curWeapon.name ] = true;
 		}
 	}
 }
@@ -571,9 +584,6 @@ function track_fire( curWeapon )
 	if ( isdefined( self.totalMatchShots ) )
 		self.totalMatchShots++;
 	
-	self bb::add_to_stat( "shots", TRACK_WEAPON_SHOT_FIRED );
-	self bb::add_to_stat( "hits", self.hits );
-
 	if( level.mpCustomMatch === true )
 	{
 		self.pers["shotsfired"]++;
@@ -702,7 +712,7 @@ function watch_offhand_end() // self == player
 
 	while ( self is_using_offhand_equipment() )
 	{
-		msg = self util::waittill_any_return( "death", "disconnect", "grenade_fire", "weapon_change" );
+		msg = self util::waittill_any_return( "death", "disconnect", "grenade_fire", "weapon_change", "watchOffhandEnd" );
 
 		if (( msg == "death" ) || ( msg == "disconnect" ))
 		{
@@ -771,6 +781,8 @@ function begin_grenade_tracking()
 	}
 	
 	
+	bbPrint( blackBoxEventName, "gametime %d spawnid %d weaponname %s", gettime(), getplayerspawnid( self ), weapon.name );
+
 	cookedTime = getTime() - startTime;
 	
 	if ( cookedTime > 1000 )
@@ -1234,6 +1246,13 @@ function damage_ent(eInflictor, eAttacker, iDamage, sMeansOfDeath, weapon, damag
 
 function debugline(a, b, color)
 {
+	/#
+	for (i = 0; i < 30*20; i++)
+	{
+		line(a,b, color);
+		wait .05;
+	}
+	#/
 }
 
 
@@ -1541,6 +1560,10 @@ function scavenger_think()
 		clip = weapon.clipSize;
 		clip *= GetDvarFloat( "scavenger_clip_multiplier", 1 );
 		clip = Int( clip );
+		
+		if ( isdefined( level.weaponLauncherEx41 ) && ( weapon.statIndex == level.weaponLauncherEx41.statIndex ) )
+			clip = 1;
+		
 		maxAmmo = weapon.maxAmmo;
 
 		if ( stock < maxAmmo - clip )
@@ -1877,4 +1900,30 @@ function multi_detonation_get_cluster_launch_dir( index, multiVal )
 	dir = AnglesToForward( angles );
 
 	return dir;
+}
+
+function should_suppress_damage( weapon, inflictor )
+{
+	if ( !isdefined( weapon ) )
+		return false;
+	
+	if ( !isdefined( self ) )
+		return false;
+	
+	if ( isdefined( level.weaponSpecialDiscGun ) && weapon.statIndex == level.weaponSpecialDiscGun.statIndex )
+	{
+		if ( isdefined( inflictor ) )
+		{
+			DEFAULT( inflictor.hit_info, [] );
+			
+			victimEntNum = self GetEntityNumber();
+			
+			if ( isdefined( inflictor.hit_info[ victimEntNum ] ) )
+				return true;
+			
+			inflictor.hit_info[ victimEntNum ] = true;
+		}
+	}
+	
+	return false;
 }

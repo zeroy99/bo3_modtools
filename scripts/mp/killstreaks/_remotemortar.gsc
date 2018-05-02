@@ -576,6 +576,12 @@ function player_linkto_remote( remote )
 		downArc = level.remoteMotarViewDown;
 	}
 	
+/#
+	leftArc = GetDvarInt( "scr_remotemortar_right", leftArc ); 
+	rightArc = GetDvarInt( "scr_remotemortar_left", rightArc ); 
+	upArc = GetDvarInt( "scr_remotemortar_up", upArc ); 
+	downArc = GetDvarInt( "scr_remotemortar_down", downArc );
+#/
 	self PlayerLinkWeaponViewToDelta( remote, "tag_player", 1.0, leftArc, rightArc, upArc, downArc );
 	self player_center_view();
 }

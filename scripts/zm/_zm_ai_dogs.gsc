@@ -371,6 +371,11 @@ function dog_spawn_factory_logic( favorite_enemy)
 			continue;
 		}
 
+		if( !isdefined( favorite_enemy ) )
+		{
+			continue;	
+		}
+		
 		dist_squared = DistanceSquared( dog_locs[i].origin, favorite_enemy.origin );
 		if(  dist_squared > ( 400 * 400 ) && dist_squared < ( 1000 * 1000 ) )
 		{
@@ -958,7 +963,7 @@ function dog_stalk_audio()
 	while(1)
 	{
 		self notify( "bhtn_action_notify", "ambient" );
-		wait randomfloatrange(3,6);		
+		wait randomfloatrange(2,4);		
 	}
 }
 

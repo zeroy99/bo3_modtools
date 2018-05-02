@@ -140,7 +140,7 @@ function update( mod, inflictor, perkFeedback, weapon, victim, psOffsetTime, sHi
 					{
 						hitAlias = "mpl_hit_alert_clone";
 					}
-					else if ( isdefined( victim ) && isPlayer( victim ) && victim flagsys::get( "gadget_armor_on" ) && armor::armor_should_take_damage( inflictor, mod, sHitLoc ) )
+					else if ( isdefined( victim ) && isPlayer( victim ) && victim flagsys::get( "gadget_armor_on" ) && armor::armor_should_take_damage( inflictor, weapon, mod, sHitLoc ) )
 					{
 						hitAlias = "mpl_hit_alert_armor";
 					}
@@ -283,7 +283,7 @@ function damage_feedback_get_stage( victim )
 
 function damage_feedback_get_dead( victim, mod, weapon, stage )
 {
-	return ( stage == 5 && (mod == "MOD_BULLET" || mod == "MOD_RIFLE_BULLET" || mod == "MOD_PISTOL_BULLET" || mod == "MOD_HEAD_SHOT") && (isdefined(weapon.isheroweapon) && !weapon.isheroweapon) && !killstreaks::is_killstreak_weapon( weapon ) );
+	return ( stage == 5 && (mod == "MOD_BULLET" || mod == "MOD_RIFLE_BULLET" || mod == "MOD_PISTOL_BULLET" || mod == "MOD_HEAD_SHOT") && (isdefined(weapon.isheroweapon) && !weapon.isheroweapon) && !killstreaks::is_killstreak_weapon( weapon ) && !( weapon.name === "siegebot_gun_turret" ) && !( weapon.name === "siegebot_launcher_turret" ) );
 }
 
 function damage_feedback_growth(victim, mod, weapon)

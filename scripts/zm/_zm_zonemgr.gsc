@@ -23,6 +23,7 @@ REGISTER_SYSTEM( "zm_zonemgr", &__init__, undefined )
 //	
 //	Your level will need to set the level.zone_manager_init_func.  This function
 //	should specify all of the connections you need to generate for each zone.
+//		Ex.:	level.zone_manager_init_func = &cosmodrome_zone_init;
 //	
 //	You will also need to call the zone_manager startup function, manage_zones.
 //	Pass in an array of starting zone names.
@@ -330,6 +331,10 @@ function zone_init( zone_name, zone_tag )
 	
 	assert( IsDefined( zone.volumes[0] ), "zone_init: No volumes found for zone: "+zone_name );	
 
+/#	
+	zone.total_spawn_count = 0;
+	zone.round_spawn_count = 0;
+#/	
 	// Fill in locs array with locations needed.
 	zone.a_loc_types = [];
 	zone.a_loc_types[ "zombie_location" ] = [];
@@ -968,6 +973,10 @@ function manage_zones( initial_zone )
 		// Okay now we can re-create the spawner list
 		[[ level.create_spawner_list_func ]]( zkeys );
 
+		/#
+		debug_show_spawn_locations();
+		#/
+
 		level.active_zone_names = zm_zonemgr::get_active_zone_names();
 
 		//wait a second before another check
@@ -975,6 +984,29 @@ function manage_zones( initial_zone )
 	}
 }
 
+//--------------------------------------------------------------
+/#
+function debug_show_spawn_locations()
+{
+	if( IS_TRUE( level.toggle_show_spawn_locations ) )
+	{
+		host_player = util::GetHostPlayer();
+		foreach( location in level.zm_loc_types[ "zombie_location" ] )
+		{
+			distance = Distance( location.origin, host_player.origin );
+			color = (0,0,1);
+			if( distance > ( GetDvarInt( "scr_spawner_location_distance" ) * 12 ) )
+			{
+				color = (1,0,0);
+			}
+			debugstar( location.origin, GetDvarInt( "scr_spawner_location_time" ), color );
+			//Print3d( location.origin, (distance/12), color, 1, 20 );
+		}
+	}
+	
+}
+
+#/
 //--------------------------------------------------------------
 //	This one function will handle managing all zones in your map
 //	to turn them on/off - probably the best way to handle this
@@ -1025,6 +1057,12 @@ function old_manage_zones( initial_zone )
 	level flag::set( "zones_initialized" );
 
 	level flag::wait_till( "begin_spawning" );
+
+	// RAVEN BEGIN bhackbarth: Add thread to display zone info for debugging
+	/#
+		level thread _debug_zones();
+    #/
+	// RAVEN END
 
 	// Now iterate through the active zones and see if we need to activate spawners
 
@@ -1211,6 +1249,8 @@ function get_active_zones_entities()
 // RAVEN BEGIN: bhackbarth  Debug zone info
 function _init_debug_zones()
 {
+	level.last_debug_zone_index = 0;
+	
 	current_y = 30;
 	current_x = 20;
 
@@ -1229,11 +1269,44 @@ function _init_debug_zones()
 		zone = level.zones[zoneName];
 
 		zone.debug_hud = [];
+		/#
+		for ( j = 0; j < 6; j++ )
+		{
+			zone.debug_hud[j] = NewDebugHudElem();
+			if ( !j )
+			{
+				zone.debug_hud[j].alignX = "right";
+			}
+			else
+			{
+				zone.debug_hud[j].alignX = "left";
+			}
+			zone.debug_hud[j].x = xloc[j];
+			zone.debug_hud[j].y = current_y;
+		}
+
+		if ( i == 40 )
+		{
+			// Create a second column
+			for ( x=0; x < xloc.size; x++ )
+			{
+				xloc[x] += 350;
+			}
+			current_y = 30;
+		}
+		else
+		{
+			current_y += 10;
+		}
+		zone.debug_hud[0] SetText(zoneName);
+		#/
 	}
 }
 
 function _destroy_debug_zones()
 {
+	level.last_debug_zone_index = undefined;
+	
 	zkeys = GetArrayKeys( level.zones );
 	for ( i = 0; i < zkeys.size; i++ )
 	{
@@ -1346,6 +1419,13 @@ function _debug_zones()
 				{
 					zone.debug_hud[4] SetText("");
 				}
+				
+			/#	
+				text += zone.a_loc_types[ "zombie_location" ].size + " spawn";
+				zone.debug_hud[5] SetText(zone.a_loc_types[ "zombie_location" ].size + " - " + zone.total_spawn_count + " - " + zone.round_spawn_count );
+			#/
+
+			///#	PrintLn( "ZM >> DEBUG=" + text );	#/
 			}
 		}
 		

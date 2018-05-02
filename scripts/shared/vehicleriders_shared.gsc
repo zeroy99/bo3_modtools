@@ -100,6 +100,11 @@ function __init__()
 	callback::on_vehicle_killed(&on_vehicle_killed);
 }
 
+function seat_position_to_index( str_position )
+{
+	return level.vehiclerider_use_index[ str_position ];
+}
+
 function on_vehicle_spawned()
 {
 	spawn_riders();
@@ -143,6 +148,13 @@ function find_next_open_position( ai )
 {
 	foreach ( s_rider in get_bundle_for_ai( ai ).objects )
 	{
+		seat_index = seat_position_to_index(s_rider.position);
+		if( seat_index <= 4 )	// IsVehicleSeatOccupied only works on code seats and not passenger seats
+		{
+			if( self IsVehicleSeatOccupied( seat_index ) )
+				continue;
+		}
+		   
 		if ( !flagsys::get( s_rider.position + "occupied" ) )
 		{
 			return s_rider.position;
@@ -218,7 +230,29 @@ function get_in( vh, str_pos, b_teleport = false )
 	if ( !isdefined( str_pos ) )
 	{
 		str_pos = vh find_next_open_position( self );
-		Assert( isdefined( str_pos ), "No unoccupied seats for vehicle rider." );
+	}
+	
+	Assert( isdefined( str_pos ), "No unoccupied seats for vehicle rider." );
+	
+	if( !isdefined( str_pos ) )
+	{
+		return;
+	}
+	
+	//return if the seat is not available
+	if ( !isdefined( vh.ignore_seat_check ) || !vh.ignore_seat_check )
+	{
+		seat_index = level.vehiclerider_use_index[ str_pos ];
+		if( seat_index <= 4 )	// IsVehicleSeatOccupied only works on code seats and not passenger seats
+		{
+			seat_available = !(vh IsVehicleSeatOccupied( seat_index ) );
+			Assert( seat_available, "This seat is already occupied." );
+		
+			if(!seat_available)
+			{
+				return;
+			}
+		}
 	}
 	
 	claim_position( vh, str_pos );
@@ -287,6 +321,20 @@ function get_in( vh, str_pos, b_teleport = false )
 	//
 	if ( isdefined( level.vehiclerider_use_index[ str_pos ] ) )
 	{
+		//double check that the seat is still available
+		if ( !isdefined( self.vehicle.ignore_seat_check ) || !self.vehicle.ignore_seat_check )
+		{
+			seat_index = level.vehiclerider_use_index[ str_pos ];
+			if( seat_index <= 4 )	// IsVehicleSeatOccupied only works on code seats and not passenger seats
+			{
+				if( self.vehicle IsVehicleSeatOccupied( seat_index ) )
+				{
+					get_out();
+					return;
+				}
+			}
+		}
+		
 		self.vehicle UseVehicle( self, level.vehiclerider_use_index[ str_pos ] );
 	}
 	
@@ -374,7 +422,7 @@ function on_vehicle_killed( params )
 	}
 }
 
-function can_get_in( vh, str_pos )
+function is_seat_available( vh, str_pos )
 {
 	if ( vh flagsys::get( str_pos + "occupied" ) )
 	{
@@ -384,6 +432,24 @@ function can_get_in( vh, str_pos )
 	if ( AnglesToUp( vh.angles )[2] < 0.3 )
 	{
 		// Vehicle is flipped
+		return false;
+	}
+	
+	seat_index = seat_position_to_index( str_pos );
+	if( seat_index <= 4 )	// IsVehicleSeatOccupied only works on code seats and not passenger seats
+	{
+		if( vh IsVehicleSeatOccupied( seat_index ) )
+		{
+			return false;
+		}
+	}
+	return true;
+}
+
+function can_get_in( vh, str_pos )
+{
+	if ( !is_seat_available( vh, str_pos ) )
+	{
 		return false;
 	}
 	
@@ -468,8 +534,6 @@ function get_out( str_mode )
 		self.disableAmmoDrop = false;
 		self.dontDropWeapon = false;
 	}
-
-	self flagsys::clear( "in_vehicle" );
 	
 	if( isdefined( self.vehicle ) )
 	{
@@ -477,11 +541,13 @@ function get_out( str_mode )
 		
 		// If there is an associated use index, call UseVehicle.
 		//
-		if ( isdefined( level.vehiclerider_use_index[ self.rider_info.position ] ) )
+		if ( isdefined( level.vehiclerider_use_index[ self.rider_info.position ] ) && (self flagsys::get( "in_vehicle" )) )
 		{
 			self.vehicle UseVehicle( self, level.vehiclerider_use_index[ self.rider_info.position ] );
 		}
 	}
+	
+	self flagsys::clear( "in_vehicle" );
 
 	self.vehicle = undefined;	
 	self.rider_info = undefined;

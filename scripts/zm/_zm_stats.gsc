@@ -8,6 +8,7 @@
 #using scripts\zm\gametypes\_globallogic;
 #using scripts\zm\gametypes\_globallogic_score;
 
+#using scripts\zm\_zm;
 #using scripts\zm\_zm_pers_upgrades;
 #using scripts\zm\_zm_weapons;
 
@@ -508,7 +509,7 @@ function get_stat_distance_traveled()
 
 function get_stat_round_number()
 {
-	return ( level.round_number );
+	return ( zm::get_round_number() );
 }
 
 function get_stat_combined_rank_value_survival_classic()

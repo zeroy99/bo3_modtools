@@ -31,5 +31,56 @@
 #insert scripts\shared\ai\utility.gsh;
 #insert scripts\shared\ai\warlord.gsh;
 
-
 #namespace WarlordBehavior;
+
+function autoexec RegisterBehaviorScriptFunctions() {}
+function private ArchetypeWarlordBlackboardInit() {}
+function private ArchetypeWarlordOnAnimscriptedCallback( entity )  {}
+function private shouldHuntEnemyPlayer( entity ) {}
+function private _warlordHuntEnemy( entity ) {}
+function chooseBetterPositionService( entity ) {}
+function canJukeCondition( behaviorTreeEntity )  {}
+function canTacticalJukeCondition( behaviorTreeEntity ) {}
+function warlordShouldNormalMelee( behaviorTreeEntity) {}
+function canTakePainCondition( behaviorTreeEntity ) {}
+function jukeAction( behaviorTreeEntity, asmStateName ) {}
+function jukeActionTerminate( behaviorTreeEntity, asmStateName ) {}
+function deathAction( behaviorTreeEntity, asmStateName ) {}
+function exposedPainActionStart( behaviorTreeEntity ) {}
+function shouldBeAngryCondition( behaviorTreeEntity ) {}
+function WarlordAngryAttack( entity ) {}
+function WarlordAngryAttack_ShootThemAll( entity, attackersArray ) {}
+
+#namespace WarlordServerUtils;
+
+function GetAlivePlayersCount(entity) {}
+function SetWarlordAggressiveMode( entity, b_aggressive_mode ) {}
+function AddPreferedPoint(entity, position, min_duration, max_duration, name) {}
+function DeletePreferedPoint( entity, name ) {}
+function ClearAllPreferedPoints(entity) {}
+function ClearPreferedPointsOutsideGoal(entity) {}
+function private SetPreferedPoint( entity, point) {}
+function private ClearPreferedPoint( entity) {}
+function private AtPreferedPoint(entity) {}
+function private ReachingPreferedPoint(entity) {}
+function private UpdatePreferedPoint(entity) {}
+function private GetPreferedValidPoints( entity ) {}
+function GetScaledForPlayers(val, scale2, scale3, scale4) {}
+function warlordCanJuke( entity ) {}
+function warlordCanTacticalJuke( entity ) {}
+function IsEnemyTooLowToAttack( enemy ) {}
+function HaveTooLowToAttackEnemy( entity ) {}
+function SetEnemyTooLowToAttack( entity ) {}
+function ComputeAttackerThreat( entity, attackerInfo) {}
+function ShouldSwitchToNewThreat( entity, attacker, threat) {}
+function UpdateAttackersList( entity, newAttacker, damage) {}
+function CheckifWeShouldMove( entity ) {}
+function WarlordDangerousEnemyAttack( entity, attacker, threat) {}
+function warlordDamageOverride( eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, weapon, vPoint, vDir, sHitLoc, vDamageOrigin, timeOffset, boneIndex, modelIndex, surfaceType, surfaceNormal ) {}
+function warlordSpawnSetup() {}
+function warlord_projectile_watcher() {}
+function remove_repulsor() {}
+function repulsor_fx() {}
+function trigger_player_shock_fx() {}
+
+

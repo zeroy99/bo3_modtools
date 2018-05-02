@@ -15,6 +15,7 @@
 #using scripts\shared\turret_shared;
 #using scripts\shared\ai_shared;
 #using scripts\shared\ai\systems\ai_interface;
+//#using scripts\cp\_util; // for getOtherTeam function
 
 #insert scripts\shared\shared.gsh;
 #insert scripts\shared\statemachine.gsh;
@@ -742,6 +743,16 @@ function Movement_Thread_StayInDistance()
 				}
 				else if ( stuckCount > 10 )
 				{
+					/# 
+					assert( false, "Hunter fall outside of NavVolume at " + self.origin );
+					v_box_min = ( -self.radius, -self.radius, -self.radius );
+					v_box_max = ( self.radius, self.radius, self.radius );
+					Box( self.origin, v_box_min, v_box_max, self.angles[1], (1,0,0), 1, false, 1000000 ); 
+					if ( isdefined( stuckLocation ) )
+					{
+						Line( stuckLocation, self.origin, (1,0,0), 1, true, 1000000 );
+					}
+					#/
 					self Kill();
 				}
 			}
@@ -794,6 +805,14 @@ function Movement_Thread_StayInDistance()
 
 		if ( foundPath )
 		{
+			/#
+			if ( IS_TRUE( GetDvarInt("hkai_debugPositionQuery") ) )
+			{
+				recordLine( self.origin, self.current_pathto_pos, (0.3,1,0) );
+				recordLine( self.origin, enemy.origin, (1,0,0.4) );
+			}
+			#/
+
 			msg = self util::waittill_any_timeout( maxGoalTimeout, "near_goal", "force_goal", "goal" );
 		}
 		else
@@ -861,6 +880,7 @@ function Delay_Target_ToEnemy_Thread( point, enemy, timeToHit )
 	while( GetTime() < timeStart + timeToHit * 1000 )
 	{
 		self.fakeTargetEnt.origin = LerpVector( point, enemy.origin + offset, ( GetTime() - timeStart ) / ( timeToHit * 1000 ) );
+		///#debugstar( self.fakeTargetEnt.origin, 1000, (0,1,0) ); #/
 		WAIT_SERVER_FRAME;
 	}
 
@@ -1304,6 +1324,7 @@ function hunter_frontScanning()
 				closest_enemy = ArrayGetClosest( self.origin, enemies );
 				
 				self.favoriteEnemy = closest_enemy;
+				/# line( scannerOrigin, closest_enemy.origin, ( 0, 1, 0 ), 1, 3 ); #/
 			}
 		}
 		else
@@ -1328,6 +1349,7 @@ function hunter_frontScanning()
 		targetLocation = scannerOrigin + scannerDirection * 1000; // any big value will do
 		self hunter_scanner_SetTargetPosition( targetLocation );
 
+		/# line( scannerOrigin, self.frontScanner.targetPos, ( 0, 1, 0 ), 1, 1000 ); #/
 		wait 0.1;
 	}
 }

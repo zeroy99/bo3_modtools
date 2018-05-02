@@ -1,7 +1,8 @@
 #using scripts\codescripts\struct;
-#using scripts\mp\teams\_teamset;
 
 #insert scripts\shared\shared.gsh;
+
+#using scripts\mp\teams\_teamset;
 
 #define HEAD_ICON_AXIS		"faction_axis"
 
@@ -38,6 +39,8 @@ function init( team )
 
 	// scoreboard
 	SetDvar("g_TeamName_" + team, &"MPUI_AXIS_SHORT");
+	//SetDvar("g_TeamColor_" + team, "0.65 0.57 0.41");
+	//SetDvar("g_ScoresColor_" + team, "0.65 0.57 0.41");
 	SetDvar("g_FactionName_" + team, "axis" );
 	
 	game["strings"][team + "_win"] = &"MP_CDP_WIN_MATCH";

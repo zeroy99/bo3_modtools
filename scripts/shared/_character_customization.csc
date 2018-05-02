@@ -447,14 +447,33 @@ function set_showcase_weapon( data_struct, mode, localClientNum, xuid, character
 		{
 			weapon_group = "weapon_launcher_alt";
 		}
+		else if ( weapon_root_name == "launcher_ex41" )
+		{
+			weapon_group = "weapon_smg_ppsh";
+		}
 	}
 	else if ( weapon_group == "weapon_pistol" && weapon_is_dual_wield )
 	{
 		weapon_group = "weapon_pistol_dw";
 	}
+	else if ( weapon_group == "weapon_smg")
+	{
+		if ( weapon_root_name == "smg_ppsh" )
+		{
+			weapon_group = "weapon_smg_ppsh";
+		}
+	}
+	else if ( weapon_group == "weapon_cqb")
+	{
+		if ( weapon_root_name == "shotgun_olympia" )
+		{
+			weapon_group = "weapon_shotgun_olympia";
+		}
+	}
 	else if ( weapon_group == "weapon_special" )
 	{
-		if ( weapon_root_name == "special_crossbow" )
+		if ( weapon_root_name == "special_crossbow" ||
+				weapon_root_name == "special_discgun" )
 		{
 			weapon_group = "weapon_smg";
 		}
@@ -462,14 +481,26 @@ function set_showcase_weapon( data_struct, mode, localClientNum, xuid, character
 		{
 			weapon_group = "weapon_pistol_dw";
 		}
+		else if( weapon_root_name == "knife_ballistic" )
+		{
+			weapon_group = "weapon_knife_ballistic";
+		}
 	}
 	else if ( weapon_group == "weapon_knife" )
 	{
-		if ( weapon_root_name == "melee_knuckles" )
+		if ( weapon_root_name == "melee_knuckles" || 
+				weapon_root_name == "melee_boxing" )
 		{
 			weapon_group = "weapon_knuckles";
 		}
-		else if ( weapon_root_name == "melee_improvise" )
+		else if ( weapon_root_name == "melee_chainsaw" || 
+				weapon_root_name == "melee_boneglass" || 
+				weapon_root_name == "melee_crescent" )
+		{
+			weapon_group = "weapon_chainsaw";
+		}
+		else if ( weapon_root_name == "melee_improvise" ||
+		          weapon_root_name == "melee_shovel" )
 		{
 			weapon_group = "weapon_improvise";
 		}
@@ -486,9 +517,14 @@ function set_showcase_weapon( data_struct, mode, localClientNum, xuid, character
 		else if ( weapon_root_name == "melee_sword" ||
 		          weapon_root_name == "melee_bat" ||
 		          weapon_root_name == "melee_fireaxe" ||
-		          weapon_root_name == "melee_mace")
+		          weapon_root_name == "melee_mace" ||
+		          weapon_root_name == "melee_katana" )
 		{
 			weapon_group = "weapon_sword";
+		}
+		else if ( weapon_root_name == "melee_prosthetic" )
+		{
+			weapon_group = "weapon_prosthetic";
 		}
 	}
 	else if ( weapon_group == "miscweapon" )

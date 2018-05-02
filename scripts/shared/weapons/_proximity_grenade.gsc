@@ -37,6 +37,7 @@ function init_shared()
 	level.proximityGrenadeDOTDamageTime = GetDvarFloat( "scr_proximityGrenadeDOTDamageTime", 0.2 );
 	level.proximityGrenadeDOTDamageInstances = GetDvarInt( "scr_proximityGrenadeDOTDamageInstances", 4 );
 	level.proximityGrenadeActivationTime = GetDvarFloat( "scr_proximityGrenadeActivationTime", .1 );
+	level.proximityChainDebug = GetDvarInt( "scr_proximityChainDebug", 0 );
 	level.proximityChainGracePeriod = GetDvarInt( "scr_proximityChainGracePeriod", 2500 );
 	level.proximityChainBoltSpeed = GetDvarFloat( "scr_proximityChainBoltSpeed", 400.0 );
 	level.proximityGrenadeProtectedTime = GetDvarFloat( "scr_proximityGrenadeProtectedTime", 0.45 );
@@ -49,6 +50,9 @@ function init_shared()
 	
 	callback::add_weapon_damage( GetWeapon( "proximity_grenade" ), &on_damage );
 
+	/#
+	level thread updateDvars();
+	#/
 }
 
 //******************************************************************
@@ -58,6 +62,27 @@ function init_shared()
 function register()
 {
 	clientfield::register( "toplayer", "tazered", VERSION_SHIP, 1, "int" );
+}
+
+function updateDvars()
+{
+	while(1)
+	{
+		level.proximityGrenadeDetectionRadius = GetDvarInt( "scr_proximityGrenadeDetectionRadius", level.proximityGrenadeDetectionRadius );
+		level.proximityGrenadeDuration = GetDvarFloat( "scr_proximityGrenadeDuration", 1.5 );
+		level.proximityGrenadeGracePeriod = GetDvarFloat( "scr_proximityGrenadeGracePeriod", level.proximityGrenadeGracePeriod );
+		level.proximityGrenadeDOTDamageAmount = GetDvarInt( "scr_proximityGrenadeDOTDamageAmount", level.proximityGrenadeDOTDamageAmount );
+		level.proximityGrenadeDOTDamageAmountHardcore = GetDvarInt( "scr_proximityGrenadeDOTDamageAmountHardcore", level.proximityGrenadeDOTDamageAmountHardcore );
+		level.proximityGrenadeDOTDamageTime = GetDvarFloat( "scr_proximityGrenadeDOTDamageTime", level.proximityGrenadeDOTDamageTime );
+		level.proximityGrenadeDOTDamageInstances = GetDvarInt( "scr_proximityGrenadeDOTDamageInstances", level.proximityGrenadeDOTDamageInstances );
+		level.proximityGrenadeActivationTime = GetDvarFloat( "scr_proximityGrenadeActivationTime", level.proximityGrenadeActivationTime );
+		level.proximityChainDebug = GetDvarInt( "scr_proximityChainDebug", level.proximityChainDebug );
+		level.proximityChainGracePeriod = GetDvarInt( "scr_proximityChainGracePeriod", level.proximityChainGracePeriod );
+		level.proximityChainBoltSpeed = GetDvarFloat( "scr_proximityChainBoltSpeed", level.proximityChainBoltSpeed );
+		level.proximityGrenadeProtectedTime = GetDvarFloat( "scr_proximityGrenadeProtectedTime", level.proximityGrenadeProtectedTime );
+
+		wait(1.0);
+	}
 }
 
 function createProximityGrenadeWatcher() // self == player
@@ -363,7 +388,16 @@ function proximityGrenadeChain( eAttacker, eInflictor, killCamEnt, weapon, means
 			{
 				continue;
 			}
-
+			
+			if ( level.proximityChainDebug || weaponobjects::friendlyFireCheck( eAttacker, player ) )
+			{
+				if ( level.proximityChainDebug || !player hasPerk ("specialty_proximityprotection") )
+				{
+					// found a player to pass the chain to					
+					
+					self thread chainPlayer( eAttacker, killCamEnt, weapon, meansOfDeath, damage, proximityChain, player, distanceSq );					
+				}
+			}			
 		}
 		
 		WAIT_SERVER_FRAME;
@@ -383,6 +417,17 @@ function chainPlayer( eAttacker, killCamEnt, weapon, meansOfDeath, damage, proxi
 	player thread proximityGrenadeChain( eAttacker, self, killCamEnt, weapon, meansOfDeath, damage, proximityChain, waitTime );
 	
 	WAIT_SERVER_FRAME;
+	
+	if ( level.proximityChainDebug )
+	{
+		/#
+			color = (1, 1, 1);
+			alpha = 1;
+			depth = 0;
+			time = 200;
+			util::debug_line(self.origin + (0,0,50), player.origin + (0,0,50), color, alpha, depth, time );
+		#/						
+	}
 	
 	self tesla_play_arc_fx( player, waitTime );
 	
@@ -421,6 +466,13 @@ function tesla_play_arc_fx( target, waitTime )
 	fxOrg delete();
 }
 
+/#
+function debugChainSphere()
+{
+	util::debug_sphere( self.origin + (0,0,50), 20, (1,1,1), 1, 0 );
+}
+#/
+	
 function watchProximityGrenadeHitPlayer( owner ) // self = grenade
 {	
 	self endon( "death" );

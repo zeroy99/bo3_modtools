@@ -40,7 +40,17 @@ function init()
 	level.swarm_fx["swarm_tail"] = "killstreaks/fx_hrpy_swrm_exhaust_trail_close";
 	level.missileDroneSoundStart = "mpl_hk_scan";
 
+	//killstreaks::register( "missile_swarm", "missile_swarm", "killstreak_missile_swarm", "missile_swarm_used",&swarm_killstreak, true );
+	//killstreaks::register_alt_weapon( "missile_swarm", "missile_swarm_projectile" );
+	//killstreaks::register_strings( "missile_swarm", &"KILLSTREAK_EARNED_MISSILE_SWARM", &"KILLSTREAK_MISSILE_SWARM_NOT_AVAILABLE", &"KILLSTREAK_MISSILE_SWARM_INBOUND", undefined, &"KILLSTREAK_MISSILE_SWARM_HACKED" );
+	//killstreaks::register_dialog( "missile_swarm", "mpl_killstreak_missile_swarm", "kls_swarm_used", "", "kls_swarm_enemy", "", "kls_swarm_ready" );
+	//killstreaks::set_team_kill_penalty_scale( "missile_swarm", 0.0 );
+	
 	clientfield::register( "world", "missile_swarm", VERSION_SHIP, 2, "int" );
+	
+/#
+	util::set_dvar_int_if_unset( "scr_missile_swarm_cam", 0 );
+#/
 }
 
 function swarm_killstreak( hardpointType )
@@ -351,6 +361,30 @@ function swarm_think( owner, killstreak_id )
 	level thread swarm_killstreak_end( owner, undefined, killstreak_id );
 }
 
+/#
+function projectile_cam( player )
+{
+	player.swarm_cam = true;
+	WAIT_SERVER_FRAME;
+	
+	forward = AnglesToForward( self.angles );
+	cam = spawn( "script_model", self.origin + ( 0, 0, 300 ) + forward * -200 );
+	cam SetModel( "tag_origin" );
+	cam LinkTo( self );
+		
+	player CameraSetPosition( cam );
+	player CameraSetLookAt( self );
+	player CameraActivate( true );	
+
+	self waittill( "death" );
+	wait( 1 );
+
+	player CameraActivate( false );
+	cam delete();
+	player.swarm_cam = false;
+}
+#/
+
 function projectile_goal_move()
 {
 	self endon( "death" );
@@ -535,6 +569,12 @@ function projectile_spawn_utility( owner, target, origin, weapon, targetname, mo
 	p.goal			= goal;
 	p.targetname	= "swarm_missile";
 	p clientfield::set( "enemyvehicle", ENEMY_VEHICLE_ACTIVE );
+/#
+	if ( !IS_TRUE( owner.swarm_cam ) && GetDvarInt( "scr_swarm_cam" ) == 1 )
+	{
+		p thread projectile_cam( owner );
+	}
+#/
 	return p;
 }
 
@@ -776,6 +816,13 @@ function player_valid_target( player, team, owner )
 	{
 		return false;
 	}
+
+/#
+	if ( player IsInMoveMode( "ufo", "noclip" ) )
+	{
+		return false;
+	}
+#/
 
 	return true;
 }

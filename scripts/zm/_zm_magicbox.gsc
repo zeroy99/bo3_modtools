@@ -1,5 +1,6 @@
 #using scripts\codescripts\struct;
 
+#using scripts\shared\aat_shared;
 #using scripts\shared\array_shared;
 #using scripts\shared\clientfield_shared;
 #using scripts\shared\demo_shared;
@@ -322,6 +323,14 @@ function boxstub_update_prompt( player )
 
 	if (!self trigger_visible_to_player( player ))
 		return false;
+	
+	if( isdefined( level.func_magicbox_update_prompt_use_override ) )
+	{
+		if( [[ level.func_magicbox_update_prompt_use_override ]]() )
+		{
+			return false;	
+		}
+	}
 
 	self.hint_parm1 = undefined;
 	if(IS_TRUE(self.stub.trigger_target.grab_weapon_hint))
@@ -696,7 +705,7 @@ function treasure_chest_think()
 	// refund money from teddy.
 	if ( level flag::get( "moving_chest_now" ) && !self._box_opened_by_fire_sale && isdefined( user_cost ) )
 	{
-		user zm_score::add_to_player_score( user_cost, false );
+		user zm_score::add_to_player_score( user_cost, false, "magicbox_bear" );
 	}
 
 	if ( level flag::get( "moving_chest_now" ) && !level.zombie_vars[ "zombie_powerup_fire_sale_on" ] && !self._box_opened_by_fire_sale )
@@ -1234,6 +1243,22 @@ function treasure_chest_CanPlayerReceiveWeapon( player, weapon, pap_triggers )
 		}
 	}
 
+	if ( weapon.name == "ray_gun" )
+	{
+		if ( player zm_weapons::has_weapon_or_upgrade( GetWeapon( "raygun_mark2" ) ) )
+		{
+			return false;
+		}
+	}
+	
+	if ( weapon.name == "raygun_mark2" )
+	{
+		if ( player zm_weapons::has_weapon_or_upgrade( GetWeapon( "ray_gun" ) ) )
+		{
+			return false;
+		}
+	}	
+
 	// enable special level by level weapon checks
 	if( IsDefined( player ) && isdefined( level.special_weapon_magicbox_check ) )
 	{
@@ -1545,6 +1570,7 @@ function treasure_chest_weapon_spawn( chest, player, respin )
 	//move it up
 //	model moveto( model.origin +( 0, 0, floatHeight ), 3, 2, 0.9 ); 
 
+	self.chest_moving = false;
 	move_the_box = treasure_chest_should_move( chest, player ); 
 	
 	preferred_weapon = undefined; 
@@ -1643,6 +1669,11 @@ function treasure_chest_weapon_spawn( chest, player, respin )
 	// Here's where the org get it's weapon type for the give function
 	self.weapon = rand; 
 	
+	if ( isdefined( level.func_magicbox_weapon_spawned ) )
+	{
+		self thread [[ level.func_magicbox_weapon_spawned ]]( self.weapon );
+	}
+	
 	//util::wait_network_frame();
 	wait( 0.1 );
 
@@ -1671,7 +1702,7 @@ function treasure_chest_weapon_spawn( chest, player, respin )
 		self.weapon_model_dw = zm_utility::spawn_buildkit_weapon_model( player, dweapon, undefined, self.weapon_model.origin - ( 3, 3, 3 ), self.weapon_model.angles ); 
 	}
 
-	if ( move_the_box )
+	if ( move_the_box && !(level.zombie_vars["zombie_powerup_fire_sale_on"] && self [[level._zombiemode_check_firesale_loc_valid_func]]()) )
 	{
 		self.weapon_model SetModel(level.chest_joker_model);
 
@@ -1697,8 +1728,8 @@ function treasure_chest_weapon_spawn( chest, player, respin )
 	}
 
 	self notify( "randomization_done" );
-
-	if (level flag::get("moving_chest_now") && !(level.zombie_vars["zombie_powerup_fire_sale_on"] && self [[level._zombiemode_check_firesale_loc_valid_func]]()))
+ 
+	if (IS_TRUE(self.chest_moving))
 	{
 		if( IsDefined( level.chest_joker_custom_movement ) )
 		{
@@ -1903,7 +1934,7 @@ function treasure_chest_give_weapon( weapon )
 	// this function was almost identical to weapon_give() so it calls that instead
 
 	//Audio: Raygun ALWAYS plays this stinger when getting it from the magicbox
-	if( weapon.name == "ray_gun" )
+	if( weapon.name == "ray_gun" || weapon.name == "raygun_mark2" )
 	{
 		playsoundatposition( "mus_raygun_stinger", (0,0,0) );
 	}
@@ -1917,7 +1948,34 @@ function treasure_chest_give_weapon( weapon )
 		}
 	}	
 	
-	self zm_weapons::weapon_give(weapon, false, true);
+	if( zm_utility::is_hero_weapon( weapon ) && !self HasWeapon( weapon ) )
+	{
+		self give_hero_weapon( weapon );
+	}
+	else
+	{
+		w_give = self zm_weapons::weapon_give(weapon, false, true);
+		
+		// make sure no aat given from the box	
+		if( isdefined(weapon) )
+		{
+			self thread aat::remove( w_give );
+		}			
+	}
+}
+
+function give_hero_weapon( weapon )//self = player
+{
+	w_previous = self GetCurrentWeapon();
+	self zm_weapons::weapon_give( weapon );
+	self GadgetPowerSet( 0, 99 );
+	self SwitchToWeapon( weapon );
+	self waittill( "weapon_change_complete" );
+	self SetLowReady( true ); 
+	self SwitchToWeapon( w_previous );
+	self util::waittill_any_timeout( 1.0, "weapon_change_complete" );
+	self SetLowReady( false );
+	self GadgetPowerSet( 0, 100 );
 }
 
 function should_upgrade_weapon( player, weapon )

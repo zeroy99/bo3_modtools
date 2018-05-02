@@ -67,6 +67,9 @@ function __init__()
 	
 	SetDvar( "bot_maxMantleHeight", 200 );
 	//SetDvar( "bot_enableWallrun", true );
+/#
+	level thread bot_devgui_think();
+#/
 }
 
 function init()
@@ -197,6 +200,8 @@ function on_player_connect()
 		return;
 	}
 
+	self endon ( "disconnect" );	
+	
 	// Do the bot initialization on connect so it gets called after skiptos
 	self.bot = SpawnStruct();
 	self.bot.threat = SpawnStruct();
@@ -521,6 +526,15 @@ function path_to_point_in_trigger( trigger )
 	
 	queryOrigin = minOrigin + ( 0, 0, queryHeight );
 	
+/#	
+	if ( GetDvarInt( "bot_drawtriggerquery", 0 ) )
+	{
+		drawS = 10;
+		Circle( queryOrigin, radius, (0,1,0), false, true, 20*drawS );
+		Circle( queryOrigin + (0,0,queryHeight), radius, (0,1,0), false, true, 20*drawS );
+		Circle( queryOrigin - (0,0,queryHeight), radius, (0,1,0), false, true, 20*drawS );
+	}
+#/	
 	queryResult = PositionQuery_Source_Navigation( queryOrigin, 0, radius, queryHeight, 17, self );
 	
 	best_point = undefined;
@@ -573,6 +587,13 @@ function get_trigger_height( trigger )
 
 function check_stuck()
 {
+/#
+	if ( !GetDvarInt( "bot_AllowMovement" ) )
+	{
+		return;
+	}
+#/
+		
 	if ( self BotUnderManualControl() ||
 		 self BotGoalReached() ||
 		 self util::isstunned() ||
@@ -596,6 +617,13 @@ function check_stuck()
 		
 		if ( self.bot.stuckCycles >= BOT_MAX_STUCK_CYCLES )
 		{
+/#		
+			if ( GetDvarInt( "bot_debugStuck" , 0 ) )
+			{				
+				Sphere( self.origin, 16, ( 1, 0, 0 ), 0.25, false, 16, 1200 );
+				iprintln( "Bot " + self.name + " not moving at: "+ self.origin );
+			}
+#/			
 			self thread stuck_resolution();
 		}
 	}
@@ -629,6 +657,12 @@ function check_stuck_position()
 	
 	for( i = 0; i < self.bot.positionHistory.size; i++ )
 	{
+/#			
+		if ( GetDvarInt( "bot_debugStuck" , 0 ) )
+		{	
+			Line( self.bot.positionHistory[i], self.bot.positionHistory[i] + ( 0, 0, 72 ), ( 0, 1, 0 ), 1, false, 10 );
+		}
+#/		
 		for ( j = i + 1; j < self.bot.positionHistory.size; j++ )
 		{
 			distSq = DistanceSquared( self.bot.positionHistory[i], self.bot.positionHistory[j] );
@@ -641,6 +675,13 @@ function check_stuck_position()
 		}
 	}
 
+/#	
+	if ( GetDvarInt( "bot_debugStuck" , 0 ) )
+	{
+		Sphere( self.origin, BOT_STUCK_DISTANCE, ( 1, 0, 0 ), 0.25, false, 16, 1200 );
+		iprintln( "Bot " + self.name + " hanging out at: "+ self.origin );
+	}
+#/	
 	self thread stuck_resolution();
 }
 
@@ -693,6 +734,17 @@ function wait_bot_path_failed_loop()
 	{
 		self waittill( "bot_path_failed", reason );
 		
+/#
+		if ( GetDvarInt( "bot_debugStuck" , 0 ) )
+		{
+			goalPosition = self BotGetGoalPosition();
+			Box( self.origin, ( -15, -15, 0 ), ( 15, 15, 72 ), 0, ( 0, 1, 0 ), 0.25, false, 1200 );
+			Box( goalPosition, ( -15, -15, 0 ), ( 15, 15, 72 ), 0, ( 1, 0, 0 ), 0.25, false, 1200 );
+			Line( self.origin, goalPosition, ( 1, 1, 1 ), 1, false, 1200 );
+			iprintln( "Bot " + self.name + " path failed from: " + self.origin + " to: " + goalPosition );
+		}
+#/
+	
 		self thread stuck_resolution();
 	}
 }
@@ -994,6 +1046,15 @@ function navmesh_wander( fwd, radiusMin, radiusMax, spacing, fwdDot )
 	}
 	else
 	{
+/#		
+		if ( GetDvarInt( "bot_debugStuck" , 0 ) )
+		{	
+			Circle( self.origin, radiusMin, ( 1, 0, 0 ), false, true, 1200 );
+			Circle( self.origin, radiusMax, ( 1, 0, 0 ), false, true, 1200 );			
+			Sphere( self.origin, 16, ( 0, 1, 0 ), 0.25, false, 16, 1200 );
+			iprintln( "Bot " + self.name + " can't find wander point at: "+ self.origin );
+		}
+#/			
 		self thread stuck_resolution();
 	}
 }
@@ -1251,3 +1312,227 @@ function kill_bot()
 	self DoDamage( self.health, self.origin );
 }
 
+/#
+	
+// Debugging
+//========================================
+
+function kill_bots()
+{
+	foreach( player in level.players )
+	{
+		if ( player util::is_bot() )
+		{
+			player kill_bot();
+		}
+	}
+}
+	
+function add_bot_at_eye_trace( team )	
+{
+	host = util::getHostPlayer();
+	
+	trace = host eye_trace();
+	
+	direction_vec = host.origin - trace["position"];
+	direction = VectorToAngles( direction_vec );
+	
+	yaw = direction[1];
+	bot = add_bot( team );
+	
+	if ( isdefined( bot ) )
+	{
+		bot waittill( "spawned_player" );
+		
+		bot SetOrigin( trace[ "position" ] );
+		bot SetPlayerAngles( ( bot.angles[0], yaw, bot.angles[2] ) );
+	}
+	
+	return bot;
+}
+
+function eye_trace()
+{
+	direction = self GetPlayerAngles();
+	direction_vec = AnglesToForward( direction );
+	eye = self GetEye();
+
+	scale = 8000;
+	direction_vec = ( direction_vec[0] * scale, direction_vec[1] * scale, direction_vec[2] * scale );
+	
+	return bullettrace( eye, eye + direction_vec, 0, undefined );
+}
+
+// Route Debugging
+//========================================
+
+function devgui_debug_route()
+{
+	iprintln( "Debug Patrol:" );
+	points = self get_nav_points();
+
+	if ( !isdefined( points ) || points.size == 0 )
+	{
+		iprintln( "Route Debug Cancelled" );
+		return;
+	}
+
+	iprintln( "Sending bots to chosen points" );
+
+	players = GetPlayers();
+	foreach( player in players )
+	{
+		if ( !player util::is_bot() )
+		{
+			continue;
+		}
+
+		player thread debug_patrol( points );
+	}
+}
+
+function get_nav_points()
+{
+	iprintln( "Square (X) - Add Point" );
+	iprintln( "Cross (A) - Done" );
+	iprintln( "Circle (B) - Cancel" );
+	
+	points = [];
+	while ( 1 )
+	{
+		WAIT_SERVER_FRAME;
+	
+		point = self eye_trace()["position"];
+		if ( isdefined( point ) )
+		{
+			point = GetClosestPointOnNavMesh( point, 128 );
+			
+			if ( isdefined( point ) )
+			{
+				Sphere( point, 16, ( 0, 0, 1 ), 0.25, false, 16, 1 );
+			}
+		}
+		
+		if ( self ButtonPressed( "BUTTON_X" ) )
+		{
+			if ( isdefined( point ) && ( points.size == 0 || Distance2D( point, points[points.size-1] ) > 16 ) )
+			{
+				points[points.size] = point;
+			}
+		}
+		else if ( self ButtonPressed( "BUTTON_A" ) )
+		{
+			return points;
+		}
+		else if ( self ButtonPressed( "BUTTON_B" ) )
+		{
+			return undefined;
+		}
+
+		for ( i = 0; i < points.size; i++ )
+		{
+			Sphere( points[i], 16, ( 0, 1, 0 ), 0.25, false, 16, 1 );
+		}
+	}
+}
+
+function debug_patrol( points )
+{
+	self notify( "debug_patrol" );
+	self endon( "death" );
+	self endon( "debug_patrol" );
+	
+	i = 0;
+	
+	//self end_sprint_to_goal();
+	
+	while( 1 )
+	{
+		self BotSetGoal( points[i], BOT_DEFAULT_GOAL_RADIUS );
+		self bot::sprint_to_goal();
+		self waittill( "bot_goal_reached" );
+		
+		i = ( i + 1 ) % points.size;
+	}
+}
+
+
+// Devgui
+//========================================
+
+function bot_devgui_think()
+{
+	while( 1 )
+	{
+		wait( 0.25 );
+
+		cmd = GetDvarString( "devgui_bot", "" );
+		
+		if ( !isdefined( level.botDevguiCmd ) || ![[level.botDevguiCmd]](cmd) )
+		{
+			host = util::getHostPlayer();
+			
+			switch( cmd )
+			{
+			case "remove_all":
+				remove_bots();
+				break;
+			case "laststand":
+				kill_bots();
+				break;
+			case "routes":
+				host devgui_debug_route();
+				break;
+			default:
+				break;			
+			}
+		}
+		
+		SetDvar( "devgui_bot", "" );
+	}
+}
+
+function coop_bot_devgui_cmd( cmd )
+{
+	host = get_host_player();
+	
+	switch( cmd )
+	{
+		case "add":
+			add_bot( host.team );
+			return true;
+		case "add_3":
+			add_bots( 3, host.team );
+			return true;
+		case "add_crosshair":
+			add_bot_at_eye_trace();
+			return true;
+		case "remove":
+			remove_bots( 1 );
+			return true;
+		break;
+	}
+	
+	return false;
+}
+
+// Debug Drawing
+//========================================
+
+function debug_star( origin, seconds, color )
+{
+	if ( !isdefined( seconds ) )
+	{
+		seconds = 1;
+	}
+	
+	if ( !isdefined( color ) )
+	{
+		color = ( 1, 0, 0 );
+	}
+
+	frames = Int( 20 * seconds );
+	DebugStar( origin, frames, color );
+}
+
+#/

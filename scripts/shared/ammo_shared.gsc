@@ -85,12 +85,6 @@ function ammo_pouch_think()
 			maxAmmo = weapon.maxammo;
 		}
 		
-		//TU1: require upgraded copycat rig to pickup grenades
-//		if ( b_is_primary_or_secondary_grenade && player HasCyberComRig( "cybercom_copycat" ) != CCOM_STATUS_UPGRADED )
-//		{
-//			continue;
-//		}
-		
 		if ( isdefined( level.customLoadoutScavenge ) )
 		{
 			maxAmmo = self [[level.customLoadoutScavenge]]( weapon );

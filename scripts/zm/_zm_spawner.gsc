@@ -866,7 +866,7 @@ function tear_into_building()
 			}
 			else
 			{
-				self util::waittill_any_timeout(1, "orientdone" );
+				self util::waittill_any_ex( 1, "orientdone", "death", "teleporting" );
 			}
 	
 			self zombie_history( "tear_into_building -> Reach position and orientated" );		
@@ -1960,7 +1960,7 @@ function zombie_damage( mod, hit_location, hit_origin, player, amount, team, wea
 
 	if ( IsDefined( self.zombie_damage_fx_func ) )
 	{
-		self [[ self.zombie_damage_fx_func ]]( mod, hit_location, hit_origin, player );
+		self [[ self.zombie_damage_fx_func ]]( mod, hit_location, hit_origin, player, direction_vec );
 	}
 
 	if ( "MOD_IMPACT" != mod && zm_utility::is_placeable_mine( weapon ) )
@@ -2081,6 +2081,11 @@ function zombie_damage_ads( mod, hit_location, hit_origin, player, amount, team,
 		{				
 			player zm_score::player_add_points( damage_type, mod, hit_location, undefined, team, weapon );
 		}
+	}
+
+	if ( IsDefined( self.zombie_damage_fx_func ) )
+	{
+		self [[ self.zombie_damage_fx_func ]]( mod, hit_location, hit_origin, player, direction_vec );
 	}
 
 	self thread zm_powerups::check_for_instakill( player, mod, hit_location );
@@ -3203,11 +3208,6 @@ function zombie_tesla_head_gib()
 function play_ambient_zombie_vocals()
 {
     self endon( "death" );
-    
-    if( self.animname == "monkey_zombie" || IS_TRUE( self.is_avogadro ) )
-	{
-        return;
-	}
     
     while(1)
     {

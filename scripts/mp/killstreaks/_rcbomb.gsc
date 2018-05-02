@@ -1,4 +1,5 @@
 #using scripts\codescripts\struct;
+
 #using scripts\shared\_oob;
 #using scripts\shared\array_shared;
 #using scripts\shared\audio_shared;
@@ -15,6 +16,7 @@
 #using scripts\shared\weapons\_weaponobjects;
 #using scripts\shared\vehicle_shared;
 #using scripts\shared\vehicle_death_shared;
+
 #using scripts\mp\_challenges;
 #using scripts\mp\_util;
 #using scripts\mp\gametypes\_globallogic_audio;
@@ -82,6 +84,7 @@ function InitRCBomb()
 	rcbomb.disableRemoteWeaponSwitch = true;
 	rcbomb.overrideVehicleDamage = &OnDamage;
 	rcbomb.overrideVehicleDeath = &OnDeath;
+	//rcbomb.remoteWeaponShutdownDelay = RCBOMB_SHUTDOWN_DELAY;
 	rcbomb.watch_remote_weapon_death = true;
 	rcbomb.watch_remote_weapon_death_duration = RCBOMB_WATCH_DEATH_DURATION;
 	
@@ -159,7 +162,7 @@ function ActivateRCBomb( hardpointType )
 	}
 
 	placement = CalculateSpawnOrigin( self.origin, self.angles );
-	if( !isdefined( placement ) || !self IsOnGround() || self util::isUsingRemote() || killstreaks::is_interacting_with_object() || self oob::IsTouchingAnyOOBTrigger() )
+	if( !isdefined( placement ) || !self IsOnGround() || self util::isUsingRemote() || killstreaks::is_interacting_with_object() || self oob::IsTouchingAnyOOBTrigger() || self killstreaks::is_killstreak_start_blocked() )
 	{
 		self iPrintLnBold( &"KILLSTREAK_RCBOMB_NOT_PLACEABLE" );
 		return false;
@@ -365,6 +368,7 @@ function OnDamage( eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, weapo
 			self.damage_on_death = false;
 			self.died_by_emp = true;
 			iDamage = self.health + 1; // destroy if hit by emp
+			//thread remote_weapons::do_static_fx();
 		}
 	}
 	
@@ -409,6 +413,7 @@ function OnDeath( eInflictor, eAttacker, iDamage, sMeansOfDeath, weapon, vDir, s
 	else
 	{
 		rcbomb thread HideAfterWait( hide_after_wait_time );
+		//rcbomb util::DeleteAfterTime( RCBOMB_SHUTDOWN_DELAY_ABANDONED );
 	}
 	
 	if ( isdefined( rcbomb ) )

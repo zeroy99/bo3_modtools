@@ -12,8 +12,14 @@
 #using scripts\shared\laststand_shared;
 #using scripts\shared\gameobjects_shared;
 
+#insert scripts\shared\shared.gsh;
+#insert scripts\shared\statemachine.gsh;
+#insert scripts\shared\version.gsh;
+#insert scripts\shared\archetype_shared\archetype_shared.gsh;
+
 #using scripts\shared\ai\systems\blackboard;
 #using scripts\shared\ai\blackboard_vehicle;
+#insert scripts\shared\ai\utility.gsh;
 
 #using scripts\shared\vehicle_shared;
 #using scripts\shared\vehicle_ai_shared;
@@ -21,13 +27,6 @@
 
 #using scripts\mp\killstreaks\_killstreaks;
 #using scripts\mp\killstreaks\_killstreak_bundles;
-
-#insert scripts\shared\shared.gsh;
-#insert scripts\shared\statemachine.gsh;
-#insert scripts\shared\version.gsh;
-#insert scripts\shared\archetype_shared\archetype_shared.gsh;
-#insert scripts\shared\ai\utility.gsh;
-
 
 #define SCAN_HEIGHT_OFFSET 40
 	
@@ -158,6 +157,15 @@ function quadtank_initialize()
 
 function quadtank_update_difficulty()
 {
+//	testing out changing the turret parameters based solely upon the number of players, since damage
+//	is alread scaled based upon the difficulty of the individual player
+//	so, saving out current method until change has been tested
+//
+//	value = gameskill::get_general_difficulty_level();
+//	
+//	scale_up = mapfloat( 0, 7, 0.8, 2.0, value );
+//	scale_down = mapfloat( 0, 7, 1.0, 0.5, value );
+	
 	if( isDefined( level.players) )
 	{
 		value = level.players.size;
@@ -1006,7 +1014,7 @@ function Attack_Thread_rocket()
 			}
 
 			wait 1;
-			msg = self util::waittill_any_timeout( 2, "turret_on_target" );
+			msg = self util::waittill_any_timeout( 2, "turret_on_target", "end_attack_thread" );
 
 			if ( isdefined( self.enemy ) && Distance2DSquared( self.origin, self.enemy.origin ) > SQR( ROCKET_LAUNCHER_MIN_DIST ) )
 			{	
@@ -1135,7 +1143,9 @@ function Movement_Thread_Wander()
 	{
 		self SetSpeed( self.settings.defaultMoveSpeed, 5, 5 );
 
+		PixBeginEvent( "_quadtank::Movement_Thread_Wander" );
 		queryResult = PositionQuery_Source_Navigation( self.origin, minSearchRadius, maxSearchRadius, halfHeight, innerSpacing, self, outerSpacing );
+		PixEndEvent();
 
 		// filter
 		PositionQuery_Filter_DistanceToGoal( queryResult, self );
@@ -1149,6 +1159,7 @@ function Movement_Thread_Wander()
 				ADD_POINT_SCORE( point, "tooCloseToSelf", -100 );
 			}
 		}
+		self vehicle_ai::PositionQuery_DebugScores( queryResult );
 
 		vehicle_ai::PositionQuery_PostProcess_SortScore( queryResult );
 

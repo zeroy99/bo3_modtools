@@ -78,7 +78,11 @@ function clearHackerTarget( weapon, successfulHack, spawned ) // self == player
 	
 	if ( isdefined( weapon ) )
 	{
-		self SetWeaponHackPercent( weapon, 0.0 );
+		if ( weapon.isHackToolWeapon )
+		{
+			self SetWeaponHackPercent( weapon, 0.0 );
+		}
+		
 		if( isdefined( self.hackerToolTarget ))
 		{
 			heatseekingmissile::setFriendlyFlags( weapon, self.hackerToolTarget );
@@ -292,7 +296,7 @@ function watchHackerToolEnd( weapon ) // self == player
 	self endon( "disconnect" );
 	self endon( "hacker_tool_fired" );
 
-	msg = self util::waittill_any_return( "weapon_change", "death" );
+	msg = self util::waittill_any_return( "weapon_change", "death", "hacker_tool_fired", "disconnect" );
 	clearHackerTarget( weapon, false, false );
 	self clientfield::set_to_player( "hacker_tool", HACKER_TOOL_INACTIVE );
 	self stopHackerToolSoundLoop();
@@ -589,6 +593,19 @@ function getBestHackerToolTarget( weapon )
 			continue;
 		}			
 		
+		/#
+		//This variable is set and managed by the 'dev_friendly_lock' function, which works with the dev_gui
+		if( GetDvarString( "scr_freelock") == "1" )
+		{
+			//If the dev_gui dvar is set, only check if the target is in the reticule. 
+			if( self isWithinHackerToolReticle( targetsAll[idx], weapon ) )
+			{
+				targetsValid[targetsValid.size] = targetsAll[idx];
+			}
+			continue;
+		}
+		#/
+
 		if ( level.teamBased || level.use_team_based_logic_for_locking_on === true ) //team based game modes
 		{
 			if ( isEntityHackableCarePackage( target_ent ))
@@ -691,6 +708,14 @@ function hackingTimeScale( target )
 		scale = Target_ScaleMinMaxRadius( target, self, level.hackerToolLockOnFOV, radiusInner, radiusOuter );
 		scale = scale * scale * scale * scale;
 		hackTime = LerpFloat( getHackOuterTime( target ), getHackTime( target ), scale );
+/#
+		hackerToolDebugText = GetDvarInt( "hackertoolDebugText", 0 ) ;
+		if ( hackerToolDebugText )
+		{
+			print3d( target.origin, "scale: " + scale + "\nInner: " + radiusInner + " Outer: " + radiusOuter, ( 0, 0, 0 ), 1, hackerToolDebugText, 2 );
+		}
+		assert( hacktime > 0 );
+#/
 		
 		hackRatio = getHackTime( target ) / hackTime;
 		if ( !isdefined( hackRatio ) )
@@ -1112,3 +1137,16 @@ function getLockOnTime( target, weapon ) // self is the player, weapon is the ha
 	return 	lockLengthMs / lockOnSpeed;
 }
 
+/#
+function tunables()
+{
+	while(1)
+	{
+		level.hackerToolLostSightLimitMs = GetDvarInt( "scr_hackerToolLostSightLimitMs", 1000 );
+		level.hackerToolLockOnRadius = GetDvarFloat( "scr_hackerToolLockOnRadius", 20 );
+		level.hackerToolLockOnFOV = GetDvarInt( "scr_hackerToolLockOnFOV", 65 );
+		
+		wait(1.0);
+	}
+}
+#/

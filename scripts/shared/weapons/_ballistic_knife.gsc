@@ -32,7 +32,7 @@ function onSpawn( watcher, player )
 	{
 		// once the missile dies, spawn a model there to be retrieved
 		retrievable_model = spawn( "script_model", endpos );
-		retrievable_model SetModel( "t6_wpn_ballistic_knife_projectile" );
+		retrievable_model SetModel( "wpn_t7_loot_ballistic_knife_projectile" );
 		retrievable_model SetTeam( player.team );
 		retrievable_model SetOwner( player );
 		retrievable_model.owner = player;
@@ -159,7 +159,7 @@ function watch_use_trigger( trigger, model, callback, playerSoundOnUse, npcSound
 		if ( !IsAlive( player ) )
 			continue;
 
-		if ( !player IsOnGround() )
+		if ( !player IsOnGround() && !SessionModeIsMultiplayerGame() )
 			continue;
 
 		if ( isdefined( trigger.triggerTeam ) && ( player.team != trigger.triggerTeam ) )
@@ -168,23 +168,25 @@ function watch_use_trigger( trigger, model, callback, playerSoundOnUse, npcSound
 		if ( isdefined( trigger.claimedBy ) && ( player != trigger.claimedBy ) )
 			continue;
 
-		if ( !player HasWeapon( level.weaponBallisticKnife ) )
+		if ( !player HasWeapon( level.weaponBallisticKnife, true ) )
+			continue;
+		
+		heldBallisticKnife = player GetWeaponForWeaponRoot( level.weaponBallisticKnife );
+		if ( !isdefined( heldBallisticKnife ) )
 			continue;
 
-		ammo_stock = player GetWeaponAmmoStock( level.weaponBallisticKnife );
-		ammo_clip = player GetWeaponAmmoClip( level.weaponBallisticKnife );
-		current_weapon = player GetCurrentWeapon();
+		ammo_stock = player GetWeaponAmmoStock( heldBallisticKnife );
+		ammo_clip = player GetWeaponAmmoClip( heldBallisticKnife );
+		
 		total_ammo = ammo_stock + ammo_clip;
 		
 		// see if this player hasn't reloaded yet, we make this check so you can't pick it up before your stock ammo has updated
 		//	if your stock ammo hasn't updated then you'll take it but you won't get it in your reserves, it just goes away
 		hasReloaded = true;
-		if( total_ammo > 0 && ammo_stock == total_ammo && current_weapon == level.weaponBallisticKnife )
-		{
+		if ( total_ammo > 0 && ammo_stock == total_ammo )
 			hasReloaded = false;
-		}
 
-		if( total_ammo >= max_ammo || !hasReloaded )
+		if ( total_ammo >= max_ammo || !hasReloaded )
 			continue;
 
 		if ( isdefined( playerSoundOnUse ) )
@@ -204,24 +206,28 @@ function pick_up( player ) // self == retrievable_model
 	// if we're not currently on the ballistic knife and the clip is empty then put the ammo in the clip
 	current_weapon = player GetCurrentWeapon();
 	player challenges::pickedUpBallisticKnife();
-	if( current_weapon != level.weaponBallisticKnife )
+	if( current_weapon.rootWeapon != level.weaponBallisticKnife )
 	{
+		heldBallisticKnife = player GetWeaponForWeaponRoot( level.weaponBallisticKnife );
+		if ( !isdefined( heldBallisticKnife ) )
+			return;
+
 		// if the clip is empty, fill it
-		clip_ammo = player GetWeaponAmmoClip( level.weaponBallisticKnife );
+		clip_ammo = player GetWeaponAmmoClip( heldBallisticKnife );
 		if( !clip_ammo )
 		{
-			player SetWeaponAmmoClip( level.weaponBallisticKnife, 1 );
+			player SetWeaponAmmoClip( heldBallisticKnife, 1 );
 		}
 		else
 		{
-			new_ammo_stock = player GetWeaponAmmoStock( level.weaponBallisticKnife ) + 1;
-			player SetWeaponAmmoStock( level.weaponBallisticKnife, new_ammo_stock );		
+			new_ammo_stock = player GetWeaponAmmoStock( heldBallisticKnife ) + 1;
+			player SetWeaponAmmoStock( heldBallisticKnife, new_ammo_stock );		
 		}
 	}
 	else
 	{
-		new_ammo_stock = player GetWeaponAmmoStock( level.weaponBallisticKnife ) + 1;
-		player SetWeaponAmmoStock( level.weaponBallisticKnife, new_ammo_stock );		
+		new_ammo_stock = player GetWeaponAmmoStock( current_weapon ) + 1;
+		player SetWeaponAmmoStock( current_weapon, new_ammo_stock );		
 	}
 }
 

@@ -145,6 +145,7 @@ function default_onRoundEndGame( winner )
 	return winner;
 }
 
+// T8 - We should get rid of the return from onRoundEndGame in favor of this
 function default_determineWinner( roundWinner )
 {
 	if ( isdefined( game["overtime_round"] ) )

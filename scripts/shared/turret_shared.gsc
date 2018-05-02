@@ -1213,6 +1213,8 @@ function _turret_think( n_index, v_offset )
 	self notify( "_turret_think" + _index( n_index ) );
 	self endon( "_turret_think" + _index( n_index ) );
 	
+	/# self thread _debug_turret_think( n_index ); #/
+		
 	self thread _turret_user_think( n_index );
 		
 	self thread _turret_new_user_think( n_index );
@@ -1600,6 +1602,83 @@ function _user_check( n_index )
 		return true;
 	}
 }
+
+/#
+
+function _debug_turret_think( n_index )
+{
+	self endon( "death" );
+	self endon( "_turret_think" + _index( n_index ) );
+	self endon( "turret_disabled" + _index( n_index ) );
+	
+	s_turret = _get_turret_data( n_index );
+	v_color = ( 0, 0, 1 );
+	
+	while ( true )
+	{
+		if ( !GetDvarint( "g_debugTurrets") )
+		{
+			wait(0.2);
+			continue;
+		}
+
+		has_target = isdefined( get_target( n_index ) );
+		
+		if ( ( does_need_user( n_index ) && !does_have_user( n_index ) )
+			|| !has_target )
+		{
+			v_color = ( 1, 1, 0 );
+		}
+		else
+		{
+			v_color = ( 0, 1, 0 );
+		}
+		
+		str_team = get_team( n_index );
+		if ( !isdefined( str_team ) )
+		{
+			str_team = "no team";
+		}
+		
+		str_target = "target > ";
+		
+		e_target = s_turret.e_next_target;		
+		if ( isdefined( e_target ) )
+		{
+			if ( IsActor( e_target ) )
+			{
+				str_target += "ai";
+			}
+			else if ( IsPlayer( e_target ) )
+			{
+				str_target += "player";
+			}
+			else if ( IsVehicle( e_target ) )
+			{
+				str_target += "vehicle";
+			}
+			else if ( isdefined( e_target.targetname ) && ( e_target.targetname == "drone" ) )
+			{
+				str_target += "drone";
+			}
+			else if ( isdefined( e_target.classname ) )
+			{
+				str_target += e_target.classname;
+			}
+		}
+		else
+		{
+			str_target += "none";
+		}
+		
+		str_debug = self GetEntNum() + ":" + str_team + ":" + str_target;
+		Record3DText( str_debug, self.origin, v_color, "Script", self );
+		
+		wait .05;
+	}
+}
+
+#/
 
 /*===================================================================================================
 	SYSTEM FUNCTIONS
@@ -2354,6 +2433,10 @@ function can_hit_target( e_target, n_index )
 //self = turret/vehicle
 function is_target_in_view( v_target, n_index )
 {
+	/#
+		_update_turret_arcs( n_index );
+	#/
+		
 	s_turret = _get_turret_data( n_index );
 	
 	v_pivot_pos = self GetTagOrigin( s_turret.str_tag_pivot );

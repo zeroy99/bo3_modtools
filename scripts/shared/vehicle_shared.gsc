@@ -1577,7 +1577,29 @@ function set_speed( speed, rate, msg )
 		return;  // potential for disaster? keeps messages from overriding previous messages
 	}
 
+	 /#
+	self thread debug_set_speed( speed, rate, msg );
+	#/
 	self setspeed( speed, rate );
+}
+
+function debug_set_speed( speed, rate, msg )
+{
+	 /#
+	self notify( "new debug_vehiclesetspeed" );
+	self endon( "new debug_vehiclesetspeed" );
+	self endon( "resuming speed" );
+	self endon( "death" );
+	while( 1 )
+	{
+		while( GetDvarString( "debug_vehiclesetspeed" ) != "off" )
+		{
+			print3d( self.origin + ( 0, 0, 192 ), "vehicle setspeed: " + msg, ( 1, 1, 1 ), 1, 3 );
+			wait .05;
+		}
+		wait .5;
+	}
+	#/
 }
 
 function script_resume_speed( msg, rate )
@@ -1998,6 +2020,16 @@ function _play_looped_fx_on_tag_origin_update( tag, effectorigin )
 
 function setup_dvars()
 {
+	/#
+	if( GetDvarString( "debug_vehicleresume" ) == "" )
+	{
+		SetDvar( "debug_vehicleresume", "off" );
+	}
+	if( GetDvarString( "debug_vehiclesetspeed" ) == "" )
+	{
+		SetDvar( "debug_vehiclesetspeed", "off" );
+	}
+	#/
 }
 
 function setup_level_vars()
@@ -3206,6 +3238,31 @@ function get_nearest_target(valid_targets)
 	return nearest;
 }
 
+//---------------//
+// Debug section //
+//---------------//
+/#
+function debug_vehicle()
+{
+	self endon( "death" );
+
+	if( GetDvarString( "debug_vehicle_health" ) == "" )
+	{
+		SetDvar( "debug_vehicle_health", "0" );
+	}
+
+	while( 1 )
+	{
+		if( GetDvarInt( "debug_vehicle_health" ) > 0 )
+		{
+			print3d( self.origin, "Health: " + self.health, ( 1, 1, 1 ), 1, 3 );
+		}
+
+		WAIT_SERVER_FRAME;
+	}
+}
+
+
 function get_dummy()
 {
 	if ( IS_TRUE( self.modeldummyon ) )
@@ -3630,6 +3687,8 @@ function update_damage_as_occupant( damage_taken, max_health ) // self == player
 {
 	damage_taken_normalized = math::clamp( damage_taken / max_health, 0.0, 1.0 );
 	self SetVehicleDamageMeter( damage_taken_normalized );
+	
+	// /# IPrintLn( "Damage Taken: " + damage_taken_normalized ); #/
 }
 
 function stop_monitor_damage_as_occupant( ) // self == player
@@ -3690,4 +3749,181 @@ function player_is_driver()
 	return false;
 }
 
+/#
+function vehicle_spawner_tool()
+{
+	allvehicles = GetEntArray( "script_vehicle", "classname" );
+	
+	vehicletypes = [];
+	
+	foreach( veh in allvehicles )
+	{
+		vehicletypes[ veh.vehicletype ] = veh.model;
+	}
+	
+	if( IsAssetLoaded( "vehicle", "civ_pickup_mini" ) )
+	{
+		veh = SpawnVehicle( "civ_pickup_mini", (0,0,10000), (0,0,0), "debug_spawn_vehicle" );
+		vehicletypes[ veh.vehicletype ] = veh.model;
+		veh Delete();
+	}
+	
+	if( IsAssetLoaded( "vehicle", "atv" ) )
+	{
+		veh = SpawnVehicle( "atv", (0,0,10000), (0,0,0), "debug_spawn_vehicle" );
+		vehicletypes[ veh.vehicletype ] = veh.model;
+		veh Delete();
+	}
+	
+	if( IsAssetLoaded( "vehicle", "prowler_quad" ) )
+	{
+		veh = SpawnVehicle( "prowler_quad", (0,0,10000), (0,0,0), "debug_spawn_vehicle" );
+		vehicletypes[ veh.vehicletype ] = veh.model;
+		veh Delete();
+	}
+	
+	if( IsAssetLoaded( "vehicle", "rc_car_racer" ) )
+	{
+		veh = SpawnVehicle( "rc_car_racer", (0,0,10000), (0,0,0), "debug_spawn_vehicle" );
+		vehicletypes[ veh.vehicletype ] = veh.model;
+		veh Delete();
+	}
+	
+	if( IsAssetLoaded( "vehicle", "jeep_fav_player" ) )
+	{
+		veh = SpawnVehicle( "jeep_fav_player", (0,0,10000), (0,0,0), "debug_spawn_vehicle" );
+		vehicletypes[ veh.vehicletype ] = veh.model;
+		veh Delete();
+	}
+	
+	types = getArrayKeys( vehicletypes );
+	
+	if( types.size == 0 )
+		return;
+	
+	type_index = 0;
+	
+	while( 1 )
+	{
+		if( GetDvarInt( "debug_vehicle_spawn" ) > 0 )
+		{
+			player = GetPlayers()[0];
+			
+			dynamic_spawn_hud = NewClientHudElem( player );
+			dynamic_spawn_hud.alignX = "left";
+			dynamic_spawn_hud.x = 20;
+			dynamic_spawn_hud.y = 395;
+			dynamic_spawn_hud.fontscale = 2;
+			
+			dynamic_spawn_dummy_model = sys::Spawn( "script_model", (0,0,0) );
+			
+			const waittime = 0.3;
+			
+			while( GetDvarInt( "debug_vehicle_spawn" ) > 0 )
+			{
+				origin = player.origin + AnglesToForward( player getPlayerAngles() ) * 270.0;
+				origin += (0,0,40);
+				
+				if( player UseButtonPressed() )
+				{	
+					dynamic_spawn_dummy_model Hide();
+					vehicle = SpawnVehicle( types[type_index], origin, player.angles, "debug_spawn_vehicle" );
+					vehicle MakeVehicleUsable();
+					
+					if( GetDvarInt( "debug_vehicle_spawn" ) == 1 )
+					{
+						SetDvar( "debug_vehicle_spawn", "0" );
+						continue;
+					}
+					wait waittime;
+				}
+				if( player buttonpressed("DPAD_RIGHT") )
+				{
+					dynamic_spawn_dummy_model Hide();
+					type_index++;
+					if( type_index >= types.size )
+						type_index = 0;
+					wait waittime;
+				}
+				if( player buttonpressed("DPAD_LEFT") )
+				{
+					dynamic_spawn_dummy_model Hide();
+					type_index--;
+					if( type_index < 0 )
+						type_index = types.size - 1;
+					wait waittime;
+				}
+				type = types[type_index];
+				dynamic_spawn_hud settext("Press X to spawn vehicle " + type );
+			
+				dynamic_spawn_dummy_model SetModel( vehicletypes[type] );
+				dynamic_spawn_dummy_model Show();
+				dynamic_spawn_dummy_model NotSolid();
+				dynamic_spawn_dummy_model.origin = origin;
+				dynamic_spawn_dummy_model.angles = player.angles;
+				WAIT_SERVER_FRAME;
+			}
+			
+			dynamic_spawn_hud destroy();
+			dynamic_spawn_dummy_model delete();
+		}
+		
+		wait 2;
+	}
+}
 
+function spline_debug()
+{
+	level flag::init( "debug_vehicle_splines" );
+	
+	level thread _spline_debug();
+	
+	while ( true )
+	{
+		level flag::set_val( "debug_vehicle_splines", GetDvarInt( "g_vehicleDrawSplines" ) );
+		wait .05;
+	}
+}
+
+function _spline_debug()
+{
+	while ( true )
+	{
+		level flag::wait_till( "debug_vehicle_splines" );
+		
+		foreach ( nd in GetAllVehicleNodes() )
+		{
+			nd show_node_debug_info();
+		}
+		
+		wait .05;
+	}
+}
+
+function show_node_debug_info()
+{
+	self.n_debug_display_count = 0;
+	
+	if ( is_unload_node() )
+	{
+		print_debug_info( "unload: \"" + self.script_unload + "\"" );
+	}
+	
+	if ( isdefined( self.script_notify ) )
+	{
+		print_debug_info( "notify: \"" + self.script_notify + "\"" );
+	}
+	
+	if ( IS_TRUE( self.script_delete ) )
+	{
+		print_debug_info( "delete" );
+	}
+}
+
+function print_debug_info( str_info )
+{
+	self.n_debug_display_count++;
+	Print3D( self.origin - ( 0, 0, self.n_debug_display_count * 20 ), str_info, BLUE, 1, 1 );
+}
+
+#/

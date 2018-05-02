@@ -8,3 +8,7 @@
 #insert scripts\shared\ai\systems\fx_character.gsh;
 #insert scripts\shared\ai\systems\gib.gsh;
 
+#namespace FxClientUtils;
+
+function PlayFxBundle( localClientNum, entity, fxScriptBundle ) {}
+function StopAllFXBundles( localClientNum, entity ) {}

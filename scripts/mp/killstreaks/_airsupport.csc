@@ -1,10 +1,12 @@
 #using scripts\codescripts\struct;
+
 #using scripts\shared\util_shared;
+
+#insert scripts\shared\shared.gsh;
+
 #using scripts\mp\_rewindobjects;
 #using scripts\mp\_util;
 #using scripts\mp\_vehicle;
-
-#insert scripts\shared\shared.gsh;
 
 #namespace airsupport;
 

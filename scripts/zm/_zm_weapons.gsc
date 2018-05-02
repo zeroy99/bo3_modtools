@@ -44,6 +44,9 @@
 #precache( "triggerstring", "ZOMBIE_WEAPONCOSTONLY_CFILL" );
 #precache( "triggerstring", "ZOMBIE_WEAPONCOSTONLY_CFILL_BGB_SECRET_SHOPPER" );
 
+#precache( "triggerstring", "ZOMBIE_WEAPONAMMOHACKED_CFILL" );
+#precache( "triggerstring", "ZOMBIE_WEAPONAMMOHACKED_CFILL_BGB_SECRET_SHOPPER" );
+
 #namespace zm_weapons;
 
 function init()
@@ -168,7 +171,7 @@ function checkGrenadeForDud( weapon, isThrownGrenade, player )
 
 	for ( ;; )
 	{
-		self util::waittill_any_timeout( 0.25, "grenade_bounce", "stationary" );
+		self util::waittill_any_ex( 0.25, "grenade_bounce", "stationary", "death", player, "zombify" );
 		if ( !self grenade_safe_to_bounce( player, weapon ) )
 		{
 			self thread makeGrenadeDudAndDestroy();
@@ -1234,7 +1237,7 @@ function wall_weapon_update_prompt( player )
 		{
 			ammo_cost = player get_ammo_cost_for_weapon( weapon );
 		}
-		else if ( player has_upgrade( weapon ) )
+		else if ( player has_upgrade( weapon ) && self.stub.hacked !== true )
 		{
 			ammo_cost = get_upgraded_ammo_cost( weapon ); 
 		}
@@ -1247,12 +1250,18 @@ function wall_weapon_update_prompt( player )
 		{
 			if ( player bgb::is_enabled( "zm_bgb_secret_shopper" ) && !is_wonder_weapon( player.currentweapon ) && ( player.currentweapon.type !== "melee" ) )
 			{
-				self.stub.hint_string = &"ZOMBIE_WEAPONAMMOONLY_CFILL_BGB_SECRET_SHOPPER";
+				if ( IS_TRUE( self.stub.hacked ) )
+					self.stub.hint_string = &"ZOMBIE_WEAPONAMMOHACKED_CFILL_BGB_SECRET_SHOPPER";
+				else
+					self.stub.hint_string = &"ZOMBIE_WEAPONAMMOONLY_CFILL_BGB_SECRET_SHOPPER";
 				self SetHintString( self.stub.hint_string );			
 			}
 			else
 			{
-				self.stub.hint_string = &"ZOMBIE_WEAPONAMMOONLY_CFILL"; 
+				if ( IS_TRUE( self.stub.hacked ) )
+					self.stub.hint_string = &"ZOMBIE_WEAPONAMMOHACKED_CFILL"; 
+				else
+					self.stub.hint_string = &"ZOMBIE_WEAPONAMMOONLY_CFILL"; 
 				self SetHintString( self.stub.hint_string );
 			}
 		}
@@ -2207,7 +2216,7 @@ function weapon_spawn_think()
 			
 			// MM - need to check and see if the player has an upgraded weapon.  If so, the ammo cost is much higher
 			//    - hacked wall buys have their costs reversed...
-			if ( IsDefined( self.hacked ) && self.hacked )
+			if ( IS_TRUE( self.stub.hacked ) )
 			{
 				if ( !player has_upgrade( weapon ) )
 				{
@@ -2637,6 +2646,46 @@ function weapon_give( weapon, is_upgrade = false, magic_box = false, nosound = f
 		return weapon;
 	}
 
+	// check for ray gun variation if already have a ray gun
+	if( weapon.name == "ray_gun" || weapon.name == "raygun_mark2" )
+	{
+		// if have mark2 and pulled mark1 just give ammo
+		if ( self has_weapon_or_upgrade( GetWeapon( "raygun_mark2" ) ) && weapon.name == "ray_gun" )
+		{
+			for( i = 0; i < primaryWeapons.size; i++ )
+			{
+				if( IsSubstr( primaryWeapons[i].name, "raygun_mark2" ) )
+				{	
+					self GiveStartAmmo( primaryWeapons[i] );
+					break;
+				}
+			}			
+
+			self notify( "weapon_give", weapon );
+			return weapon;
+		}
+		else if( self has_weapon_or_upgrade( GetWeapon( "ray_gun" ) ) && weapon.name == "raygun_mark2" )
+		{	
+			// change out ray gun for mark 2
+			for( i = 0; i < primaryWeapons.size; i++ )
+			{
+				if( IsSubstr( primaryWeapons[i].name, "ray_gun" ) )
+				{	
+					self weapon_take( primaryWeapons[i] ); 				
+					break;
+				}
+			}
+			
+			weapon = self give_build_kit_weapon( weapon );
+			self notify( "weapon_give", weapon );
+
+			self GiveStartAmmo( weapon );
+			
+			self SwitchToWeapon( weapon ); 									
+			return weapon;
+		}
+	}
+
 	if ( zm_utility::is_melee_weapon( weapon ) )
 	{
 		current_weapon=zm_melee_weapon::change_melee_weapon( weapon, current_weapon );
@@ -2721,6 +2770,7 @@ function weapon_give( weapon, is_upgrade = false, magic_box = false, nosound = f
 		if ( self [[ level.zombiemode_offhand_weapon_give_override ]]( weapon ) )
 		{
 			self notify( "weapon_give", weapon );
+			self zm_utility::play_sound_on_ent( "purchase" );
 			return weapon;
 		}
 	}
@@ -3145,8 +3195,8 @@ function weapondata_give( weapondata )
 	}
 
 	alt_weapon = weapon.altWeapon;
-	if ( alt_weapon != level.weaponNone )
-	{
+	if ( alt_weapon != level.weaponNone && alt_weapon.altweapon == weapon )
+	{		
 		if ( !self HasWeapon( alt_weapon ) )
 		{
 			self GiveWeapon( alt_weapon );

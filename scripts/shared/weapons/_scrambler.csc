@@ -337,6 +337,10 @@ function cleanUpScramblerOnDelete( scramblerEnt, scramblerHandle, isLocalized, l
 
 function isEnemyScrambler( localClientNum )
 {
+	/#
+	if ( GetDvarInt( "scr_forceEnemyScrambler", 0 ) ) 
+		return true;
+	#/
 	enemy = !util::friend_not_foe(localClientNum);
 	return enemy;
 }

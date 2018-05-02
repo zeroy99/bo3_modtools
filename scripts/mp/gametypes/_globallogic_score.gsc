@@ -11,6 +11,7 @@
 
 #using scripts\shared\bots\_bot;
 
+#insert scripts\mp\_contracts.gsh;
 #insert scripts\shared\shared.gsh;
 #insert scripts\shared\abilities\_ability_util.gsh;
 
@@ -555,6 +556,8 @@ function playTop3Sounds()
 			if ( level.placement["all"][i].score == level.placement["all"][j].score )
 				currentScorePlace--;
 		}
+		wasInTheMoney = ( prevScorePlace <= 3 );
+		isInTheMoney = ( currentScorePlace <= 3 );
 		
 		level.placement["all"][i].prevScorePlace = currentScorePlace;
 	}
@@ -589,11 +592,6 @@ function _setPlayerMomentum( player, momentum, updateScore = true )
 	if ( momentum == oldMomentum )
 		return;
 	
-	if ( updateScore )
-	{
-		player bb::add_to_stat( "momentum", ( momentum - oldMomentum ));
-	}
-
 	if ( momentum > oldMomentum )
 	{
 		highestMomentumCost = 0;
@@ -1101,12 +1099,15 @@ function updateWinStats( winner )
 	updateContractWin( winner );
 }
 
-function canUpdateWeaponContractStats()
+function canUpdateWeaponContractStats( player )
 {
 	if ( GetDvarInt( "enable_weapon_contract", 0 ) == 0 )
 		return false;
 	
 	if ( !level.rankedMatch && !level.arenaMatch )
+		return false;
+	
+	if ( player GetDStat( "contracts", MP_CONTRACT_SPECIAL_SLOT, "index" ) != 0 )
 		return false;
 
 	return true;
@@ -1114,7 +1115,7 @@ function canUpdateWeaponContractStats()
 
 function updateWeaponContractStart( player )
 {
-	if ( !canUpdateWeaponContractStats() )
+	if ( !canUpdateWeaponContractStats( player ) )
 		return;
 	
 	if ( player GetDStat( "weaponContractData", "startTimestamp" ) == 0 )
@@ -1125,7 +1126,7 @@ function updateWeaponContractStart( player )
 
 function updateWeaponContractWin( winner )
 {
-	if ( !canUpdateWeaponContractStats() )
+	if ( !canUpdateWeaponContractStats( winner ) )
 		return;
 
 	matchesWon = winner GetDStat( "weaponContractData", "currentValue" ) + 1;
@@ -1143,12 +1144,12 @@ function updateWeaponContractWin( winner )
 
 function updateWeaponContractPlayed()
 {
-	if ( !canUpdateWeaponContractStats() )
-		return;
-
 	foreach( player in level.players )
 	{
 		if ( !isdefined( player ) )
+			continue;
+		
+		if ( !canUpdateWeaponContractStats( player ) )
 			continue;
 
 		// must at least spawned into a team to get matches played credit, otherwise players could potentially exploit this by never spawning in

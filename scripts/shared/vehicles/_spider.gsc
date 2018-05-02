@@ -34,6 +34,9 @@ REGISTER_SYSTEM( "spider", &__init__, undefined )
 function __init__()
 {	
 	vehicle::add_main_callback( "spider", &spider_initialize );
+	/#
+	SetDvar( "debug_spider_noswitch", 0 );
+	#/
 }
 
 function NO_SWITCH_ON()
@@ -196,12 +199,21 @@ function GetNextMovePosition_ranged( enemy )
 	
 	self vehicle_ai::PositionQuery_DebugScores( queryResult );
 
+	/# self.debug_ai_move_to_points_considered = queryResult.data; #/
 
 	if( !isdefined( best_point ) )
 	{
 		return undefined;
 	}
 
+/#
+	if ( IS_TRUE( GetDvarInt("hkai_debugPositionQuery") ) )
+	{
+		recordLine( self.origin, best_point.origin, (0.3,1,0) );
+		recordLine( self.origin, enemy.origin, (1,0,0.4) );
+	}
+#/
+		
 	return best_point.origin;
 }
 
@@ -371,6 +383,12 @@ function switch_to_melee()
 
 function should_switch_to_melee( from_state, to_state, connection )
 {
+/#
+	if ( NO_SWITCH_ON() )
+	{
+		return false;
+	}
+#/
 
 	if ( !vehicle_ai::IsCooldownReady( "state_change" ) )
 	{
@@ -606,6 +624,12 @@ function do_melee_attack( enemy )
 
 function should_switch_to_range( from_state, to_state, connection )
 {
+/#
+	if ( NO_SWITCH_ON() )
+	{
+		return false;
+	}
+#/
 
 	if ( self.pathfailcount > 4 )
 	{

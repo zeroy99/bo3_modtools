@@ -351,6 +351,8 @@ function trap_use_think( trap )
 			*/
 			else
 			{
+				self playsound("zmb_trap_deny");
+				who zm_audio::create_and_play_dialog( "general", "outofmoney" );
 				continue;
 			}
 
@@ -512,7 +514,14 @@ function trap_move_switches()
 	{
 		// Rotate switch model "on"
 		self._trap_switches[i] rotatepitch( 180, .5 );
-		self._trap_switches[i] playsound( "evt_switch_flip_trap" );
+		if(IsDefined (self._trap_type) && (self._trap_type == "fire"))
+		{
+			self._trap_switches[i] playsound( "evt_switch_flip_trap_fire" );
+		}
+		else
+		{
+			self._trap_switches[i] playsound( "evt_switch_flip_trap" );
+		}
 	}
 	self._trap_switches[0] waittill( "rotatedone" );
 
@@ -817,14 +826,14 @@ function player_elec_damage()
 		}
 		if(!self hasperk( PERK_JUGGERNOG ) || self.health - 100 < 1)
 		{
-			radiusdamage(self.origin,10,self.health + 100,self.health + 100);
+			self DoDamage( self.health + 100, self.origin );
 			self.is_burning = undefined;
 
 		}
 		else
 		{
-			self dodamage(50, self.origin);
-			wait(.1);
+			self DoDamage( 50, self.origin );
+			wait 0.1;
 			//self playsound("wpn_zmb_electrap_zap");
 			self.is_burning = undefined;
 		}

@@ -6,10 +6,10 @@
 #using scripts\shared\util_shared;
 #using scripts\shared\weapons\_weaponobjects;
 #using scripts\shared\weapons\_weapons;
-#using scripts\mp\_util;
 
 #insert scripts\shared\shared.gsh;
 
+#using scripts\mp\_util;
 
 #namespace airsupport;
 
@@ -30,7 +30,7 @@ function init()
 	/#
 	if ( airsupport_heights.size > 1 )
 	{
-		println( "Found more then one 'air_support_height' structs in the map" );
+		util::error( "Found more then one 'air_support_height' structs in the map" );
 	}
 	#/
 	
@@ -39,7 +39,7 @@ function init()
 	/#
 	if ( airsupport_heights.size > 0 )
 	{
-		println( "Found an entity in the map with an 'air_support_height' targetname.  There should be only structs." );
+		util::error( "Found an entity in the map with an 'air_support_height' targetname.  There should be only structs." );
 	}
 	#/
 
@@ -48,7 +48,7 @@ function init()
 	/#
 	if ( heli_height_meshes.size > 1 )
 	{
-		println( "Found more then one 'heli_height_lock' classname in the map" );
+		util::error( "Found more then one 'heli_height_lock' classname in the map" );
 	}
 	#/
 		
@@ -259,6 +259,8 @@ function planeStrike( owner, requiredDeathCount, pathStart, pathEnd, bombTime, f
 	plane.angles = direction;
 
 	plane moveTo( pathEnd, flyTime, 0, 0 );
+	
+	thread debug_plane_line( flyTime, flyspeed, pathStart, pathEnd );
 	
 	if ( isdefined(planeSpawnedFunction) )
 	{
@@ -476,6 +478,8 @@ function getHeliPath( start, goal )
 {
 	startNoFlyZones = insideNoFlyZones( start, true );
 	
+	thread debug_line( start, goal, (1,1,1) );
+
 	goalNoFlyZones = insideNoFlyZones( goal );
 	
 	// if the end point is in a no fly zone then raise the height to the top of the zone
@@ -500,10 +504,12 @@ function followPath( path,  doneNotify, stopAtGoal )
 	{
 		self SetVehGoalPos( path[i], false );
 		
+		thread debug_line( self.origin, path[i], (1,1,0) );
 		self waittill("goal" );		
 	}
 		
 	self SetVehGoalPos( path[path.size - 1], stopAtGoal );
+	thread debug_line( self.origin, path[i], (1,1,0) );
 	
 	self waittill("goal" );
 	
@@ -601,11 +607,15 @@ function calculatePath( start, end, startNoFlyZones, goalNoFlyZones )
 	Assert( points.size >= 1 );
 	
 	
+	debug_sphere( points[points.size - 1], 10, (1,0,0), 1, 1000 );
+	
 	point = start;
 	
 //	PrintLn( "Path Calculated: " + points.size );
 	for ( i = 0 ; i < points.size; i++ )
 	{
+		thread debug_line( point, points[i], (0,1,0) );
+		debug_sphere( points[i], 10, (0,0,1), 1, 1000 );
 		point = points[i];
 	}
 	return points;
@@ -693,6 +703,7 @@ function entLOSRadiusDamage( ent, pos, radius, max, min, owner, eInflictor )
 		assumed_ceiling_height = 800;  // check for very high ceilings
 		eye_position = ent.entity GetEye();
 		head_height = eye_position[2];
+		debug_display_time = 40 * 100;
 
 		// check if there is a path to this entity above his feet. if not, they're probably indoors
 		trace = weapons::damage_trace( ent.entity.origin, ent.entity.origin + (0,0,assumed_ceiling_height), 0, undefined );
@@ -705,12 +716,14 @@ function entLOSRadiusDamage( ent, pos, radius, max, min, owner, eInflictor )
 			// the "ceiling height" point.  I dont want to change it at this point.
 			
 			test_point = trace["position"];
+			debug_star(test_point, (0,1,0), debug_display_time);
 			
 			trace = weapons::damage_trace( (test_point[0],test_point[1],head_height) , (pos[0],pos[1], head_height), 0, undefined );
 			indoors = (trace["fraction"] != 1);
 			
 			if ( indoors )
 			{
+				debug_star((pos[0],pos[1], head_height), (0,1,0), debug_display_time);
 				// give them a distance advantage for being indoors.
 				dist *= 4;
 				if ( dist > radius )
@@ -718,10 +731,12 @@ function entLOSRadiusDamage( ent, pos, radius, max, min, owner, eInflictor )
 			}
 			else
 			{
+				debug_star((pos[0],pos[1], head_height), (1,0,0), debug_display_time);
 				trace = weapons::damage_trace( (pos[0],pos[1], head_height), pos, 0, undefined );
 				indoors = (trace["fraction"] != 1);
 				if ( indoors )
 				{
+					debug_star(pos, (0,1,0), debug_display_time);
 					// give them a distance advantage for being indoors.
 					dist *= 4;
 					if ( dist > radius )
@@ -729,11 +744,13 @@ function entLOSRadiusDamage( ent, pos, radius, max, min, owner, eInflictor )
 				}
 				else
 				{
+					debug_star(pos, (1,0,0), debug_display_time);
 				}
 			}
 		}
 		else
 		{
+			debug_star(ent.entity.origin + (0,0,assumed_ceiling_height), (1,0,0), debug_display_time );
 		}
 	}
 
@@ -934,9 +951,271 @@ function GetRandomHelicopterStartOrigin()
 	start_origin = ( AnglesToForward( direction ) * dist );
 	start_origin += ( ( randomfloat( 2 ) - 1 ) * pathRandomness, ( randomfloat( 2 ) - 1 ) * pathRandomness, 0 );
 
+/#
+	if ( GetDvarInt( "scr_noflyzones_debug", 0 ) ) 
+	{
+		if ( level.noFlyZones.size )
+		{
+			index = RandomIntRange( 0, level.noFlyZones.size );
+			delta = level.noFlyZones[ index ].origin;
+			delta = ( delta[0] + RandomInt( 10 ), delta[ 1 ] + RandomInt( 10 ), 0 );
+			delta = VectorNormalize( delta );
+			start_origin = ( delta * dist );
+		}
+	}
+#/
 	return start_origin;
 }
 
+
+////////////////////////////////////////////////////////////////////////////
+// debug
+
+function debug_no_fly_zones()
+{
+	/#
+	for ( i = 0; i < level.noFlyZones.size; i++ )
+	{
+		debug_airsupport_cylinder( level.noFlyZones[i].origin, level.noFlyZones[i].radius, level.noFlyZones[i].height, (1,1,1), undefined, 5000 );
+	}
+	#/
+}
+
+function debug_plane_line( flyTime, flyspeed,pathStart, pathEnd )
+{
+	thread debug_line( pathStart, pathEnd, (1,1,1) );
+	
+	delta = VectorNormalize(pathEnd - pathStart);
+	
+	for ( i = 0; i < flyTime; i++ )
+	{
+		thread debug_star( pathStart + VectorScale(delta, i * flyspeed), (1,0,0) );
+	}
+}
+
+function debug_draw_bomb_explosion(prevpos)
+{
+	self notify("draw_explosion");
+	WAIT_SERVER_FRAME;
+	self endon("draw_explosion");
+	
+	self waittill("projectile_impact", weapon, position );
+	
+	thread debug_line( prevpos, position, (.5,1,0) );
+	thread debug_star( position, (1,0,0) );
+}
+
+function debug_draw_bomb_path( projectile, color, time )
+{
+/#
+	self endon("death");
+	level.airsupport_debug = GetDvarInt( "scr_airsupport_debug", 0 );				// debug mode, draws debugging info on screen
+	
+	if ( !isdefined( color ) )
+	{
+		color = (.5,1,0);
+	}
+	
+	if ( isdefined( level.airsupport_debug ) && level.airsupport_debug == 1.0 )
+	{
+		prevpos = self.origin;
+		while(isdefined ( self.origin ) )
+		{		
+			thread debug_line( prevpos, self.origin, color, time );
+			prevpos = self.origin;
+			
+			if ( isdefined(projectile) && projectile )
+			{
+				thread debug_draw_bomb_explosion( prevpos );
+			}
+			
+			wait .2;
+		}
+	}
+#/
+}
+
+function debug_print3d_simple( message, ent, offset, frames )
+{
+	/#
+	level.airsupport_debug = GetDvarInt( "scr_airsupport_debug", 0 );				// debug mode, draws debugging info on screen
+	
+	if ( isdefined( level.airsupport_debug ) && level.airsupport_debug == 1.0 )
+	{
+		if( isdefined( frames ) )
+			thread draw_text( message, ( 0.8, 0.8, 0.8 ), ent, offset, frames );
+		else
+			thread draw_text( message, ( 0.8, 0.8, 0.8 ), ent, offset, 0 );
+	}
+	#/
+}
+
+function draw_text( msg, color, ent, offset, frames )
+{
+	/#
+	if( frames == 0 )
+	{
+		while ( isdefined( ent ) && isdefined( ent.origin ) )
+		{
+			print3d( ent.origin+offset, msg , color, 0.5, 4 );
+			WAIT_SERVER_FRAME;
+		}
+	}
+	else
+	{
+		for( i=0; i < frames; i++ )
+		{
+			if( !isdefined( ent ) )
+				break;
+			print3d( ent.origin+offset, msg , color, 0.5, 4 );
+			WAIT_SERVER_FRAME;
+		}
+	}
+	#/
+}
+
+
+function debug_print3d( message, color, ent, origin_offset, frames )
+{
+/#
+	level.airsupport_debug = GetDvarInt( "scr_airsupport_debug", 0 );				// debug mode, draws debugging info on screen
+	
+	if ( isdefined( level.airsupport_debug ) && level.airsupport_debug == 1.0 )
+		self thread draw_text( message, color, ent, origin_offset, frames );
+#/
+}
+
+
+function debug_line( from, to, color, time, depthTest )
+{
+/#
+	level.airsupport_debug = GetDvarInt( "scr_airsupport_debug", 0 );				// debug mode, draws debugging info on screen
+	
+	if ( isdefined( level.airsupport_debug ) && level.airsupport_debug == 1.0 )
+	{
+		if ( DistanceSquared( from, to )  < 0.01 )
+			return;
+		
+		if ( !isdefined(time) )
+		{
+			time = 1000;
+		}
+		if ( !isdefined(depthTest) )
+		{
+			depthTest = true;
+		}
+		Line( from, to, color, 1, depthTest, time);
+	}
+#/
+
+}
+
+function debug_star( origin, color, time )
+{
+/#
+	level.airsupport_debug = GetDvarInt( "scr_airsupport_debug", 0 );				// debug mode, draws debugging info on screen
+	
+	if ( isdefined( level.airsupport_debug ) && level.airsupport_debug == 1.0 )
+	{
+		if ( !isdefined(time) )
+		{
+			time = 1000;
+		}
+		if ( !isdefined(color) )
+		{
+			color = (1,1,1);
+		}
+		debugstar(  origin, time, color );
+	}
+#/
+}
+
+function debug_circle( origin, radius, color, time )
+{
+/#
+	level.airsupport_debug = GetDvarInt( "scr_airsupport_debug", 0 );				// debug mode, draws debugging info on screen
+	
+	if ( isdefined( level.airsupport_debug ) && level.airsupport_debug == 1 )
+	{
+		if ( !isdefined(time) )
+		{
+			time = 1000;
+		}
+		if ( !isdefined(color) )
+		{
+			color = (1,1,1);
+		}
+		circle( origin, radius, color, true, true, time );
+	}
+#/
+}
+
+function debug_sphere( origin, radius, color, alpha, time )
+{
+/#
+	level.airsupport_debug = GetDvarInt( "scr_airsupport_debug", 0 );				// debug mode, draws debugging info on screen
+	
+	if ( isdefined( level.airsupport_debug ) && level.airsupport_debug == 1 )
+	{
+		if ( !isdefined(time) )
+		{
+			time = 1000;
+		}
+		if ( !isdefined(color) )
+		{
+			color = (1,1,1);
+		}
+		
+		sides = Int(10 * ( 1 + Int(radius / 100) ));
+		sphere( origin, radius, color, alpha, true, sides, time );
+	}
+#/
+}
+
+function debug_airsupport_cylinder( origin, radius, height, color, mustRenderHeight, time )
+{
+/#
+	level.airsupport_debug = GetDvarInt( "scr_airsupport_debug", 0 );				// debug mode, draws debugging info on screen
+	
+	if ( isdefined( level.airsupport_debug ) && level.airsupport_debug == 1 )
+	{
+		debug_cylinder( origin, radius, height, color, mustRenderHeight, time );
+	}
+#/
+}
+
+function debug_cylinder( origin, radius, height, color, mustRenderHeight, time )
+{
+/#
+	
+	subdivision = 600;
+	
+	{
+		if ( !isdefined(time) )
+		{
+			time = 1000;
+		}
+		if ( !isdefined(color) )
+		{
+			color = (1,1,1);
+		}
+		
+		count = (height/subdivision);
+		
+		for ( i = 0; i < count; i++ )
+		{
+			point = origin + ( 0, 0, i * subdivision );
+			circle( point, radius, color, true, true, time );
+		}
+		
+		if( isdefined( mustRenderHeight ) )
+		{
+			point = origin + ( 0, 0, mustRenderHeight );
+			circle( point, radius, color, true, true, time );
+		}
+	}
+#/
+}
 function getPointOnLine( startPoint, endPoint, ratio )
 {
 	nextPoint = ( startPoint[0] + ( ( endPoint[0] - startPoint[0] ) * ratio ) , 

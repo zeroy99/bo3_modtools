@@ -30,7 +30,7 @@ function armblade_sound_thread()
 	self endon( "death" );
 	for( ;; )
 	{
-		result = self util::waittill_any_return( "weapon_change" );		
+		result = self util::waittill_any_return( "weapon_change", "disconnect" );		
 		if( IsDefined( result ) )
 		{
 			if( ( result == "weapon_change" ) && ( self GetCurrentWeapon() == level.weaponArmblade ) )

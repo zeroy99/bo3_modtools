@@ -1024,7 +1024,7 @@ function door_opened(cost,quick_close)
 		// Just play purchase sound on the first door
 		if( self.doors.size )
 		{
-			zm_utility::play_sound_at_pos( "purchase", self.doors[0].origin );
+			zm_utility::play_sound_at_pos( "purchase", self.origin ); //self is the specific door being opened
 		}
 	}
 	
@@ -2108,6 +2108,9 @@ function blocker_trigger_think()
 			{
 				break;
 			}
+
+			// tracking when player boarding a window.
+			player notify( "boarding_window", self );
 			
 			if(isdefined(self.zbarrier))
 			{

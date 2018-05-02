@@ -9,6 +9,8 @@
 
 #using scripts\mp\gametypes\_globallogic_player;
 #using scripts\mp\gametypes\_loadout;
+#using scripts\mp\killstreaks\_killstreak_bundles;
+#using scripts\mp\killstreaks\_killstreaks;
 
 #using scripts\mp\_vehicle;
 
@@ -67,7 +69,9 @@ function Callback_VehicleDamage( eInflictor, eAttacker, iDamage, iDFlags, sMeans
 	if ( isdefined( eAttacker ) && isPlayer( eAttacker ) && isdefined( eAttacker.canDoCombat ) && !eAttacker.canDoCombat )
 		return;
 	
-	
+	if ( self weapons::should_suppress_damage( weapon, eInflictor ) )
+		return;
+
 	if ( isdefined( self.overrideVehicleDamage ) )
 	{
 		iDamage = self [[self.overrideVehicleDamage]]( eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, weapon, vPoint, vDir, sHitLoc, vDamageOrigin, psOffsetTime, damageFromUnderneath, modelIndex, partName, vSurfaceNormal );
@@ -273,7 +277,14 @@ function Callback_VehicleRadiusDamage( eInflictor, eAttacker, iDamage, fInnerDam
 	
 	if ( isdefined( eAttacker ) && isPlayer( eAttacker ) && isdefined( eAttacker.canDoCombat ) && !eAttacker.canDoCombat )
 		return;
-
+	
+	if ( isdefined( self.killstreakType ) )
+	{
+		maxhealth = VAL( self.maxhealth, self.health );
+		DEFAULT( maxhealth, 200 );
+		iDamage = self killstreaks::OnDamagePerWeapon( self.killstreakType, eAttacker, iDamage, iDFlags, sMeansOfDeath, weapon, maxhealth, undefined, maxhealth * 0.4, undefined, 0, undefined, true, 1.0 );	
+	}
+	
 	// check for completely getting out of the damage
 	if( !(iDFlags & IDFLAGS_NO_PROTECTION) )
 	{

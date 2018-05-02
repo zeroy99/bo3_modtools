@@ -5,11 +5,11 @@
 #using scripts\shared\util_shared;
 #using scripts\shared\vehicle_shared;
 #using scripts\shared\visionset_mgr_shared;
-#using scripts\shared\visionset_mgr_shared;
 
 #insert scripts\shared\shared.gsh;
 #insert scripts\shared\version.gsh;
 #insert scripts\mp\killstreaks\_killstreaks.gsh;
+#using scripts\shared\visionset_mgr_shared;
 
 #define DART_VISIONSET_FILE				"mp_vehicles_dart"
 #define SENTINEL_VISIONSET_FILE			"mp_vehicles_sentinel"

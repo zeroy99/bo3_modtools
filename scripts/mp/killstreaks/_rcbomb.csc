@@ -1,17 +1,19 @@
 #using scripts\codescripts\struct;
+
 #using scripts\shared\clientfield_shared;
 #using scripts\shared\math_shared;
 #using scripts\shared\system_shared;
 #using scripts\shared\util_shared;
 #using scripts\shared\vehicle_shared;
 #using scripts\shared\vehicles\_driving_fx;
-#using scripts\mp\_callbacks;
-#using scripts\mp\_util;
-#using scripts\mp\_vehicle;
 
 #insert scripts\mp\killstreaks\_killstreaks.gsh;
 #insert scripts\shared\shared.gsh;
 #insert scripts\shared\version.gsh;
+
+#using scripts\mp\_callbacks;
+#using scripts\mp\_util;
+#using scripts\mp\_vehicle;
 
 // _rcbomb.csc
 // Sets up clientside behavior for the rcbomb
@@ -214,6 +216,9 @@ function stunnedHandler( localClientNum )
 	while( 1 )
 	{
 		self waittill( "stunned" );
+///#
+//		PrintLn( "CLIENT ***************** stunned" );
+//#/
 	
 		self setstunned( true );
 		
@@ -229,6 +234,9 @@ function notStunnedHandler( localClientNum )
 	self endon( "stunned" );
 	
 	self waittill( "not_stunned" );
+///#
+//		PrintLn( "CLIENT ***************** not stunned" );
+//#/
 	
 	self setstunned( false );
 }

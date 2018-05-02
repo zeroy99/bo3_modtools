@@ -1,17 +1,21 @@
 #using scripts\codescripts\struct;
+
 #using scripts\shared\callbacks_shared;
 #using scripts\shared\killstreaks_shared;
 #using scripts\shared\popups_shared;
 #using scripts\shared\util_shared;
 #using scripts\shared\weapons\_weapons;
+
+#insert scripts\shared\shared.gsh;
+
 #using scripts\mp\gametypes\_globallogic_utils;
 #using scripts\mp\gametypes\_loadout;
+
+
 #using scripts\mp\_util;
 #using scripts\mp\killstreaks\_killstreakrules;
 #using scripts\mp\killstreaks\_killstreaks;
 #using scripts\mp\killstreaks\_supplydrop;
-
-#insert scripts\shared\shared.gsh;
 
 #precache( "material", "hud_ks_minigun" );
 #precache( "material", "hud_ks_m32" );
@@ -39,6 +43,7 @@ function init()
 	level.killStreakIcons["killstreak_m202_flash"] = "hud_ks_m202";
 	level.killStreakIcons["killstreak_m220_tow_drop"] = "hud_ks_tv_guided_marker";
 	level.killStreakIcons["killstreak_m220_tow"] = "hud_ks_tv_guided_missile";
+	//level.killStreakIcons["killstreak_mp40"] = "hud_mp40";
 	
 	callback::on_spawned( &on_player_spawned );
 	
@@ -268,6 +273,7 @@ function watchKillstreakWeaponSwitch( killstreakWeapon, killstreak_id, isFromInv
 	noneWeapon = getWeapon( "none" );
 	minigunWeapon = getWeapon( "minigun" );
 	minigunInventoryWeapon = getWeapon( "inventory_minigun" );
+	//self endon( "killstreak_weapon_taken" );
 
 	while(1)
 	{

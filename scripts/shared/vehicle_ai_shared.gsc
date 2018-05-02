@@ -339,7 +339,7 @@ function waittill_pathing_done( maxtime = 15 )
 {
 	self endon( "change_state" );
 
-	self util::waittill_any_timeout( maxtime, "near_goal", "force_goal", "reached_end_node", "goal", "pathfind_failed" );
+	self util::waittill_any_ex( maxtime, "near_goal", "force_goal", "reached_end_node", "goal", "pathfind_failed", "change_state" );
 }
 
 function waittill_pathresult( maxtime = 0.5 )
@@ -606,7 +606,7 @@ function iff_override( owner,time = 60 )
 	timeout = (isDefined(self.settings)?self.settings.ifftimetillrevert:time);
 	assert(timeout>10);
 	self thread iff_notifyMeInNSec(timeout-10,"iff_override_revert_warn");//5 defined in _cybercom.gsh; 
-	msg = self util::waittill_any_timeout( timeout,"iff_override_reverted" );
+	msg = self util::waittill_any_timeout( timeout,"iff_override_reverted", "death" );
 	if (msg == "timeout" )
 	{
 		self notify ("iff_override_reverted");
@@ -2021,6 +2021,34 @@ function PositionQuery_DebugScores( queryResult )
 // self == pointStruct
 function DebugScore( entity )
 {
+	/#
+	if ( !isdefined( self._scoreDebug ) )
+	{
+		return;
+	}
+	
+	if ( !IS_TRUE( GetDvarInt("hkai_debugPositionQuery") ) )
+	{
+		return;
+	}
+
+	step = 10;
+	count = 1;
+	
+	color = (1,0,0);
+	if ( self.score >= 0 )
+	{
+		color = (0,1,0);
+	}
+
+	RecordStar( self.origin, color );
+	record3DText( "" + self.score + ":", self.origin - (0,0,step * count), color );
+	foreach( name, score in self._scoreDebug )
+	{
+		count++;
+		record3DText( name + " " + score, self.origin - (0,0,step * count), color );
+	}
+	#/
 }
 
 
@@ -2264,6 +2292,19 @@ function UpdatePersonalThreatBias_ViaClientFlags( client_flags, threat_bias, bia
 		}
 	}
 }
+
+/#
+function UpdatePersonalThreatBias_Bots( threat_bias, bias_duration ) // self == sentient
+{
+	foreach( player in level.players )
+	{
+		if (player util::is_bot())
+		{
+			self SetPersonalThreatBias( player, Int( threat_bias ), bias_duration );
+		}
+	}
+}
+#/
 
 //switch target when someone starts to hijack 
 function target_hijackers()

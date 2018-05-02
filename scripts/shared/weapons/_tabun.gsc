@@ -40,6 +40,9 @@ function init_shared()
 	level.sound_shock_tabun_stop = "";
 	
 	
+	/#
+	level thread checkDvarUpdates();
+	#/
 }
 
 
@@ -99,6 +102,10 @@ function damageEffectArea ( owner, position, radius, height, killCamEnt )
 	shockEffectArea = spawn( "trigger_radius", position, 0, radius, height );
 	gasEffectArea = spawn( "trigger_radius", position, 0, radius, height );
 
+	/#
+	if( GetDvarint( "scr_draw_triggers" ) )
+		level thread util::drawcylinder( position, radius, height, undefined, "tabun_draw_cylinder_stop" );
+	#/
 	
 	// dog stuff
 	if ( isdefined( level.dogsOnFlashDogs ) )
@@ -164,6 +171,10 @@ function damageEffectArea ( owner, position, radius, height, killCamEnt )
 	shockEffectArea delete();
 	gasEffectArea delete();	
 
+	/#
+	if( GetDvarint( "scr_draw_triggers" ) )
+		level notify( "tabun_draw_cylinder_stop" );
+	#/
 }	
 	
 function damageInPoisonArea( gasEffectArea, killcament, trace, position ) // self == player in poison area
@@ -261,6 +272,15 @@ function generateLocations( position, owner )
 	startPos = position + oneFoot;
 
 	
+	/#
+	level.tabun_debug = GetDvarInt( "scr_tabun_debug", 0 );
+	if ( level.tabun_debug )
+	{
+		black = ( 0.2, 0.2, 0.2 );	
+		debugstar(startPos, 2 * 1000, black);
+	}
+	#/
+	
 	spawnAllLocs( owner, startPos );
 }
 
@@ -279,6 +299,16 @@ function singleLocation( position, owner )
 function hitPos( start, end, color )
 {
 	trace = bullettrace( start, end, false, undefined );
+	
+	/#
+	level.tabun_debug = GetDvarInt( "scr_tabun_debug", 0 );
+	if ( level.tabun_debug )
+	{
+		debugstar(trace["position"], 2 * 1000, color);
+	}
+
+	thread tabun_debug_line( start, trace["position"], color, true, 80 );
+	#/
 	
 	return trace["position"];
 }
@@ -485,7 +515,15 @@ function getCenterOfLocations( locations )
 	}
 	
 		
-	
+	/#
+	level.tabun_debug = GetDvarInt( "scr_tabun_debug", 0 );
+	if ( level.tabun_debug )
+	{
+		purple = ( 0.9, 0.2, 0.9 );
+		debugstar(centroid, 2 * 1000, purple);
+	}
+	#/
+
 	return centroid;
 }
 
@@ -520,7 +558,36 @@ function getcenter( locations )
 	
 	center = ( avgX, avgY, locations["tracePos"][0][2] );
 	
+	/#
+	level.tabun_debug = GetDvarInt( "scr_tabun_debug", 0 );
+	if ( level.tabun_debug )
+	{
+		cyan = ( 0.2, 0.9, 0.9 );
+		debugstar(center, 2 * 1000, cyan);
+	}
+	#/
+		
+	//fxToPlay = level.fx_tabun_1;
+	//SpawnTimedFX( fxToPlay, center );
 	
 	return center;	
 }
 
+/#
+function tabun_debug_line( from, to, color, depthTest, time )
+{
+	debug_rcbomb = GetDvarInt( "scr_tabun_debug", 0 );
+	if ( debug_rcbomb == "1" )
+	{
+		if ( !isdefined(time) )
+		{
+			time = 100;
+		}
+		if ( !isdefined(depthTest) )
+		{
+			depthTest = true;
+		}
+		Line( from, to, color, 1, depthTest, time);
+	}
+}
+#/

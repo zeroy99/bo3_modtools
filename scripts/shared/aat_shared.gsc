@@ -76,7 +76,7 @@ function private on_player_connect()
 
 
 // self = ai or vehicle actor
-function private aat_cooldown_init()
+function aat_cooldown_init()
 {
 	self.aat_cooldown_start = [];
 
@@ -167,7 +167,7 @@ function aat_response( death, inflictor, attacker, damage, flags, mod, weapon, v
 
 	if ( isdefined( level.aat[name].validation_func ) )
 	{
-		if ( ![[level.aat[name].validation_func]]() )
+		if ( !self [[level.aat[name].validation_func]]() )
 		{
 			return;
 		}

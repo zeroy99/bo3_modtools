@@ -6,3 +6,5 @@
 #insert scripts\shared\version.gsh;
 #insert scripts\shared\ai\systems\destructible_character.gsh;
 
+function AddDestructPieceCallback( localClientNum, entity, pieceNumber, callbackFunction ) {}
+

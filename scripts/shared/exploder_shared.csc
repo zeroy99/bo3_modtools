@@ -293,7 +293,8 @@ function reportExploderIds()
 	//}
 }
 
-function exploder( exploder_id )
+//Note: specific client number only supported for radiant based exploders as ID based is now legacy
+function exploder( exploder_id, n_localclientnumber )
 {
 	if( IsInt( exploder_id ) )
 	{
@@ -301,7 +302,7 @@ function exploder( exploder_id )
 	}
 	else//This is a radiant exploder
 	{
-		activate_radiant_exploder( exploder_id );
+		activate_radiant_exploder( exploder_id, n_localclientnumber );
 	}	
 }
 
@@ -348,22 +349,37 @@ function activate_individual_exploder()
 }
 
 //TODO T7 - update this if other functionality comes online for the new system
-function activate_radiant_exploder( string )
+function activate_radiant_exploder( string, n_localclientnumber )
 {
-	for ( localClientNum = 0; localClientNum < level.localPlayers.size; localClientNum++ )
+	if( isdefined( n_localclientnumber ) )
 	{
-		PlayRadiantExploder( localClientNum, string );
-	}	
+		PlayRadiantExploder( n_localclientnumber, string );
+	}
+	else
+	{
+		for ( localClientNum = 0; localClientNum < level.localPlayers.size; localClientNum++ )
+		{
+			PlayRadiantExploder( localClientNum, string );
+		}
+	}
 }
 
-function stop_exploder( exploder_id )
+//Note: specific client number only supported for radiant based exploders as ID based is now legacy
+function stop_exploder( exploder_id, n_localclientnumber )
 {
 	//println("*** Client : Delete exploder " + num);
 	if( IsString( exploder_id ) )
 	{
-		for ( localClientNum = 0; localClientNum < level.localPlayers.size; localClientNum++ )
+		if( isdefined( n_localclientnumber ) )
 		{
-			StopRadiantExploder( localClientNum, exploder_id );
+			StopRadiantExploder( n_localclientnumber, exploder_id );	
+		}
+		else
+		{		   
+			for ( localClientNum = 0; localClientNum < level.localPlayers.size; localClientNum++ )
+			{
+				StopRadiantExploder( localClientNum, exploder_id );
+			}
 		}
 		return;
 	}	

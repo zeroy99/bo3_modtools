@@ -16,7 +16,6 @@
 
 #using scripts\zm\_bb;
 #using scripts\zm\_challenges;
-#using scripts\zm\_sticky_grenade;
 #using scripts\zm\_util;
 #using scripts\zm\_zm_pers_upgrades_functions;
 
@@ -26,18 +25,8 @@
 
 function init()
 {
-	// assigns weapons with stat numbers from 0-99
-	// attachments are now shown here, they are per weapon settings instead
-	
-
-	//TODO - add to statstable so its a regular weapon?
-	
 	level.missileEntities = [];
 	level.hackerToolTargets = [];
-
-//	thread _flashgrenades::main();
-//	thread _empgrenade::init();
-//	thread entityheadicons::init();
 
 	if ( !isdefined(level.grenadeLauncherDudTime) )
 		level.grenadeLauncherDudTime = 0;
@@ -46,25 +35,6 @@ function init()
 		level.thrownGrenadeDudTime = 0;
 		
 	level thread onPlayerConnect();
-	
-//	_smokegrenade::init();
-//	_heatseekingmissile::init();
-//	_acousticsensor::init();
-//	_sensor_grenade::init();
-	//_tacticalinsertion::init();
-//	_scrambler::init();
-//	_explosive_bolt::init();
-	if (  level._uses_sticky_grenades )
-	{
-		_sticky_grenade::init();
-	}
-//	_proximity_grenade::init();
-//	_bouncingbetty::init();
-//	_trophy_system::init();
-//	_ballistic_knife::init();
-//	_satchel_charge::init();
-//	_riotshield::init();
-//	_hacker_tool::init();
 }
 
 function onPlayerConnect()
@@ -646,7 +616,7 @@ function watch_offhand_end() // self == player
 
 	while ( self is_using_offhand_equipment() )
 	{
-		msg = self util::waittill_any_return( "death", "disconnect", "grenade_fire", "weapon_change" );
+		msg = self util::waittill_any_return( "death", "disconnect", "grenade_fire", "weapon_change", "watchOffhandEnd" );
 
 		if (( msg == "death" ) || ( msg == "disconnect" ))
 		{
@@ -683,7 +653,10 @@ function beginGrenadeTracking()
 	
 	self waittill ( "grenade_fire", grenade, weapon );
 
-
+	// catch cases where antoher thread (presumably also waiting on "grenade_fire") has seen fit to delete the grenade before we got a chance to handle it
+	if (!isdefined(grenade)) 
+		return; 
+	
 	level.missileEntities[ level.missileEntities.size ] = grenade;
 	grenade.weapon = weapon;
 	grenade thread watchMissileDeath();
@@ -1129,6 +1102,13 @@ function damageEnt(eInflictor, eAttacker, iDamage, sMeansOfDeath, weapon, damage
 
 function debugline(a, b, color)
 {
+	/#
+	for (i = 0; i < 30*20; i++)
+	{
+		line(a,b, color);
+		wait .05;
+	}
+	#/
 }
 
 
@@ -1438,6 +1418,8 @@ function scavenger_think()
 					ammo = maxAmmo;
 				}
 				player SetWeaponAmmoStock( weapon, ammo );
+
+				player thread challenges::scavengedGrenade();
 			}
 			break;
 

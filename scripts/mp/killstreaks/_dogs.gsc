@@ -1,4 +1,5 @@
 #using scripts\codescripts\struct;
+
 #using scripts\shared\array_shared;
 #using scripts\shared\system_shared;
 #using scripts\shared\tweakables_shared;
@@ -6,16 +7,18 @@
 #using scripts\shared\util_shared;
 #using scripts\shared\weapons\_weapons;
 #using scripts\shared\weapons\_weapon_utils;
+
+#insert scripts\shared\shared.gsh;
+
 #using scripts\mp\gametypes\_battlechatter;
 #using scripts\mp\gametypes\_dev;
 #using scripts\mp\gametypes\_spawning;
 #using scripts\mp\gametypes\_spawnlogic;
+
 #using scripts\mp\_util;
 #using scripts\mp\killstreaks\_killstreakrules;
 #using scripts\mp\killstreaks\_killstreaks;
 #using scripts\mp\killstreaks\_supplydrop;
-
-#insert scripts\shared\shared.gsh;
 
 #define DOG_MODEL_FRIENDLY			"german_shepherd_vest"
 #define DOG_MODEL_ENEMY				"german_shepherd_vest_black"

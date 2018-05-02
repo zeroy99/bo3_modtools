@@ -407,7 +407,7 @@ function isHeadShot( weapon, sHitLoc, sMeansOfDeath, eInflictor )
 	case "MOD_MELEE_ASSASSINATE":
 		return false;
 	case "MOD_IMPACT":
-	   if( weapon != level.weaponBallisticKnife )
+	   if( weapon.rootWeapon != level.weaponBallisticKnife )
 			return false;
 	}
 
@@ -454,6 +454,18 @@ function getHitLocHeight( sHitLoc )
 	}
 	return 48;
 }
+
+function debugLine( start, end )
+{
+	/#
+	for ( i = 0; i < 50; i++ )
+	{
+		line( start, end );
+		wait .05;
+	}
+	#/
+}
+
 
 function isExcluded( entity, entityList )
 {

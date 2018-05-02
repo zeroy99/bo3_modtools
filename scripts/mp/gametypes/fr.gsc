@@ -1560,6 +1560,7 @@ function tutorial_17a()
 	self show_tutorial_hint_with_full_movement( &"FREERUN_TUTORIAL_22" );
 }
 
+
 function tutorial_18()
 {
 	self play_tutorial_vo_with_hint( "vox_tuto_tutorial_sequence_23", &"FREERUN_TUTORIAL_23" );

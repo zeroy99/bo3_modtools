@@ -100,6 +100,9 @@ function defaultRole()
 		undefined,
 		&state_slash_update,
 		undefined );
+    /#
+	SetDvar( "debug_sword_threat_selection", 1 );
+	#/
 	//kick off target selection
 	self thread glaive_target_selection();
 	
@@ -200,6 +203,17 @@ function private glaive_target_selection()
 			wait 0.25;
 			continue;
 		}
+		
+		/#
+		//debug sword threat selection
+		if( GetDvarInt( "debug_sword_threat_selection", 0 ) )
+		{
+			if( IsDefined( self.glaiveEnemy ) )
+			{
+				line( self.origin, self.glaiveEnemy.origin, ( 1, 0, 0 ), 1.0, false, 5 );
+			}
+		}
+		#/
 		
 		if( self is_enemy_valid( self.glaiveEnemy ) )
 		{

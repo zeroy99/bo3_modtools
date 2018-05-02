@@ -49,6 +49,9 @@
 #using scripts\mp\_end_game_flow;
 #using scripts\mp\mpdialog;
 
+//Gametype registration
+
+
 //Weapon registration
 #using scripts\shared\weapons\_sticky_grenade;
 #using scripts\mp\_bouncingbetty;
@@ -99,7 +102,11 @@ function levelNotifyHandler(clientNum, state, oldState)
 
 function main()
 {
+	/#
+	
 	Assert( isdefined( level.first_frame ), "There should be no waits before load::main." );
+	
+	#/
 	
 	level thread util::serverTime();
 	level thread util::init_utility();

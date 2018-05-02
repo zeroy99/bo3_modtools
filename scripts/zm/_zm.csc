@@ -339,6 +339,7 @@ function init_clientfields()
 	clientfield::register("world", "round_complete_num", VERSION_SHIP, 8, "int", &round_complete_num, !CF_HOST_ONLY, CF_CALLBACK_ZERO_ON_NEW_ENT);
 	clientfield::register("world", "game_end_time", VERSION_SHIP, 20, "int", &game_end_time, !CF_HOST_ONLY, CF_CALLBACK_ZERO_ON_NEW_ENT);
 	clientfield::register("world", "quest_complete_time", VERSION_SHIP, 20, "int", &quest_complete_time, !CF_HOST_ONLY, CF_CALLBACK_ZERO_ON_NEW_ENT);
+	clientfield::register("world", "game_start_time", VERSION_TU15_FFOTD_090816_0, 20, "int", &game_start_time, !CF_HOST_ONLY, CF_CALLBACK_ZERO_ON_NEW_ENT);
 }
 
 function box_monitor(clientNum, state, oldState)
@@ -423,6 +424,12 @@ function game_end_time(localClientNum, oldVal, newVal, bNewEnt, bInitialSnap, fi
 function quest_complete_time(localClientNum, oldVal, newVal, bNewEnt, bInitialSnap, fieldName, bWasTimeJump)
 {
 	model = CreateUIModel( GetUIModelForController( localClientNum ), "hudItems.time.quest_complete_time" );
+	SetUIModelValue( model, newVal );
+}
+
+function game_start_time(localClientNum, oldVal, newVal, bNewEnt, bInitialSnap, fieldName, bWasTimeJump)
+{
+	model = CreateUIModel( GetUIModelForController( localClientNum ), "hudItems.time.game_start_time" );
 	SetUIModelValue( model, newVal );
 }
 
@@ -1419,6 +1426,8 @@ function rise_dust_fx( clientnum, type, billow_fx, burst_fx )
 		
 	for (t = 0; t < dust_time; t += dust_interval)
 	{
+		if (!isdefined(self))
+			return; 
 		PlayfxOnTag(clientnum,effect, self, dust_tag);
 		wait dust_interval;
 	}

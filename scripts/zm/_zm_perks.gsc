@@ -125,7 +125,10 @@ function perk_machine_think( str_key, s_custom_perk )
 		machine_triggers = GetEntArray( s_custom_perk.radiant_machine_name, "target" );
 		
 		for( i = 0; i < machine.size; i++ )
+		{
 			machine[i] SetModel(level.machine_assets[str_key].off_model);
+			machine[i] Solid();
+		}
 		
 		level thread zm_perks::do_initial_power_off_callback( machine, str_key );
 		array::thread_all( machine_triggers, &zm_perks::set_power_on, false );
@@ -246,7 +249,8 @@ function turn_perk_off(ishidden)
 		if(IS_TRUE(ishidden))
 		{
 			newMachine.ishidden = true;
-			newMachine hide();
+			newMachine Ghost();
+			newMachine NotSolid();
 		}
 		
 		self Delete();
@@ -288,6 +292,9 @@ function perk_fx( fx, turnOffFx )
 	{
 		wait(3);
 		
+		if ( !isdefined(self) )
+			return;
+			
 		if ( !IS_TRUE( self.b_keep_when_turned_off ))
 		{
 			if ( isdefined( self ) && !IS_TRUE(self.perk_fx) )
@@ -375,7 +382,17 @@ function reset_vending_hint_string()
 	{
 		if ( isdefined( level._custom_perks[ perk ] ) && isdefined( level._custom_perks[ perk ].cost ) && isdefined( level._custom_perks[ perk ].hint_string ) )
 		{
-			self SetHintString( level._custom_perks[ perk ].hint_string, level._custom_perks[ perk ].cost );
+			//will convert function override to string / int value as needed.
+			if( IsFunctionPtr( level._custom_perks[ perk ].cost ) )
+			{
+				n_cost = [[level._custom_perks[ perk ].cost]]();
+			}
+			else
+			{
+				n_cost = level._custom_perks[ perk ].cost;
+			}		
+				
+			self SetHintString( level._custom_perks[ perk ].hint_string, n_cost );
 		}		
 	}
 }
@@ -532,7 +549,7 @@ function vending_trigger_think()
 			if ( cheat != true )
 			{
 				//player iprintln( "Already using Perk: " + perk );
-				self playsound("deny");
+				self playsound("evt_perk_deny");
 				player zm_audio::create_and_play_dialog( "general", "sigh" );
 
 				
@@ -601,7 +618,7 @@ function vending_trigger_post_think( player, perk )
 
 	// do the drink animation
 	gun = player perk_give_bottle_begin( perk );
-	evt = player util::waittill_any_return( "fake_death", "death", "player_downed", "weapon_change_complete" );
+	evt = player util::waittill_any_return( "fake_death", "death", "player_downed", "weapon_change_complete", "perk_abort_drinking", "disconnect" );
 	
 	// once they start drinking they get the perk - if the machine is disabled in mid drink they will have it disabled
 	if (evt == "weapon_change_complete" )
@@ -674,7 +691,7 @@ function wait_give_perk( perk, bought )
 	self endon( "end_game" );
 	self endon( "perk_abort_drinking" );
 
-	self util::waittill_any_timeout(0.5, "burp" );
+	self util::waittill_any_timeout(0.5, "burp", "player_downed", "disconnect", "end_game", "perk_abort_drinking" );
 	self give_perk( perk, bought );
 }
 
@@ -1518,7 +1535,7 @@ function perk_machine_spawn_init()
 			}
 			else
 			{
-				bump_trigger = Spawn( "trigger_radius", s_spawn_pos.origin + (0, 0, 30), 0, 40, 80);
+				bump_trigger = Spawn( "trigger_radius", s_spawn_pos.origin + (0, 0, 20), 0, 40, 80);
 				bump_trigger.script_activated = 1;
 				bump_trigger.script_sound = "zmb_perks_bump_bottle";
 				bump_trigger.targetname = "audio_bump_trigger";
@@ -1544,9 +1561,15 @@ function perk_machine_spawn_init()
 			t_use.bump = bump_trigger;
 			
 			if ( isdefined( s_spawn_pos.script_notify ) )
-		    {
+			{
 				perk_machine.script_notify = s_spawn_pos.script_notify;
-	   		}
+			}
+			
+			// targets attack positions for machines
+			if ( isdefined( s_spawn_pos.target ) )
+			{
+				perk_machine.target = s_spawn_pos.target;
+			}
 			
 			if( isdefined( s_spawn_pos.blocker_model ) )
 			{

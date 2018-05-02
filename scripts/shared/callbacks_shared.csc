@@ -725,19 +725,38 @@ function CodeCallback_ExtraCamRenderOutfitPreview( localClientNum, jobIndex, ext
 	}
 }
 
+#if XFILE_VERSION >= 568
 function CodeCallback_ExtraCamRenderWCPaintjobIcon( localClientNum, extraCamIndex, jobIndex, attachmentVariantString, weaponOptions, weaponPlusAttachments, loadoutSlot, paintjobIndex, paintjobSlot, isFilesharePreview )
 {
+#else //#if XFILE_VERSION >= 568
+function CodeCallback_ExtraCamRenderWCPaintjobIcon( localClientNum, extraCamIndex, jobIndex, attachmentVariantString, weaponOptions, weaponPlusAttachments, loadoutSlot, paintjobIndex, paintjobSlot )
+{	
+#endif //#else //#if XFILE_VERSION >= 568
 	if ( isdefined( level.extra_cam_render_wc_paintjobicon_func_callback ) )
 	{
+#if XFILE_VERSION >= 568
 		[[level.extra_cam_render_wc_paintjobicon_func_callback]]( localClientNum, extraCamIndex, jobIndex, attachmentVariantString, weaponOptions, weaponPlusAttachments, loadoutSlot, paintjobIndex, paintjobSlot, isFilesharePreview );
+#else //#if XFILE_VERSION >= 568
+		[[level.extra_cam_render_wc_paintjobicon_func_callback]]( localClientNum, extraCamIndex, jobIndex, attachmentVariantString, weaponOptions, weaponPlusAttachments, loadoutSlot, paintjobIndex, paintjobSlot );
+#endif	//#else //#if XFILE_VERSION >= 568
 	}
 }
 
+#if XFILE_VERSION >= 568
 function CodeCallback_ExtraCamRenderWCVariantIcon( localClientNum, extraCamIndex, jobIndex, attachmentVariantString, weaponOptions, weaponPlusAttachments, loadoutSlot, paintjobIndex, paintjobSlot, isFilesharePreview )
 {
+#else //#if XFILE_VERSION >= 568
+function CodeCallback_ExtraCamRenderWCVariantIcon( localClientNum, extraCamIndex, jobIndex, attachmentVariantString, weaponOptions, weaponPlusAttachments, loadoutSlot, paintjobIndex, paintjobSlot )
+{
+#endif //#else //#if XFILE_VERSION >= 568
+	
 	if ( isdefined( level.extra_cam_render_wc_varianticon_func_callback ) )
 	{
+#if XFILE_VERSION >= 568
 		[[level.extra_cam_render_wc_varianticon_func_callback]]( localClientNum, extraCamIndex, jobIndex, attachmentVariantString, weaponOptions, weaponPlusAttachments, loadoutSlot, paintjobIndex, paintjobSlot, isFilesharePreview );
+#else //#if XFILE_VERSION >= 568
+		[[level.extra_cam_render_wc_varianticon_func_callback]]( localClientNum, extraCamIndex, jobIndex, attachmentVariantString, weaponOptions, weaponPlusAttachments, loadoutSlot, paintjobIndex, paintjobSlot );
+#endif //#else //#if XFILE_VERSION >= 568
 	}
 }
 

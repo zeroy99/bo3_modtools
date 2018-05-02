@@ -190,7 +190,11 @@ function sentinel_drone_camera_scanner( localClientNum, oldVal, newVal, bNewEnt,
 	else
 	{
 		//Turn off the scanner light
-		if( isdefined(self.CameraScannerFX))
+		/#
+			keep_scanner_on = GetDvarInt("sentinel_DebugFX_KeepScannerOn", 0);
+		#/
+			
+		if( isdefined(self.CameraScannerFX) && !IS_TRUE(keep_scanner_on))
 		{
 			StopFX(localClientNum, self.CameraScannerFX);
 			self.CameraScannerFX = undefined;
@@ -263,7 +267,11 @@ function sentinel_drone_beam_fire(localClientNum, newVal, tag_id)
 		}
 		
 		//Turn off the scanner light
-		if( isdefined(self.CameraScannerFX))
+		/#
+			keep_scanner_on = GetDvarInt("sentinel_DebugFX_KeepScannerOn", 0);
+		#/
+			
+		if( isdefined(self.CameraScannerFX) && !IS_TRUE(keep_scanner_on))
 		{
 			StopFX(localClientNum, self.CameraScannerFX);
 			self.CameraScannerFX = undefined;

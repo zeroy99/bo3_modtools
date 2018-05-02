@@ -1,9 +1,10 @@
 #using scripts\codescripts\struct;
+
+#insert scripts\shared\shared.gsh;
+
 #using scripts\mp\teams\_teamset;
 #using scripts\mp\teams\_teamset_axis;
 #using scripts\mp\teams\_teamset_allies;
-
-#insert scripts\shared\shared.gsh;
 
 #define HEAD_ICON_ALLIES		"faction_allies"
 #define HEAD_ICON_AXIS			"faction_axis"

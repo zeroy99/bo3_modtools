@@ -243,6 +243,83 @@ function waittill_any_return( string1, string2, string3, string4, string5, strin
 	return msg;
 }
 
+
+/@
+"Name: waittill_any_ex( <timeout>, <ent1>, <string1_1>, <string1_2>, <string1_3>... <ent2>, <string2_1>, <string2_2>... ... )"
+"Summary: Waits for any of the the specified notifies and returns which one it got.  NOTE: you can send any number of ents and arguments that you want.  The first <ent1> is optional.  In this case, self will be used as the first ent."
+"Module: Utility"
+"CallOn: Entity"
+"OptionalArg:	<timeout> timeout value (in seconds)"
+"OptionalArg:	<ent1> name of a notify to wait on"
+"OptionalArg:	<string1_1> name of a notify to wait on (ent1 or self)"
+"OptionalArg:	<string1_2> name of a notify to wait on (ent1 or self)"
+"OptionalArg:	<string1_3> name of a notify to wait on (ent1 or self)"
+"MandatoryArg:	<ent2> name of a notify to wait on"
+"OptionalArg:	<string2_1> name of a notify to wait on (ent2)"
+"OptionalArg:	<string2_2> name of a notify to wait on (ent2)"
+"OptionalArg:	<string2_3> name of a notify to wait on (ent2)"
+"Example: which_notify = self waittill_any( "stop_waiting", guy1, "goal", "pain", "near_goal", "bulletwhizby", guy2, "death" );"
+"SPMP: both"
+@/
+function waittill_any_ex( ... )
+{
+	s_common = SpawnStruct();
+
+	// You can run on an ent if you like instead of passing in an ent as the first argument.
+	e_current = self;
+
+	// if the first parameter is a number, it's a timeout value
+	n_arg_index = 0;
+	if ( StrIsNumber( vararg[ 0 ] ) )
+	{
+		n_timeout = vararg[ 0 ];
+		n_arg_index++;
+
+		if ( n_timeout > 0 )
+		{
+			s_common thread _timeout( n_timeout );
+		}
+	}
+	
+	// If we have an array, use that as the argument list
+	if ( IsArray( vararg[ n_arg_index ] ) )
+	{
+		a_params = vararg[ n_arg_index ];
+		n_start_index = 0;
+	}
+	// Otherwise use the full parameter list.
+	else
+	{
+		a_params = vararg;
+		n_start_index = n_arg_index;
+	}
+
+	// Run through the parameter list.
+	//	If the parameter is a string, assume it's for the last specified ent
+	//  If the paramter is not a string, assume it's a new ent specification.
+	for( i=n_start_index; i<a_params.size; i++ )
+	{
+		if ( !IsString( a_params[i] ) )
+		{
+			// Non string parameter == ent specification.  All strings that follow are notifies to wait for on this ent.
+			e_current = a_params[i];
+	    }
+		else
+		{
+			// string parameter == notify to check for
+			if ( isdefined( e_current ) )
+			{
+				e_current thread waittill_string ( a_params[i], s_common );
+			}
+		}
+	}
+
+	s_common waittill ( "returned", str_notify );
+	s_common notify ( "die" );
+	return str_notify;
+}
+
+
 /@
 "Name: waittill_any_array_return( <a_notifies> )"
 "Summary: Waits for any of the the specified notifies and return which one it got."
@@ -1399,10 +1476,39 @@ function local_players_entity_thread( entity, func, arg1, arg2, arg3, arg4 )
 
 function debug_line( from, to, color, time )
 {
+/#
+	level.debug_line = GetDvarInt( "scr_debug_line", 0 );				// debug mode, draws debugging info on screen
+	
+	if ( isdefined( level.debug_line ) && level.debug_line == 1.0 )
+	{
+		if ( !isdefined(time) )
+		{
+			time = 1000;
+		}
+		Line( from, to, color, 1, 1, time);
+	}
+#/
+
 }
 
 function debug_star( origin, color, time )
 {
+/#
+	level.debug_star = GetDvarInt( "scr_debug_star", 0 );				// debug mode, draws debugging info on screen
+	
+	if ( isdefined( level.debug_star ) && level.debug_star == 1.0 )
+	{
+		if ( !isdefined(time) )
+		{
+			time = 1000;
+		}
+		if ( !isdefined(color) )
+		{
+			color = (1,1,1);
+		}
+		debugstar( origin, time, color );
+	}
+#/
 }
 
 

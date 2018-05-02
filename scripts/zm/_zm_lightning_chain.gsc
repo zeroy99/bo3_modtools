@@ -367,7 +367,12 @@ function private lc_do_damage( source_enemy, arc_num, player, params )
 		}		
 		else	
 		{
-			self DoDamage( self.health + 666, origin, player );
+			weapon = level.weaponNone; 
+			if ( isdefined(params.weapon) )
+			{
+				weapon = params.weapon; 
+			}
+			self DoDamage( self.health + 666, origin, player, undefined, "none", "MOD_UNKNOWN", 0, weapon );
 		}
 		if ( !IS_TRUE(self.deathpoints_already_given) && player zm_spawner::player_can_score_from_zombies() )
 		{

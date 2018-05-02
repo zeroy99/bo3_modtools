@@ -97,7 +97,7 @@ function private spawn_init()
 		}
 		if (!IsDefined (level.pack_a_punch.interaction_trigger_radius) )
 		{
-			level.pack_a_punch.interaction_trigger_radius = 40;
+			level.pack_a_punch.interaction_trigger_radius = 40; //You cannot create a trigger with a radius smaller than 40
 		}
 		if (!IsDefined (level.pack_a_punch.interaction_trigger_height) )
 		{
@@ -453,9 +453,15 @@ function private vending_weapon_upgrade()
 	 		isRepack = true;
  		}
 
+		// If the persistent upgrade "double_points" is active, the cost is halved
+		if( player zm_pers_upgrades_functions::is_pers_double_points_active() )
+		{
+			current_cost = player zm_pers_upgrades_functions::pers_upgrade_double_points_cost( current_cost );
+		}
+				
 		if( !player zm_score::can_player_purchase( current_cost ) )
 		{
-			self playsound("deny");
+			self playsound("zmb_perks_packa_deny");
 			if(isDefined(level.pack_a_punch.custom_deny_func))
 			{
 				player [[level.pack_a_punch.custom_deny_func]]();
@@ -611,6 +617,12 @@ function private wait_for_player_to_take( player, weapon, packa_timer, b_weapon_
 			player zm_stats::increment_player_stat( "pap_weapon_grabbed" );
 
 			current_weapon = player GetCurrentWeapon();
+/#
+if ( level.weaponNone == current_weapon )
+{
+	iprintlnbold( "WEAPON IS NONE, PACKAPUNCH RETRIEVAL DENIED" );
+}
+#/
 			if( zm_utility::is_player_valid( player ) && 
 				!IS_DRINKING(player.is_drinking) && 
 				!zm_utility::is_placeable_mine( current_weapon )  && 
@@ -639,6 +651,7 @@ function private wait_for_player_to_take( player, weapon, packa_timer, b_weapon_
 					upgrade_weapon = player zm_weapons::give_build_kit_weapon( upgrade_weapon );
 					player GiveStartAmmo( upgrade_weapon );
 				}
+				player notify( "weapon_give", upgrade_weapon );
 
 				aatID = -1;
 				if ( IS_TRUE( b_weapon_supports_aat ) )
@@ -753,6 +766,8 @@ function private wait_for_disconnect( player )
 		wait(0.1);
 	}
 	
+	/#	println("*** PAP : User disconnected."); #/
+	
 	self notify( "pap_player_disconnected" );
 }
 
@@ -863,11 +878,14 @@ function private get_range( delta, origin, radius )
 
 function private turn_on( origin, radius )
 {
+	/#	println( "^1ZM POWER: PaP on\n" );	#/
 	level notify( "Pack_A_Punch_on" );
 }
 
 function private turn_off( origin, radius )
 {
+	/#	println( "^1ZM POWER: PaP off\n" );	#/
+
 	// NOTE: This will cause problems if there is more than one pack-a-punch machine in the level
 	level notify( "Pack_A_Punch_off" );
 	self.target notify( "death" );
@@ -960,6 +978,11 @@ function private pap_powered()
 
 	self SetZBarrierPieceState( PAP_POWERED_PIECE, "closed" );
 	
+	if( self.classname === "zbarrier_zm_castle_packapunch" || self.classname === "zbarrier_zm_tomb_packapunch" )
+	{
+		self clientfield::set("pap_working_FX", 0);
+	}		
+	
 	while ( true )
 	{
 		wait( randomfloatrange( 180, 1800 ) );
@@ -976,6 +999,11 @@ function private pap_take_gun()
 	self SetZBarrierPieceState( PAP_FLAG_PIECE, "opening" );
 	self SetZBarrierPieceState( PAP_WEAPON_PIECE, "opening" );	
 	wait .1;//let the right peices be shown first
+	
+	if( self.classname === "zbarrier_zm_castle_packapunch" || self.classname === "zbarrier_zm_tomb_packapunch" )
+	{
+		self clientfield::set("pap_working_FX", 1);
+	}	
 }
 
 function private pap_eject_gun()

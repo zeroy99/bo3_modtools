@@ -1,4 +1,5 @@
 #using scripts\codescripts\struct;
+
 #using scripts\shared\hostmigration_shared;
 #using scripts\shared\hud_shared;
 #using scripts\shared\hud_util_shared;

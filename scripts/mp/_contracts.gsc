@@ -29,6 +29,7 @@
 	
 #define MAX_CONTRACT_SLOTS					10	// should coincide with contracts array size on mp_stats.ddl
 #define FIRST_UNASSIGNED_CONTRACT_SLOT		3
+#define DEFAULT_DEBUG_CONTRACT_SLOT			MAX_CONTRACT_SLOTS - 1
 
 // contract string table and columns
 #define CONTRACT_TABLE						"gamedata/tables/mp/mp_contractTable.csv"
@@ -36,8 +37,15 @@
 #define TARGET_VALUE_COL					2
 #define NAME_STRING_COL						3
 #define TITLE_OVERRIDE_COL					4
+#define CONTRACT_TYPE						5
+#define CK_COST_COL							6
+#define CALLING_CARD_STAT_COL				7	// mp_stats.ddl, PlayerStatsList[ <stat_name> ]
+#define WEAPON_CAMO_STAT_COL				8	// mp_stats.ddl, PlayerStatsList[ <stat_name> ]
+#define ABSOLUTE_STAT_PATH_COL				9	// mp_stats.ddl
 
 // table index values from mp_contractTable.csv
+
+// weekly contracts
 #define BIG_TOTAL_WINS_INDEX					1
 #define BIG_OBJECTIVE_WINS_INDEX				2
 #define BIG_MEDALS_SPECIALIST_ABILITIES_INDEX	3
@@ -46,6 +54,8 @@
 #define ATTACKER_DEFENDER_KILLS_INDEX			6
 #define BIG_KILLS_SPECIALIST_WEAPON_INDEX		7
 #define BIG_KILLS_KILLSTREAK_INDEX				8
+	
+// daily contracts
 #define TOTAL_WINS_INDEX						1000
 #define ARENA_WINS_INDEX						1001
 #define TDM_WINS_INDEX							1002
@@ -75,11 +85,31 @@
 #define CTF_WINS_INDEX							1026
 #define DEM_WINS_INDEX							1027
 #define DM_WINS_INDEX							1028
+#define CLEAN_WINS_INDEX						1029
+	
+// special contracts
+#define HUGE_SMG_KILL_INDEX						3000
+#define HUGE_AR_KILL_INDEX						3001
+#define HUGE_SHOTGUN_KILL_INDEX					3002
+#define HUGE_LMG_KILL_INDEX						3003
+#define HUGE_SNIPER_KILL_INDEX					3004
+#define HUGE_MELEE_WEAPON_KILL_INDEX			3005
+#define HUGE_KILLS_SPECIALIST_WEAPON_INDEX		3006
+#define HUGE_TOTAL_WINS_INDEX					3007
+#define HUGE_TOTAL_WINS_INDEX_2					3008
+#define HUGE_TOTAL_WINS_INDEX_3					3009
+#define HUGE_TOTAL_WINS_INDEX_GRAND_SLAM		3010
+#define HUGE_TOTAL_WINS_INDEX_4					3011
+#define HUGE_TOTAL_WINS_INDEX_5					3012
+#define HUGE_TOTAL_WINS_INDEX_6					3013
+#define HUGE_TOTAL_WINS_INDEX_7					3014
+#define HUGE_TOTAL_WINS_INDEX_8					3015
 
 #namespace contracts;
 
 #precache( "eventstring", "mp_daily_challenge_complete" );
 #precache( "eventstring", "mp_weekly_challenge_complete" );
+#precache( "eventstring", "mp_special_contract_complete" );
 
 REGISTER_SYSTEM( "contracts", &__init__, undefined )
 
@@ -171,6 +201,9 @@ function setup_player_contracts()
 			table_row = TableLookupRowNum( CONTRACT_TABLE, INDEX_COL, contract_index );
 			player.pers["contracts"][contract_index].table_row = table_row;
 			player.pers["contracts"][contract_index].target_value =  int( TableLookupColumnForRow( CONTRACT_TABLE, table_row, TARGET_VALUE_COL ) );
+			player.pers["contracts"][contract_index].calling_card_stat = TableLookupColumnForRow( CONTRACT_TABLE, table_row, CALLING_CARD_STAT_COL );
+			player.pers["contracts"][contract_index].weapon_camo_stat = TableLookupColumnForRow( CONTRACT_TABLE, table_row, WEAPON_CAMO_STAT_COL );
+			player.pers["contracts"][contract_index].absolute_stat_path = TableLookupColumnForRow( CONTRACT_TABLE, table_row, ABSOLUTE_STAT_PATH_COL );
 		}
 	}
 }
@@ -263,6 +296,7 @@ function contract_kills( data )
 	{
 		player add_stat( KILLS_SPECIALIST_WEAPON_INDEX );
 		player add_stat( BIG_KILLS_SPECIALIST_WEAPON_INDEX );
+		player add_stat( HUGE_KILLS_SPECIALIST_WEAPON_INDEX );
 	}
 	
 	isKillstreak = isdefined( data.eInflictor ) && isdefined( data.eInflictor.killstreakid );
@@ -287,26 +321,35 @@ function contract_kills( data )
 		{
 			case "weapon_assault":
 				player add_stat( AR_KILL_INDEX );
+				player add_stat( HUGE_AR_KILL_INDEX );
 				break;
 				
 			case "weapon_smg":
 				player add_stat( SMG_KILL_INDEX );
+				player add_stat( HUGE_SMG_KILL_INDEX );
 				break;
 				
 			case "weapon_sniper":
 				player add_stat( SNIPER_KILL_INDEX );
+				player add_stat( HUGE_SNIPER_KILL_INDEX );
 				break;
 				
 			case "weapon_lmg":
 				player add_stat( LMG_KILL_INDEX );
+				player add_stat( HUGE_LMG_KILL_INDEX );
 				break;
 				
 			case "weapon_cqb":
 				player add_stat( SHOTGUN_KILL_INDEX );
+				player add_stat( HUGE_SHOTGUN_KILL_INDEX );
 				break;
 				
 			case "weapon_pistol":
 				player add_stat( PISTOL_KILL_INDEX );
+				break;
+				
+			case "weapon_knife":
+				player add_stat( HUGE_MELEE_WEAPON_KILL_INDEX );
 				break;
 			
 			default:
@@ -385,6 +428,32 @@ function add_active_stat( contract_index, delta = 1 )
 				}
 			}
 		}
+		else if ( slot == MP_CONTRACT_SPECIAL_SLOT )
+		{
+			event = &"mp_special_contract_complete";
+			display_rewards = true;
+			
+			absolute_stat_path = self.pers["contracts"][contract_index].absolute_stat_path;
+			if ( absolute_stat_path != "" )
+			{
+				set_contract_award_stat_from_path( absolute_stat_path, true );
+			}
+			
+			calling_card_stat = self.pers["contracts"][contract_index].calling_card_stat;
+			if ( calling_card_stat != "" )
+			{
+				set_contract_award_stat( "calling_card", calling_card_stat );
+			}
+			
+			weapon_camo_stat = self.pers["contracts"][contract_index].weapon_camo_stat;
+			if ( weapon_camo_stat != "" )
+			{
+				set_contract_award_stat( "weapon_camo", weapon_camo_stat );
+			}
+				
+			self set_contract_stat( MP_CONTRACT_SPECIAL_SLOT, "award_given", 1 );
+		}
+		
 		
 		self LUINotifyEvent( event, 2, contract_index, display_rewards );
 	}
@@ -398,6 +467,80 @@ function get_contract_stat( slot, stat_name )
 function set_contract_stat( slot, stat_name, stat_value )
 {
 	return self SetDStat( "contracts", slot, stat_name, stat_value );
+}
+
+function set_contract_award_stat( award_type, stat_name, stat_value = 1 )
+{
+	// award_type is unused for now as we use PlayerStatsList for now
+	
+	return self AddPlayerStat( stat_name, stat_value );
+}
+
+function set_contract_award_stat_from_path( stat_path, stat_value )
+{
+	stat_path_array = StrTok( stat_path, " " );
+	
+	string_path_1 = "";
+	string_path_2 = "";
+	string_path_3 = "";
+	string_path_4 = "";
+	string_path_5 = "";
+	
+	switch( stat_path_array.size )
+	{
+		case 5:
+			string_path_5 = stat_path_array[4];
+			if( StrIsNumber( string_path_5 ) )
+			{
+				string_path_5 = Int( string_path_5 );
+			}
+		case 4:
+			string_path_4 = stat_path_array[3];
+			if( StrIsNumber( string_path_4 ) )
+			{
+				string_path_4 = Int( string_path_4 );
+			}
+		case 3:
+			string_path_3 = stat_path_array[2];
+			if( StrIsNumber( string_path_3 ) )
+			{
+				string_path_3 = Int( string_path_3 );
+			}
+		case 2:
+			string_path_2 = stat_path_array[1];
+			if( StrIsNumber( string_path_2 ) )
+			{
+				string_path_2 = Int( string_path_2 );
+			}
+		case 1:
+			string_path_1 = stat_path_array[0];
+			if( StrIsNumber( string_path_1 ) )
+			{
+				string_path_1 = Int( string_path_1 );
+			}
+	}
+		
+	switch( stat_path_array.size )
+	{
+		case 1:
+			return self SetDStat( string_path_1, stat_value );
+			break;
+		case 2:
+			return self SetDStat( string_path_1, string_path_2, stat_value );
+			break;
+		case 3:
+			return self SetDStat( string_path_1, string_path_2, string_path_3, stat_value );
+			break;
+		case 4:
+			return self SetDStat( string_path_1, string_path_2, string_path_3, string_path_4, stat_value );
+			break;
+		case 5:
+			return self SetDStat( string_path_1, string_path_2, string_path_3, string_path_4, string_path_5, stat_value );
+			break;
+		default:
+			AssertMsg( "Stat path depth of " + stat_path_array.size + " is too large. Limit to 5 deep" );
+			break;
+	}
 }
 
 function award_loot_xp_due( amount )
@@ -510,6 +653,15 @@ function contract_win( winner )
 {
 	winner add_stat( TOTAL_WINS_INDEX );
 	winner add_stat( BIG_TOTAL_WINS_INDEX );
+	winner add_stat( HUGE_TOTAL_WINS_INDEX );
+	winner add_stat( HUGE_TOTAL_WINS_INDEX_2 );
+	winner add_stat( HUGE_TOTAL_WINS_INDEX_3 );
+	winner add_stat( HUGE_TOTAL_WINS_INDEX_GRAND_SLAM );
+	winner add_stat( HUGE_TOTAL_WINS_INDEX_4 );
+	winner add_stat( HUGE_TOTAL_WINS_INDEX_5 );
+	winner add_stat( HUGE_TOTAL_WINS_INDEX_6 );
+	winner add_stat( HUGE_TOTAL_WINS_INDEX_7 );
+	winner add_stat( HUGE_TOTAL_WINS_INDEX_8 );
 	
 	if ( util::is_objective_game( level.gametype ) )
 	{
@@ -566,6 +718,10 @@ function gametype_win( winner )
 			
 		case "dm":
 			winner add_stat( DM_WINS_INDEX );
+			break;
+			
+		case "clean":
+			winner add_stat( CLEAN_WINS_INDEX );
 			break;
 			
 		default:

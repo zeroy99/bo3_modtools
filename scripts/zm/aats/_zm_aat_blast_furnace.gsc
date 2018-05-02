@@ -136,7 +136,7 @@ function blast_furnace_zombie_burn( e_attacker, w_weapon )
 			e_attacker zm_stats::increment_challenge_stat( "ZOMBIE_HUNTER_BLAST_FURNACE" );
 		}
 		
-		self DoDamage( n_damage, self.origin, e_attacker );
+		self DoDamage( n_damage, self.origin, e_attacker, undefined, "none", "MOD_UNKNOWN", 0, w_weapon );
 		i++;
 		wait ZM_AAT_BLAST_FURNACE_DOT_TICK_RATE;
 	}

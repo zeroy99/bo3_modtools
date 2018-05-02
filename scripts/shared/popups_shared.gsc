@@ -223,14 +223,20 @@ function displayPopUpsWaiter()
 	self.startMessageNotifyQueue = [];
 	self.wagerNotifyQueue = [];
 				
-	while( !level.gameEnded )
+	while( isdefined( level ) && isdefined( level.gameEnded ) && !level.gameEnded )
 	{
 		if ( self.startMessageNotifyQueue.size == 0 && self.messageNotifyQueue.size == 0 )
 			self waittill( "received award" );
 		
 		waittillframeend;
 
-		if ( level.gameEnded  )
+		if ( !isdefined( level ) )
+			break;
+		
+		if ( !isdefined( level.gameEnded ) )
+			break;
+		
+		if ( level.gameEnded )
 			break;
 		
 		if ( self.startMessageNotifyQueue.size > 0 )

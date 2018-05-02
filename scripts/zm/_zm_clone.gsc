@@ -56,12 +56,13 @@ function spawn_player_clone( player, origin, forceweapon, forcemodel )
 	}
 	else
 	{
-		clone SetModel( self.model );
-		if (isdefined(player.headModel))
-		{
-			clone.headModel = player.headModel;
-			clone attach(clone.headModel, "", true);
-		}
+		//set the body model
+		mdl_body = player GetCharacterBodyModel();
+		clone SetModel( mdl_body );
+	
+		//set the render options
+		bodyRenderOptions = player GetCharacterBodyRenderOptions();
+		clone SetBodyRenderOptions( bodyRenderOptions, bodyRenderOptions, bodyRenderOptions );
 	}
 
 	if (weaponmodel != "" && weaponmodel != "none" )

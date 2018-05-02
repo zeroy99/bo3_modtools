@@ -29,6 +29,9 @@ function init_shared()
 	level.fx_flare = "killstreaks/fx_heli_chaff";
 
 	//Dvar is used with the dev gui so as to let the player target friendly vehicles with heat-seekers.
+	/#
+		SetDvar("scr_freelock", "0");
+	#/
 }
 
 function on_player_spawned()
@@ -80,6 +83,8 @@ function StingerFiredNotify()
 	{
 		self waittill( "missile_fire", missile, weapon );
 
+		/# thread debug_missile( missile ); #/
+
 		if ( weapon.lockonType == "Legacy Single" )
 		{
 			if( isdefined(self.stingerTarget) && self.stingerLockFinalized )
@@ -89,6 +94,42 @@ function StingerFiredNotify()
 		}
 	}
 }
+
+/#
+function debug_missile( missile )
+{
+	level notify( "debug_missile" );
+	level endon( "debug_missile" );
+	
+	level.debug_missile_dots = [];
+	
+	while( 1 )
+	{
+		if ( GetDvarInt( "scr_debug_missile", 0 ) == 0 )
+		{
+			wait 0.5;
+			continue;
+		}
+
+		if ( isdefined( missile ) )
+		{
+			missile_info = SpawnStruct();
+			missile_info.origin = missile.origin;
+			target = missile Missile_GetTarget();
+			missile_info.targetEntNum = ( isdefined( target ) ? target GetEntityNumber() : undefined );
+			ARRAY_ADD( level.debug_missile_dots, missile_info );
+		}
+		
+		foreach( missile_info in level.debug_missile_dots )
+		{
+			dot_color = ( isdefined( missile_info.targetEntNum ) ? RED : GREEN );
+			util::debug_sphere( missile_info.origin, 10, dot_color, 0.66, 1 );
+		}
+		
+		WAIT_SERVER_FRAME;
+	}
+}
+#/
 
 function StingerWaitForAds()
 {
@@ -303,6 +344,19 @@ function StingerIRTLoop( weapon )
 function TargetWithinRangeOfPlaySpace( target )
 {
 	
+/#
+	// for tuning
+	if ( GetDvarInt( "scr_missilelock_playspace_extra_radius_override_enabled", 0 ) > 0 )
+	{
+		extraRadiusDvar = GetDvarInt( "scr_missilelock_playspace_extra_radius", 5000 );
+		if ( extraRadiusDvar != VAL( level.missileLockPlaySpaceCheckExtraRadius, 0 ) )
+		{
+			level.missileLockPlaySpaceCheckExtraRadius = extraRadiusDvar;
+			level.missileLockPlaySpaceCheckRadiusSqr = undefined;
+		}
+	}
+#/
+	
 	// only allow targetting of targets that are within the play space by a specified radius
 	// use level.missileLockPlaySpaceCheckExtraRadius to set it per level
 	if ( level.missileLockPlaySpaceCheckEnabled === true )
@@ -367,6 +421,19 @@ function GetBestStingerTarget( weapon )
 
 	for ( idx = 0; idx < targetsAll.size; idx++ )
 	{
+		/#
+		//This variable is set and managed by the 'dev_friendly_lock' function, which works with the dev_gui
+		if( GetDvarString( "scr_freelock") == "1" )
+		{
+			//If the dev_gui dvar is set, only check if the target is in the reticule. 
+			if( self InsideStingerReticleNoLock( targetsAll[idx], weapon ) )
+			{
+				targetsValid[targetsValid.size] = targetsAll[idx];
+			}
+			continue;
+		}
+		#/		
+
 		target = targetsAll[idx];
 
 		if ( level.teamBased || level.use_team_based_logic_for_locking_on === true ) //team based game modes
@@ -1171,6 +1238,21 @@ function MissileTarget_DeployFlares(origin, angles) // self == missile target
 	flareObject MoveGravity( velocity, 5.0 );
 	
 	flareObject thread util::deleteAfterTime( 5.0 );
+/#
+	self thread debug_tracker( flareObject );
+#/
 	return flareObject;
 }
 
+/#
+function debug_tracker( target )
+{
+	target endon( "death");
+	
+	while(1)
+	{
+		util::debug_sphere( target.origin, 10, (1,0,0), 1, 1 );
+		WAIT_SERVER_FRAME;
+	}
+}
+#/

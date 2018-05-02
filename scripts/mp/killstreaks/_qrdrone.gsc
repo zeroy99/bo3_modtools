@@ -73,8 +73,10 @@ function init()
 	level.QRDrone_minigun_flash = "weapon/fx_muz_md_rifle_3p";
 	level.QRDrone_fx["explode"] = "killstreaks/fx_drgnfire_explosion";	
 	
+//	level._effect[ "quadrotor_crash" ]	= "_t6/destructibles/fx_quadrotor_crash01";
 	level._effect[ "quadrotor_nudge" ]	= "killstreaks/fx_drgnfire_impact_sparks";
 	level._effect[ "quadrotor_damage" ]	= "killstreaks/fx_drgnfire_damage_state";
+//	level._effect[ "quadrotor_death" ]	= "_t6/destructibles/fx_quadrotor_death01";
 
 	level.QRDrone_dialog["launch"][0] = "ac130_plt_yeahcleared";
 	level.QRDrone_dialog["launch"][1] = "ac130_plt_rollinin";
@@ -110,6 +112,15 @@ function init()
 	level.QRDrone_noDeployZones = GetEntArray( "no_vehicles", "targetname" );
 
 	level._effect["qrdrone_prop"] = "_t6/weapon/qr_drone/fx_qr_wash_3p";
+
+/#
+	util::set_dvar_if_unset( "scr_QRDroneFlyTime", 60 );
+#/
+	//killstreaks::register( "qrdrone", "killstreak_qrdrone", "killstreak_qrdrone", "qrdrone_used",&tryUseQRDrone );
+	//killstreaks::register_alt_weapon( "qrdrone", "qrdrone_turret" );
+	//killstreaks::register_strings( "qrdrone", &"KILLSTREAK_EARNED_QRDRONE", &"KILLSTREAK_QRDRONE_NOT_AVAILABLE", &"KILLSTREAK_QRDRONE_INBOUND", undefined, &"KILLSTREAK_QRDRONE_HACKED" );
+	//killstreaks::register_dialog( "qrdrone", "mpl_killstreak_qrdrone", "kls_recondrone_used", "", "kls_recondrone_enemy", "", "kls_recondrone_ready" );
+	//killstreaks::override_entity_camera_in_demo("qrdrone", true);
 
 	clientfield::register( "helicopter", "qrdrone_state", VERSION_SHIP, 3, "int" );
 	clientfield::register( "helicopter", "qrdrone_timeout", VERSION_SHIP, 1, "int" );
@@ -770,6 +781,21 @@ function QRDrone_play_single_fx_on_tag( effect, tag )
 		self.damage_fx_ent delete();
 	}
 	
+	
+//	ent = spawn( "script_model", ( 0, 0, 0 ) );
+//	ent SetModel( "tag_origin" );
+//	ent.origin = self GetTagOrigin( tag );
+//	ent.angles = self GetTagAngles( tag );
+//	ent NotSolid();
+//	ent Hide();
+//	ent LinkTo( self, tag );
+//	ent.effect = effect;
+//	playfxontag( effect, ent, "tag_origin" );
+//	ent playsound("veh_qrdrone_sparks");
+//
+//		
+//	self.damage_fx_ent = ent;
+	
 	playfxontag( effect, self, "tag_origin" );
 
 }
@@ -810,6 +836,10 @@ function QRDrone_damageWatcher()
 		
 		self.owner playrumbleonentity("damage_heavy");
 
+/#
+		self.damage_debug = ( damage + " (" + weapon.name + ")" );
+#/
+		
 		if ( mod == "MOD_RIFLE_BULLET" || mod == "MOD_PISTOL_BULLET")
 		{
 			if ( isPlayer( attacker ) )
@@ -866,6 +896,8 @@ function QRDrone_stun( duration )
 	self endon( "death" );
 	self notify( "stunned" );
 	
+	//PlayFX( level.ai_tank_stun_fx, self.origin + (0,0,-20) + AnglesToForward(self.angles) * 6, AnglestoForward(self.angles) );
+	
 	self.owner util::freeze_player_controls( true );
 	
 	if (isdefined(self.owner.fullscreen_static))
@@ -892,6 +924,7 @@ function QRDrone_death( attacker, weapon, dir, damageType )
 		if ( self.owner util::IsEnemyPlayer( attacker ) )
 		{
 			attacker challenges::destroyedQRDrone( damageType, weapon );
+			//scoreevents::processScoreEvent( "destroyed_qrdrone", attacker, self.owner, weapon );
 			attacker AddWeaponStat( weapon, "destroyed_qrdrone", 1 );
 			attacker challenges::addFlySwatterStat( weapon, self );	
 			attacker AddWeaponStat( weapon, "destroyed_controlled_killstreak", 1 );		
@@ -915,6 +948,8 @@ function QRDrone_death( attacker, weapon, dir, damageType )
 		self.emp_fx delete();
 	}
 	// A dynEnt will be spawned in the collision thread when it hits the ground and "crash_done" notify will be sent
+	//self freeVehicle();
+	//wait 20;
 	self clientfield::set( "qrdrone_state", QRDRONE_FX_DEATH );
 	watcher =  self.owner weaponobjects::getWeaponObjectWatcher( "qrdrone" );
 	watcher thread weaponobjects::waitAndDetonate( self, 0.0, attacker, weapon );
@@ -1073,6 +1108,9 @@ function QRDrone_collision()
 		}
 		else
 		{
+			//self.crash_accel *= 0.5;
+			//self SetVehVelocity( self.velocity * 0.8 );
+//			CreateDynEntAndLaunch( self.deathmodel, self.origin, self.angles, self.origin, velocity * 0.03, level._effect[ "quadrotor_crash" ], 1 );
 			self playsound ("veh_qrdrone_explo");
 			self notify( "crash_done" );
 		}
@@ -1263,6 +1301,19 @@ function QRDrone_leave_on_timeout( killstreakName )
 
 	qrdrone.flyTime = 60.0;
 	waittime = self.flyTime - 10;
+/#
+	util::set_dvar_int_if_unset( "scr_QRDroneFlyTime", qrdrone.flyTime );
+	qrdrone.flyTime = GetDvarInt( "scr_QRDroneFlyTime" );
+	waittime = self.flyTime - 10;
+	if( waittime < 0 )
+	{
+		wait( qrdrone.flyTime );
+		self clientfield::set( "qrdrone_state", QRDRONE_FX_DEATH );
+		watcher =  qrdrone.owner weaponobjects::getWeaponObjectWatcher( "qrdrone" );
+		watcher thread weaponobjects::waitAndDetonate(qrdrone,0);
+		return;
+	}
+#/	
 	
 	qrdrone thread killstreaks::WaitForTimeout( killstreakName, waittime, &QRDrone_leave_on_timeout_callback, "death" );
 }
@@ -1541,6 +1592,17 @@ function setVisionsetWaiter()
 
 function inithud()
 {	
+	/*self.fullscreen_static = newclienthudelem( self );
+	self.fullscreen_static.x = 0;
+	self.fullscreen_static.y = 0; 
+	self.fullscreen_static.horzAlign = "fullscreen";
+	self.fullscreen_static.vertAlign = "fullscreen";
+	self.fullscreen_static.hidewhendead = false;
+	self.fullscreen_static.hidewheninmenu = true;
+	self.fullscreen_static.immunetodemogamehudsettings = true;
+	self.fullscreen_static.sort = 0; 
+	self.fullscreen_static SetShader( "tow_filter_overlay_no_signal", 640, 480 ); 
+	self.fullscreen_static.alpha = 0;*/
 }
 
 function destroyHud()

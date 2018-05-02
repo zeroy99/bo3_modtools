@@ -166,7 +166,7 @@ function minigun_damage_adjust(  inflictor, attacker, damage, flags, meansofdeat
 		// Don't affect damage dealt if the weapon isn't the minigun, allow other damage callbacks to be evaluated - mbettelman 1/28/2016
 		return -1;
 	}
-	if (self.archetype == ARCHETYPE_ZOMBIE || self.archetype == ARCHETYPE_ZOMBIE_DOG)
+	if ( self.archetype == ARCHETYPE_ZOMBIE || self.archetype == ARCHETYPE_ZOMBIE_DOG || self.archetype == ARCHETYPE_ZOMBIE_QUAD )
 	{		
 		n_percent_damage = self.health * (RandomFloatRange(.34, .75) );
 	}

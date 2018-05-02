@@ -114,7 +114,11 @@
 
 function main()
 {
+	/#
+	
 	Assert( isdefined( level.first_frame ), "There should be no waits before load::main." );
+	
+	#/
 	
 	level._loadStarted = true;
 

@@ -27,8 +27,6 @@
 #using scripts\shared\laststand_shared;
 
 #using scripts\shared\util_shared;
-#using scripts\mp\killstreaks\_killstreaks;
-#using scripts\mp\killstreaks\_killstreak_bundles;
 
 #insert scripts\shared\shared.gsh;
 #insert scripts\shared\version.gsh;
@@ -37,6 +35,8 @@
 
 #insert scripts\shared\ai\utility.gsh;
 
+#using scripts\mp\killstreaks\_killstreaks;
+#using scripts\mp\killstreaks\_killstreak_bundles;
 
 // ----------------------------------------------------------------------------
 // #define
@@ -48,6 +48,7 @@
 #define JUMP_COOLDOWN				11
 #define IGNORE_COOLDOWN				12
 	
+#define DEBUG_ON false
 	
 #define SIEGEBOT_THEIA_BUNDLE "siegebot_theia"
 	
@@ -423,6 +424,12 @@ function state_jumpUp_enter( params )
 	goal = self.jump.highground_history.origin;
 
 	trace = PhysicsTrace( goal + ( 0, 0, 200 ), goal - ( 0, 0, 10000 ), ( -10, -10, -10 ), ( 10, 10, 10 ), self, PHYSICS_TRACE_MASK_VEHICLE );
+	if ( DEBUG_ON )
+	{
+	/#debugstar( goal, 60000, (0,1,0) ); #/
+	/#debugstar( trace[ "position" ], 60000, (0,1,0) ); #/
+	/#line(goal, trace[ "position" ], (0,1,0), 1, false, 60000 ); #/
+	}
 	if ( trace[ "fraction" ] < 1 )
 	{
 		goal = trace[ "position" ];
@@ -464,6 +471,12 @@ function state_jumpDown_enter( params )
 	goal = self.jump.lowground_history;
 
 	trace = PhysicsTrace( goal + ( 0, 0, 500 ), goal - ( 0, 0, 10000 ), ( -10, -10, -10 ), ( 10, 10, 10 ), self, PHYSICS_TRACE_MASK_VEHICLE );
+	if ( DEBUG_ON )
+	{
+	/#debugstar( goal, 60000, (0,1,0) ); #/
+	/#debugstar( trace[ "position" ], 60000, (0,1,0) ); #/
+	/#line(goal, trace[ "position" ], (0,1,0), 1, false, 60000 ); #/
+	}
 	if ( trace[ "fraction" ] < 1 )
 	{
 		goal = trace[ "position" ];
@@ -529,6 +542,12 @@ function state_jump_update( params )
 
 	self.jump.in_air = true;
 
+	if ( DEBUG_ON ) 
+	{
+	/#debugstar( goal, 60000, (0,1,0) ); #/
+	/#debugstar( goal + (0,0,100), 60000, (0,1,0) ); #/
+	/#line(goal, goal + (0,0,100), (0,1,0), 1, false, 60000 ); #/
+	}
 
 	// calculate distance and forces
 	totalDistance = Distance2D(goal, self.jump.linkEnt.origin);
@@ -555,9 +574,11 @@ function state_jump_update( params )
 		antiGravityScaleUp = MapFloat( 0, 0.5, 0.6, 0, abs( 0.5 - distanceToGoal / totalDistance ) );
 		antiGravityScale = MapFloat( (self.radius * 1.0), (self.radius * 3), 0, 1, distanceToGoal );
 		antiGravity = antiGravityScale * antiGravityScaleUp * (-params.gravityForce) + (0,0,antiGravityByDistance);
+		if ( DEBUG_ON ) /#line(self.jump.linkEnt.origin, self.jump.linkEnt.origin + antiGravity, (0,1,0), 1, false, 60000 ); #/
 
 		velocityForwardScale = MapFloat( (self.radius * 1), (self.radius * 4), 0.2, 1, distanceToGoal );
 		velocityForward = initVelocityForward * velocityForwardScale;
+		if ( DEBUG_ON ) /#line(self.jump.linkEnt.origin, self.jump.linkEnt.origin + velocityForward, (0,1,0), 1, false, 60000 ); #/
 
 		oldVerticleSpeed = velocity[2];
 		velocity = (0,0, velocity[2]);
@@ -583,6 +604,7 @@ function state_jump_update( params )
 			self ASMRequestSubstate( params.landingState );
 		}
 
+		if ( DEBUG_ON ) /#debugstar( self.jump.linkEnt.origin, 60000, (1,0,0) ); #/
 		WAIT_SERVER_FRAME;
 	}
 
@@ -746,11 +768,20 @@ function side_step()
 
 	trace = PhysicsTrace( start, start + traceDir * step_size, 0.8 * ( -self.radius, -self.radius, 0 ), 0.8 * ( self.radius, self.radius, self.height ), self, PHYSICS_TRACE_MASK_VEHICLE );
 
+	if ( DEBUG_ON )
+	{
+		/#line(start, start + traceDir * step_size, (1,0,0), 1, false, 100 ); #/
+	}
+
 	if ( trace["fraction"] < 1 )
 	{
 		traceDir = -traceDir;
 		trace = PhysicsTrace( start, start + traceDir * step_size, 0.8 * ( -self.radius, -self.radius, 0 ), 0.8 * ( self.radius, self.radius, self.height ), self, PHYSICS_TRACE_MASK_VEHICLE );
 		jukeState = oppositeJukeState;
+		if ( DEBUG_ON )
+		{
+			/#line(start, start + traceDir * step_size, (1,0,0), 1, false, 100 ); #/
+		}
 	}
 
 	if ( trace["fraction"] >= 1 )
@@ -856,6 +887,8 @@ function footstep_right_monitor()
 
 function highGroundPoint( distanceLimitMin, distanceLimitMax, pointsArray, idealDist )
 {
+	/# Record3DText( "range: [" + distanceLimitMin + "," + distanceLimitMax + "]", self.origin, (1,0.5,0), "Script", self ); #/
+
 	bestScore = 1000000; // lower the better
 	result = undefined;
 	foreach( point in pointsArray )
@@ -863,6 +896,8 @@ function highGroundPoint( distanceLimitMin, distanceLimitMax, pointsArray, ideal
 		distanceToTarget = Distance2D( point.origin, self.origin );
 		if ( distanceToTarget < distanceLimitMin || distanceLimitMax < distanceToTarget )
 		{
+			/# RecordStar( point.origin, (1,0.5,0) ); #/
+			/# Record3DText( "out of range: " + distanceToTarget, point.origin, (1,0.5,0), "Script", self ); #/
 			continue;
 		}
 
@@ -876,6 +911,9 @@ function highGroundPoint( distanceLimitMin, distanceLimitMax, pointsArray, ideal
 		{
 			score += 1000;
 		}
+
+		/# RecordStar( point.origin, (1,0.5,0) ); #/
+		/# Record3DText( "dist: " + distanceToTarget + " score: " + score, point.origin, (1,0.5,0), "Script", self ); #/
 
 		if ( score < bestScore )
 		{
@@ -1106,6 +1144,22 @@ function shoulder_light_focus( target )
 	}
 }
 
+function Debug_line_to_target( target, time, color )
+{
+	self endon( "death" );
+	point1 = self.origin;
+	point2 = target.origin;
+	if ( DEBUG_ON ) 
+	{
+		stopTime = GetTime() + time * 1000;
+		while ( GetTime() <= stopTime )
+		{
+			/#line(point1, point2, color, 1, false, 3 ); #/
+			WAIT_SERVER_FRAME;
+		}
+	}
+}
+
 function Pin_first_three_spikes_to_ground( delay )
 {
 	self endon( "death" );
@@ -1273,6 +1327,11 @@ function Attack_Thread_Rocket()
 
 		if ( isAlive( enemy ) )
 		{
+			if ( DEBUG_ON ) 
+			{
+				self thread Debug_line_to_target( enemy, 5, (1,0,0) );
+			}
+
 			turretOrigin = self GetTagOrigin( "tag_gunner_flash2" );
 			distToEnemy = Distance2D( self.origin, enemy.origin );
 			shootHeight = math::clamp( distToEnemy * 0.35, 100, 350 );
@@ -1299,6 +1358,12 @@ function Attack_Thread_Rocket()
 				self SetGunnerTargetEnt( spike, (0,0,0), 1 );
 				self FireWeapon( 2, enemy );
 				vehicle_ai::Cooldown( "spike_on_ground", randomFloatRange( 6, 10 ) );
+
+				if ( DEBUG_ON ) 
+				{
+					/#debugstar( spike.origin, 200, (1,0,0) ); #/
+						/#Circle( spike.origin, 150, (1,0,0), false, true, 200 ); #/
+				}
 
 				wait 0.1;
 			}
@@ -1513,6 +1578,7 @@ function GetNextMovePosition( enemy )
 	}
 
 	vehicle_ai::PositionQuery_PostProcess_SortScore( queryResult );
+	self vehicle_ai::PositionQuery_DebugScores( queryResult );
 
 	if( queryResult.data.size == 0 )
 		return self.origin;
@@ -1562,6 +1628,9 @@ function get_jumpon_target( distanceLimitMin, distanceLimitMax, idealDist, inclu
 	minDistAwayFromHighGround = 300;
 	maxDistAwayFromArenaCenter = 1800;
 
+	/# RecordStar( self.origin, (1,0.5,0) ); #/
+	/# Record3DText( "JUMP TO GROUND", self.origin, (1,0.5,0), "Script", self ); #/
+	
 	foreach( target in targets )
 	{
 		if ( !is_valid_target( target ) || !target.allowdeath || IsAirBorne( target ) )
@@ -1571,17 +1640,23 @@ function get_jumpon_target( distanceLimitMin, distanceLimitMax, idealDist, inclu
 
 		if ( Distance2DSquared( self.arena_center, target.origin ) > SQR( maxDistAwayFromArenaCenter ) )
 		{
+			/# RecordStar( target.origin, (0,0.5,1) ); #/
+			/# Record3DText( "too far from center: " + distance2d( self.arena_center, target.origin ), target.origin, (0,0.5,1), "Script", self ); #/
 			continue;
 		}
 
 		if ( too_close_to_high_ground( target.origin, minDistAwayFromHighGround ) )
 		{
+			/# RecordStar( target.origin, (0,0.5,1) ); #/
+			/# Record3DText( "too close to platform", target.origin, (0,0.5,1), "Script", self ); #/
 			continue;
 		}
 
 		distanceToTarget = Distance2D( target.origin, self.origin );
 		if ( distanceToTarget < distanceLimitMin || distanceLimitMax < distanceToTarget )
 		{
+			/# RecordStar( target.origin, (1,0.5,0) ); #/
+			/# Record3DText( "out of range: " + distanceToTarget, target.origin, (1,0.5,0), "Script", self ); #/
 			continue;
 		}
 
@@ -1597,6 +1672,9 @@ function get_jumpon_target( distanceLimitMin, distanceLimitMax, idealDist, inclu
 		{
 			score = randomFloat( 200 );
 		}
+
+		/# RecordStar( target.origin, (1,0.5,0) ); #/
+		/# Record3DText( "dist: " + distanceToTarget + " score: " + score, target.origin, (1,0.5,0), "Script", self ); #/
 
 		if ( isPlayer( target ) && !isVehicle( target ) )
 		{
@@ -1682,6 +1760,7 @@ function face_target( position, targetAngleDiff )
 	angleAdjustingStart = GetTime();
 	while( angleDiff > targetAngleDiff && vehicle_ai::TimeSince( angleAdjustingStart ) < 4 )
 	{
+		if ( DEBUG_ON ) /#line(self.origin, position, (1,0,1), 1, false, 5 ); #/
 		angleDiff = AbsAngleClamp180( self.angles[1] - goalAngles[1] );
 		WAIT_SERVER_FRAME;
 	}
@@ -1865,6 +1944,15 @@ function pin_spike_to_ground()
 		target pin_to_ground();
 		wait randomFloatRange(0.05, 0.1);
 	}
+
+	if ( DEBUG_ON ) 
+	{
+		foreach ( spike in spikeTargets )
+		{
+			/#debugstar( spike.origin, 200, (1,0,0) ); #/
+			/#Circle( spike.origin, 150, (1,0,0), false, true, 200 ); #/
+		}
+	}
 }
 
 function spike_score( target )
@@ -1962,6 +2050,12 @@ function attack_spike_minefield()
 		bestTarget = bestTarget.origin;
 	}
 
+	if ( DEBUG_ON ) 
+	{
+		/#debugstar( bestTarget, 200, (1,0,0) ); #/
+		/#Circle( bestTarget, spikeCoverRadius, (1,0,0), false, true, 200 ); #/
+	}
+	
 	//tell the level theia is about to fire spikes
 	level notify( "theia_preparing_spike_attack", bestTarget );
 	
@@ -2016,6 +2110,7 @@ function Delay_Target_ToEnemy_Thread( point, enemy, timeToHit )
 		while( GetTime() < timeStart + timeToHit * 1000 )
 		{
 			self.fakeTargetEnt.origin = LerpVector( point, enemy.origin + offset, ( GetTime() - timeStart ) / ( timeToHit * 1000 ) );
+			if ( DEBUG_ON ) /#debugstar( self.fakeTargetEnt.origin, 100, (0,1,0) ); #/
 			WAIT_SERVER_FRAME;
 		}
 	}

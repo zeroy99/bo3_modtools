@@ -142,7 +142,7 @@ function recordEndGameComScoreEventForPlayer( player, result )
 		currXP = player rank::getRankXpStat();
 		prevXP = player.pers["rankxp"];
 		
-		if ( globallogic_score::canUpdateWeaponContractStats() )
+		if ( globallogic_score::canUpdateWeaponContractStats( player ) )
 		{
 			specialContractId = 1;		// this is a one-off contract. Use any non-zero value to indicate that it is populated.
 			specialContractTarget = GetDvarInt( "weapon_contract_target_value", 100 );
@@ -232,11 +232,20 @@ function recordEndGameComScoreEventForPlayer( player, result )
 	gameLength = game["timepassed"] / 1000;	
 	timePlayed = player globallogic::getTotalTimePlayed( gameLength );
 	
-	totalKills = player GetDStat( "playerstatslist", "kills", "statValue" );
-	totalHits = player GetDStat( "playerstatslist", "hits", "statValue" );
-	totalDeaths = player GetDStat( "playerstatslist", "deaths", "statValue" );
-	totalWins = player GetDStat( "playerstatslist", "wins", "statValue" );
-	totalXP = player GetDStat( "playerstatslist", "rankxp", "statValue" );
+	totalKills = 0;
+	totalHits = 0;
+	totalDeaths = 0;
+	totalWins = 0;
+	totalXP = 0;
+		
+	if ( level.gametype != "fr" )
+	{
+		totalKills = player GetDStat( "playerstatslist", "kills", "statValue" );
+		totalHits = player GetDStat( "playerstatslist", "hits", "statValue" );
+		totalDeaths = player GetDStat( "playerstatslist", "deaths", "statValue" );
+		totalWins = player GetDStat( "playerstatslist", "wins", "statValue" );
+		totalXP = player GetDStat( "playerstatslist", "rankxp", "statValue" );
+	}
 	
 	killCount = 0;
 	hitCount = 0;
@@ -446,13 +455,13 @@ function player_monitor_wall_run()
 	self.timeSpentWallRunningInLife = 0;
 	while ( true )
 	{
-		notification = self util::waittill_any_return( "wallrun_begin", "death" );		
+		notification = self util::waittill_any_return( "wallrun_begin", "death", "disconnect", "stop_player_monitor_wall_run" );		
 		if( notification == "death" )
 			break;	// end thread
 
 		self.lastWallRunStartTime = getTime();
 
-		notification = self util::waittill_any_return( "wallrun_end", "death" );		
+		notification = self util::waittill_any_return( "wallrun_end", "death", "disconnect", "stop_player_monitor_wall_run" );		
 		
 		self.timeSpentWallRunningInLife += (getTime() - self.lastWallRunStartTime);
 
@@ -474,13 +483,13 @@ function player_monitor_swimming()
 	self.timeSpentSwimmingInLife = 0;
 	while ( true )
 	{
-		notification = self util::waittill_any_return( "swimming_begin", "death" );		
+		notification = self util::waittill_any_return( "swimming_begin", "death", "disconnect", "stop_player_monitor_swimming" );		
 		if( notification == "death" )
 			break;	// end thread
 
 		self.lastSwimmingStartTime = getTime();
 
-		notification = self util::waittill_any_return( "swimming_end", "death" );		
+		notification = self util::waittill_any_return( "swimming_end", "death", "disconnect", "stop_player_monitor_swimming" );		
 		
 		self.timeSpentSwimmingInLife += (getTime() - self.lastSwimmingStartTime);
 
@@ -502,14 +511,14 @@ function player_monitor_slide()
 	self.numberOfSlidesInLife = 0;
 	while ( true )
 	{
-		notification = self util::waittill_any_return( "slide_begin", "death" );		
+		notification = self util::waittill_any_return( "slide_begin", "death", "disconnect", "stop_player_monitor_slide" );		
 		if( notification == "death" )
 			break;	// end thread
 
 		self.lastSlideStartTime = getTime();
 		self.numberOfSlidesInLife++;
 
-		notification = self util::waittill_any_return( "slide_end", "death" );		
+		notification = self util::waittill_any_return( "slide_end", "death", "disconnect", "stop_player_monitor_slide" );		
 		
 		if( notification == "death" )
 			break;  // end thread		
@@ -528,14 +537,14 @@ function player_monitor_doublejump()
 	self.numberOfDoubleJumpsInLife = 0;
 	while ( true )
 	{
-		notification = self util::waittill_any_return( "doublejump_begin", "death" );		
+		notification = self util::waittill_any_return( "doublejump_begin", "death", "disconnect", "stop_player_monitor_doublejump" );		
 		if( notification == "death" )
 			break;	// end thread
 
 		self.lastDoubleJumpStartTime = getTime();
 		self.numberOfDoubleJumpsInLife++;
 
-		notification = self util::waittill_any_return( "doublejump_end", "death" );		
+		notification = self util::waittill_any_return( "doublejump_end", "death", "disconnect", "stop_player_monitor_doublejump" );		
 		
 		if( notification == "death" )
 			break;  // end thread		
@@ -2185,6 +2194,12 @@ function Callback_PlayerDamage( eInflictor, eAttacker, iDamage, iDFlags, sMeansO
 		return;
 	}
 	
+	if ( isdefined( eInflictor ) && eInflictor.killstreakType === "siegebot" )
+	{
+		if ( eInflictor.team === "neutral" )
+			return;
+	}
+
 	self.iDFlags = iDFlags;
 	self.iDFlagsTime = getTime();
 
@@ -2584,7 +2599,7 @@ function PlayerKilled_WeaponStats( attacker, weapon, sMeansOfDeath, wasInLastSta
 			attacker AddWeaponStat( weapon, "headshots", 1, attacker.class_num, attackerWeaponPickedUp, undefined, attacker.primaryLoadoutGunSmithVariantIndex, attacker.secondaryLoadoutGunSmithVariantIndex );
 		}
 		
-		if ( sMeansOfDeath == "MOD_PROJECTILE" )
+		if ( sMeansOfDeath == "MOD_PROJECTILE" || ( ( sMeansOfDeath == "MOD_GRENADE" || sMeansOfDeath == "MOD_IMPACT" ) && weapon.rootWeapon.statIndex == level.weaponLauncherEx41.statIndex ) )
 		{
 			attacker AddWeaponStat( weapon, "direct_hit_kills", 1 );
 		}
@@ -3759,7 +3774,7 @@ function update_ffa_top_scorers()
 {
 	waittillframeend;
 	
-	if ( !level.players.size )
+	if ( !level.players.size || level.gameEnded )
 		return;
 
 	placement = [];

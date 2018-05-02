@@ -373,7 +373,14 @@ function laststand_enable_player_weapons()
 	// return the player's additional primary weapon, if they retained the perk through laststand - Black Ops 3 TU1 fix
 	if( self HasPerk( PERK_ADDITIONAL_PRIMARY_WEAPON ) && isdefined( self.weapon_taken_by_losing_specialty_additionalprimaryweapon ) )
  	{
-		self zm_weapons::give_build_kit_weapon( self.weapon_taken_by_losing_specialty_additionalprimaryweapon );
+		if ( isdefined(level.return_additionalprimaryweapon) )
+		{
+			self [[ level.return_additionalprimaryweapon ]]( self.weapon_taken_by_losing_specialty_additionalprimaryweapon );
+		}
+		else
+		{
+			self zm_weapons::give_build_kit_weapon( self.weapon_taken_by_losing_specialty_additionalprimaryweapon );
+		}
 	}
 	else if ( isdefined(self.weapon_taken_by_losing_specialty_additionalprimaryweapon) && self.lastActiveWeapon == self.weapon_taken_by_losing_specialty_additionalprimaryweapon )
 	{
@@ -385,7 +392,7 @@ function laststand_enable_player_weapons()
 		self TakeWeapon( self.laststandpistol );
 	}
 	
-	if( isdefined( self.hadpistol ) && self.hadpistol == true && isdefined( level.zombie_last_stand_ammo_return ) )
+	if( isdefined( self.hadpistol ) && self.hadpistol == true && isdefined( level.zombie_last_stand_ammo_return ) && isdefined( self.laststandpistol ) )
 	{
 		[ [ level.zombie_last_stand_ammo_return ] ]();
 	}
@@ -404,8 +411,18 @@ function laststand_enable_player_weapons()
 		self SwitchToWeapon(); // Switch to any available primary
 	}
 	
-	
+	self.laststandpistol = undefined;
 }
+
+function laststand_has_players_weapons_returned( e_player )
+{
+	if( isdefined( e_player.laststandpistol ) )
+	{
+		return false;
+	}		
+
+	return true;
+}	
 
 function laststand_clean_up_on_disconnect( e_revivee, w_reviver, w_revive_tool )
 {
@@ -832,7 +849,8 @@ function revive_trigger_spawn()
 		self.revivetrigger SetMovingPlatformEnabled( true );
 		self.revivetrigger EnableLinkTo();
 		self.revivetrigger.origin = self.origin;
-		self.revivetrigger LinkTo( self ); 
+		self.revivetrigger LinkTo( self );
+		self.revivetrigger SetInvisibleToPlayer( self );
 
 		self.revivetrigger.beingRevived = 0;
 		self.revivetrigger.createtime = gettime();
@@ -995,6 +1013,11 @@ function revive_give_back_weapons( w_reviver, w_revive_tool )
 
 	// Don't switch to their old primary weapon if they got put into last stand while trying to revive a teammate
 	if ( self laststand::player_is_in_laststand() )
+	{
+		return;
+	}
+	
+	if( IsDefined( level.revive_give_back_weapons_custom_func ) && self [[ level.revive_give_back_weapons_custom_func ]] ( w_reviver ) )
 	{
 		return;
 	}
@@ -1346,11 +1369,6 @@ function auto_revive( reviver, dont_enable_weapons )
 
 	self notify("clear_red_flashing_overlay"); 
 
-	if( !isdefined(dont_enable_weapons) || (dont_enable_weapons == false) )
-	{
-		self laststand_enable_player_weapons();
-	}
-
 	self AllowJump( true );
 	
 	self util::delay( N_REVIVE_VISIBILITY_DELAY, "death", &set_ignoreme, false );
@@ -1372,6 +1390,14 @@ function auto_revive( reviver, dont_enable_weapons )
 	}
 
 	self notify ( "player_revived", reviver );
+
+	// necessary wait to let bgb give back perks
+	WAIT_SERVER_FRAME;
+
+	if( !isdefined(dont_enable_weapons) || (dont_enable_weapons == false) )
+	{
+		self laststand_enable_player_weapons();
+	}
 }
 
 
@@ -1382,7 +1408,7 @@ function remote_revive( reviver )
 		return;
 	}	
 	self playsound( "zmb_character_remote_revived" );
-	self auto_revive( reviver );
+	self thread auto_revive( reviver );
 
 }
 

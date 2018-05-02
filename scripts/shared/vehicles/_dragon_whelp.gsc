@@ -111,6 +111,9 @@ function defaultRole()
 		self vehicle_ai::add_utility_connection( "power_up", "combat" );
     }
 
+    /#
+	SetDvar( "debug_dragon_threat_selection", 0 );
+	#/
 
 	//kick off target selection
 	self thread dragon_target_selection();
@@ -249,6 +252,16 @@ function private dragon_target_selection()
 			continue;
 		}
 		
+		/#
+		//debug sword threat selection
+		if( GetDvarInt( "debug_dragon_threat_selection", 0 ) )
+		{
+			if( IsDefined( self.dragonEnemy ) )
+			{
+				line( self.origin, self.dragonEnemy.origin, ( 1, 0, 0 ), 1.0, false, 5 );
+			}
+		}
+		#/
 		
 		//decide who the enemy should be
 		target = get_dragon_enemy();
@@ -430,6 +443,13 @@ function state_combat_update( params )
 
 				if ( isdefined( best_point ) )
 				{
+					/#
+					if ( IS_TRUE( GetDvarInt("hkai_debugPositionQuery") ) )
+					{
+						recordLine( self.origin, best_point.origin, (0.3,1,0) );
+						recordLine( self.origin, self.owner.origin, (1,0,0.4) );
+					}
+					#/
 
 					if ( DistanceSquared( self.origin, best_point.origin ) > SQR( 50 ) )
 					{

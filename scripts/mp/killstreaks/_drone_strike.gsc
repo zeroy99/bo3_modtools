@@ -1,8 +1,10 @@
 #using scripts\codescripts\struct;
+
 #using scripts\shared\challenges_shared;
 #using scripts\shared\clientfield_shared;
 #using scripts\shared\scoreevents_shared;
 #using scripts\shared\util_shared;
+
 #using scripts\mp\_challenges;
 #using scripts\mp\_util;
 #using scripts\mp\gametypes\_spawning;

@@ -133,9 +133,15 @@ function ActivateSatellite()
 	satellite SetCanDamage( true );
 	satellite thread killstreaks::MonitorDamage( SATELLITE_NAME, satellite.maxhealth, &DestroySatellite, satellite.lowhealth, &OnLowHealth, 0, undefined, false );
 	satellite thread killstreaks::WaitTillEMP( &DestroySatelliteByEMP );
+	// satellite.overrideVehicleDamage = &SatelliteDamageOverride;	// satellite is not a vehicle right now
 	satellite.killstreakDamageModifier = &killstreakDamageModifier;
 
 	satellite.rocketDamage = ( satellite.maxhealth / SATELLITE_MISSILES_TO_DESTROY ) + 1;
+	
+	/#
+	//Box( airsupport::GetMapCenter() + ( xOffset, yOffset, zOffset ), (-4, -4, 0 ), ( 4, 4, 5000 ), 0, ( 1, 0, 0 ), 0.6, false, 2000 );	
+	//Box( airsupport::GetMapCenter() + ( -xOffset, -yoffset, zOffset ), (-4, -4, 0 ), ( 4, 4, 5000 ), 0, ( 0, 1, 0 ), 0.6, false, 2000 );	
+	#/
 	
 	satellite MoveTo( airsupport::GetMapCenter() + ( -xOffset, -yoffset, zOffset ), SATELLITE_DURATION_MS * 0.001 );
 

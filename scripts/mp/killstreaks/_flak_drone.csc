@@ -1,16 +1,20 @@
 #using scripts\codescripts\struct;
+
 #using scripts\shared\clientfield_shared;
 #using scripts\shared\math_shared;
 #using scripts\shared\system_shared;
 #using scripts\shared\util_shared;
 #using  scripts\shared\vehicle_shared;
-#using scripts\mp\_helicopter_sounds;
-#using scripts\mp\_util;
-#using scripts\shared\duplicaterender_mgr;
 
 #insert scripts\shared\shared.gsh;
 #insert scripts\shared\version.gsh;
+
+#using scripts\mp\_helicopter_sounds;
+#using scripts\mp\_util;
+
 #insert scripts\mp\killstreaks\_killstreaks.gsh;
+
+#using scripts\shared\duplicaterender_mgr;
 #insert scripts\shared\duplicaterender.gsh;
 
 #namespace flak_drone;

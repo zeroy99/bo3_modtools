@@ -11,6 +11,10 @@
 #using scripts\shared\scoreevents_shared;
 #using scripts\shared\sound_shared;
 #using scripts\shared\util_shared;
+
+#insert scripts\shared\shared.gsh;
+#insert scripts\shared\version.gsh;
+
 #using scripts\mp\gametypes\_battlechatter;
 #using scripts\mp\gametypes\_globallogic;
 #using scripts\mp\gametypes\_globallogic_audio;
@@ -19,11 +23,9 @@
 #using scripts\mp\gametypes\_hostmigration;
 #using scripts\mp\gametypes\_spawning;
 #using scripts\mp\gametypes\_spawnlogic;
+
 #using scripts\mp\_challenges;
 #using scripts\mp\_util;
-
-#insert scripts\shared\shared.gsh;
-#insert scripts\shared\version.gsh;
 
 #define RANDOM_ZONE_LOCATIONS_OFF 0
 #define RANDOM_ZONE_LOCATIONS_ON 1
@@ -401,7 +403,7 @@ function KothCaptureLoop()
 
 		level.zone toggleZoneEffects( true );
 
-		msg = level util::waittill_any_return( "zone_captured", "zone_destroyed" );
+		msg = level util::waittill_any_return( "zone_captured", "zone_destroyed", "game_ended", "zone_moved" );
 	
 		// this happens if it goes from contested to neutral
 		if ( msg == "zone_destroyed" )
@@ -1532,6 +1534,16 @@ function onPlayerKilled( eInflictor, attacker, iDamage, sMeansOfDeath, weapon, v
 	}
 }
 
+function watchKillWhileContesting( zone_captured_team )
+{
+	level endon( zone_captured_team );
+	level endon( "zone_destroyed" );
+	level endon( "zone_captured" );
+	level endon( "death" );
+	
+	self util::waittill_any_return( "killWhileContesting", "disconnect" );
+	level notify( "abortKillWhileContesting" );
+}
 
 function killWhileContesting()
 {	
@@ -1548,7 +1560,9 @@ function killWhileContesting()
 	
 	self.clearEnemyCount++;
 	
-	zoneReturn = level util::waittill_any_return( "zone_captured" + playerteam, "zone_destroyed", "zone_captured", "death" );
+	zone_captured_team = "zone_captured" + playerteam;
+	self thread watchKillWhileContesting( zone_captured_team );
+	zoneReturn = level util::waittill_any_return( zone_captured_team, "zone_destroyed", "zone_captured", "death", "abortKillWhileContesting" );
 	
 	if ( zoneReturn == "death" || playerteam != self.pers["team"] )
 	{
@@ -1602,7 +1616,7 @@ function updateCapsPerMinute(lastOwnerTeam)
 	if ( IsPlayer( self ) && isdefined(self.timePlayed["total"]) )
 		minutesPassed = self.timePlayed["total"] / 60;
 		
-	self.capsPerMinute = self.numCaps / minutesPassed;
+	self.capsPerMinute = ( minutesPassed ? self.numCaps / minutesPassed : 0 );
 	if ( self.capsPerMinute > self.numCaps )
 		self.capsPerMinute = self.numCaps;
 }

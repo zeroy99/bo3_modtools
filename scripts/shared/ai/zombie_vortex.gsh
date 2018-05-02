@@ -15,8 +15,9 @@
 #define VORTEX_SCREEN_EFFECT_NAME			"zm_idgun_vortex"
 
 #define VORTEX_START_CLIENTFIELD			"vortex_start"
-#define VORTEX_VERSION_1			1
-#define VORTEX_VERSION_2			2
+#define VORTEX_EFFECT_VERSION_NONE			0
+#define VORTEX_EFFECT_VERSION_1			1
+#define VORTEX_EFFECT_VERSION_2			2
 
 #define IDGUN_VEH_KILL_DIST_SQR		12.0 * 12.0
 

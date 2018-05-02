@@ -12,3 +12,7 @@
 #insert scripts\shared\ai\utility.gsh;
 #insert scripts\shared\shared.gsh;
 
+function autoexec RegisterBehaviorScriptFunctions()
+{	
+
+}

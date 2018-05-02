@@ -44,7 +44,7 @@ function set_interaction_height( n_height )
 	level.pack_a_punch.interaction_height = n_height;
 }
 
-function set_interaction_trigger_radius( n_radius )
+function set_interaction_trigger_radius( n_radius ) //You cannot create a trigger with a radius smaller than 40
 {
 	init_parameters();
 	level.pack_a_punch.interaction_trigger_radius = n_radius;

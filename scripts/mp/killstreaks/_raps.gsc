@@ -142,6 +142,7 @@ function RapsHelicopterDynamicAvoidanceUpdate( index_to_update )
 	if( level.raps_helicopters.size >= 2 )
 	{			
 		helicopter = level.raps_helicopters[index_to_update];
+		/#	helicopter.__action_just_made = false; #/
 			
 		for( i = 0; i < level.raps_helicopters.size; i++ )
 		{
@@ -168,6 +169,8 @@ function RapsHelicopterDynamicAvoidanceUpdate( index_to_update )
 				//
 				//	pick a new goal based on distance, speed, and the last time picked
 				//
+				/#	helicopter.__last_dynamic_avoidance_action = 20;	/* new goal */ #/
+				/#	helicopter.__action_just_made = true; #/
 					
 				helicopter UpdateHelicopterSpeed();
 				if ( helicopter.isLeaving )
@@ -190,6 +193,8 @@ function RapsHelicopterDynamicAvoidanceUpdate( index_to_update )
 				//
 				//	do a full stop if the other helicopter is in front and is too close
 				//
+				/#	helicopter.__last_dynamic_avoidance_action = 10;	/* stop */ #/
+				/#	helicopter.__action_just_made = true; #/
 					
 				helicopter StopHelicopter();
 			}
@@ -199,6 +204,8 @@ function RapsHelicopterDynamicAvoidanceUpdate( index_to_update )
 				//	after a full stop, have the helicopter back off if the other helicopter is in front and too close
 				//	and a new drop location may be picked based on the tuning vars
 				//
+				/#	helicopter.__last_dynamic_avoidance_action = 50;	/* back off */ #/
+				/#	helicopter.__action_just_made = true; #/
 			
 				delta = otherHelicopterRefOrigin - helicopterRefOrigin;
 				newGoalPosition = helicopter.origin -
@@ -210,6 +217,7 @@ function RapsHelicopterDynamicAvoidanceUpdate( index_to_update )
 				// pick a new drop location for use after the "back off" goal is reached
 				if ( RAPS_HELAV_ALWAYS_PICK_NEW_GOAL_POST_BACK_OFF || (GetTime() - helicopter.lastNewGoalTime) > RAPS_HELAV_MIN_PICK_NEW_GOAL_TIME_MS )
 				{
+					/#	helicopter.__last_dynamic_avoidance_action = 51;	/* back off + new goal */ #/
 					helicopter.targetDropLocation = GetClosestRandomHelicopterPosition( newGoalPosition, 8 );
 					helicopter.lastNewGoalTime = GetTime();
 				}
@@ -220,6 +228,8 @@ function RapsHelicopterDynamicAvoidanceUpdate( index_to_update )
 				//	slow down the helicopter if within the configured distances and at full speed
 				//	there is a cautious and a more cautious speed based on if the other helicopter is in front
 				//
+				/#	helicopter.__last_dynamic_avoidance_action = (( otherInFront ) ? 31 : 30);	/* cautious */ #/
+				/#	helicopter.__action_just_made = true; #/	
 					
 				helicopter UpdateHelicopterSpeed( ( (otherInFront) ? RAPS_HELAV_DRIVE_MODE_MORE_CAUTIOUS : RAPS_HELAV_DRIVE_MODE_CAUTIOUS) );
 			}
@@ -228,6 +238,8 @@ function RapsHelicopterDynamicAvoidanceUpdate( index_to_update )
 				//
 				//	speed the helicopter back up if we are beyond the slow down distance and set to drive at full speed
 				//
+				/#	helicopter.__last_dynamic_avoidance_action = 40;	/* expedient */ #/
+				/#	helicopter.__action_just_made = true; #/
 
 				helicopter UpdateHelicopterSpeed( RAPS_HELAV_DRIVE_MODE_EXPEDIENT );
 			}
@@ -241,6 +253,59 @@ function RapsHelicopterDynamicAvoidanceUpdate( index_to_update )
 				helicopter UpdateHelicopterSpeed();
 			}
 		}
+		
+		/#
+		//================================================================================================
+		//
+		//	this code section is meant for visual debuggingof the RAPS Helicopter dynamic avoidance system
+		//
+		//------------------------------------------------------------------------------------------------
+		//
+		if ( RAPS_HELAV_DEBUG )
+		{
+			if ( isdefined( helicopter ) )
+			{
+				server_frames_to_persist = INT( (RAPS_HELAV_TIME_BETWEEN_UPDATES * 2) / SERVER_FRAME );
+				
+				Sphere( helicopterRefOrigin, 		10, ( 0, 0, 1 ), 1, false, 10, server_frames_to_persist );
+				Sphere( otherHelicopterRefOrigin,	10, ( 1, 0, 0 ), 1, false, 10, server_frames_to_persist );
+				
+				circle( helicopterRefOrigin, RAPS_HELAV_SLOW_DOWN_DISTANCE, 	( 1, 1, 0 ), true, true, server_frames_to_persist );	
+				circle( helicopterRefOrigin, RAPS_HELAV_NEED_NEW_GOAL_DISTANCE,	( 0, 0, 0 ), true, true, server_frames_to_persist );
+				circle( helicopterRefOrigin, RAPS_HELAV_FULL_STOP_DISTANCE,		( 1, 0, 0 ), true, true, server_frames_to_persist );
+				
+				Print3d( helicopter.origin, "Speed: " + INT( helicopter GetSpeedMPH() ), (1,1,1), 1, 2.5, server_frames_to_persist );
+				
+				action_debug_color = ( 0.8, 0.8, 0.8 );
+				debug_action_string = "";
+				if ( helicopter.__action_just_made )
+					action_debug_color = ( 0, 1, 0 );
+					
+				switch ( helicopter.__last_dynamic_avoidance_action )
+				{
+					case 0:		break;	// do nothing
+					case 10:	debug_action_string = "stop";			break;
+					case 20:	debug_action_string = "new goal";		break;
+					case 30:	debug_action_string = "cautious";		break;
+					case 31:	debug_action_string = "more cautious";	break;
+					case 40:	debug_action_string = "expedient";		break;
+					case 50:	debug_action_string = "back off";		break;
+					case 51:	debug_action_string = "back off + new goal"; break;
+					default:	debug_action_string = "unknown action";	break;
+				}
+				
+				// display last action taken
+				Print3d( helicopter.origin + ( 0, 0, -50 ), debug_action_string, action_debug_color, 1, 2.5, server_frames_to_persist );
+
+			}
+		}
+		//
+		//------------------------------------------------------------------------------------------------
+		//
+		//	end of visual debug section
+		//
+		//================================================================================================
+		#/
 	}
 }
 
@@ -283,8 +348,33 @@ function ActivateRapsKillstreak( hardpointType )
 	ARRAY_ADD( level.raps_helicopters, level.raps[ player.entNum ].helicopter );
 	level thread UpdateKillstreakOnHelicopterDeath( level.raps[ player.entNum ].helicopter, player.entNum );
 	
+/#
+	if ( RAPS_HELICOPTER_DEBUG_AUTO_REACTIVATE )
+	{
+		level thread AutoReactivateRapsKillstreak( player.entNum, player, hardpointType );
+	}
+#/
+	
 	return true;
 }
+
+/#
+function AutoReactivateRapsKillstreak( ownerEntNum, player, hardpointType )
+{
+	while( true )
+	{
+		level waittill( "raps_updated_" + ownerEntNum );
+		
+		if( isdefined( level.raps[ ownerEntNum ].helicopter ) )
+			continue;
+		
+		wait ( RandomFloatRange( 2.0, 5.0 ) );
+		player thread ActivateRapsKillstreak( hardpointType );		
+		
+		return;
+	}
+}
+#/
 	
 function WatchRapsKillstreakEnd( killstreakId, ownerEntNum, team )
 {
@@ -379,6 +469,7 @@ function InitHelicopterPositions()
 		randomNavMeshPoints = util::PositionQuery_PointArray( mapCenter, RAPS_HELICOPTER_NAV_RADIUS_MIN, radius, 70, RAPS_HELICOPTER_NAV_POINT_SPACING );
 	}
 	
+	/# position_query_drop_location_count = randomNavMeshPoints.size; #/
 
 	// add level specific raps drop locations
 	if ( isdefined( level.add_raps_drop_locations ) )
@@ -386,6 +477,20 @@ function InitHelicopterPositions()
 		[[ level.add_raps_drop_locations ]]( randomNavMeshPoints );
 	}
 
+/#
+	// debug draw level specific points
+	if ( RAPS_HELICOPTER_NAV_POINT_TRACE_DEBUG )
+	{
+		boxHalfWidth = RAPS_HELICOPTER_NAV_TRACE_BOX_WIDTH * 0.25; // draw a smaller box
+
+		for( i = position_query_drop_location_count; i < randomNavMeshPoints.size; i++ )
+		{
+			// shows a short orange box 
+			Box( randomNavMeshPoints[ i ], (-boxHalfWidth, -boxHalfWidth, 0), (boxHalfWidth, boxHalfWidth, 8.88 ), 0, ( 1.0, 0.53, 0.0 ), 0.9, false, 9999999 );
+		}
+	}
+#/
+		
 	// get any level specific omit points
 	omit_locations = [];
 	if ( isdefined( level.add_raps_omit_locations ) )
@@ -393,6 +498,22 @@ function InitHelicopterPositions()
 		[[ level.add_raps_omit_locations ]]( omit_locations ); // don't add too many of these.
 	}
 	
+/#
+	// debug draw level specific omit points
+	if ( RAPS_HELICOPTER_NAV_POINT_TRACE_DEBUG )
+	{
+		debug_radius = RAPS_HELICOPTER_NAV_TRACE_BOX_WIDTH * 0.5; // draw a smaller box
+
+		foreach( omit_location in omit_locations )
+		{
+			// shows a few dark grey circles 
+			Circle( omit_location, debug_radius, ( 0.05, 0.05, 0.05 ), false, true, 9999999 );
+			Circle( omit_location + ( 0, 0, 4 ), debug_radius, ( 0.05, 0.05, 0.05 ), false, true, 9999999 );
+			Circle( omit_location + ( 0, 0, 8 ), debug_radius, ( 0.05, 0.05, 0.05 ), false, true, 9999999 );
+		}
+	}
+#/	
+
 	// - - - - -	
 	//
 	// -- collect the random points that can be used to drop raps (test points using box traces, etc.) 
@@ -412,6 +533,17 @@ function InitHelicopterPositions()
 		trace = physicstrace( start_water_trace, stop_water_trace, ( -2, -2, -2 ), ( 2, 2, 2 ) , undefined, PHYSICS_TRACE_MASK_WATER );
 		if( trace["fraction"] < 1.0 )
 		{
+			/#
+				if ( RAPS_HELICOPTER_NAV_POINT_TRACE_DEBUG )
+				{
+					DebugBoxWidth = RAPS_HELICOPTER_NAV_TRACE_BOX_WIDTH * 0.5;
+					DebugBoxHeight = 10;
+						
+					// draw a blue box where water was found
+					Box( start_water_trace, ( -DebugBoxWidth, -DebugBoxWidth, 0 ), ( DebugBoxWidth, DebugBoxWidth, DebugBoxHeight ), 0, ( 0.0, 0, 1.0 ), 0.9, false, 9999999 );
+					Box( start_water_trace, ( -2, -2, -2 ), ( 2, 2, 2 ), 0, ( 0.0, 0, 1.0 ), 0.9, false, 9999999 );
+				}
+			#/
 			continue;
 		}
 		
@@ -424,6 +556,17 @@ function InitHelicopterPositions()
 			{
 				should_omit = true;
 	
+				/#
+					if ( RAPS_HELICOPTER_NAV_POINT_TRACE_DEBUG )
+					{
+						DebugBoxWidth = RAPS_HELICOPTER_NAV_TRACE_BOX_WIDTH * 0.5;
+						DebugBoxHeight = 10;
+							
+						// draw a dark grey box for omitted boxes
+						Box( point, ( -DebugBoxWidth, -DebugBoxWidth, 0 ), ( DebugBoxWidth, DebugBoxWidth, DebugBoxHeight ), 0, ( 0.05, 0.05, 0.05 ), 1.0, false, 9999999 );
+					}
+				#/
+				
 				break;
 			}
 		}
@@ -506,6 +649,23 @@ function IsTraceSafeForRapsDroneDropFromHelicopter( spaciousPoint, traceHeight, 
 	
 	trace = PhysicsTrace( start, end, ( -traceBoxHalfWidth, -traceBoxHalfWidth, 0 ), ( traceBoxHalfWidth, traceBoxHalfWidth, traceBoxHalfWidth * 2.0 ), undefined, PHYSICS_TRACE_MASK_PHYSICS );
 
+
+/#
+	if ( RAPS_HELICOPTER_NAV_POINT_TRACE_DEBUG )
+	{
+		if (trace["fraction"] < 1.0 )
+		{
+			// shows the first trace hit, but from the end
+			Box( end, (-traceBoxHalfWidth, -traceBoxHalfWidth, 0), (traceBoxHalfWidth, traceBoxHalfWidth, (start[2] - end[2]) * (1.0 - trace["fraction"])), 0, ( 1.0, 0, 0.0 ), 0.6, false, 9999999 );
+		}
+		else
+		{
+			// shows a small green box 
+			Box( end, (-traceBoxHalfWidth, -traceBoxHalfWidth, 0), (traceBoxHalfWidth, traceBoxHalfWidth, 8.88), 0, ( 0.0, 1.0, 0.0 ), 0.6, false, 9999999 );
+		}
+	}
+#/
+		
 	return ( trace["fraction"] == 1.0 && trace["surfacetype"] == "none" );
 }
 
@@ -574,6 +734,7 @@ function SpawnRapsHelicopter( killstreakId )
 	helicopter.targetDropLocation = RAPS_HEDEPS_UNSPECIFIED_AVOID_POINT;
 	helicopter.lastDropLocation = RAPS_HEDEPS_UNSPECIFIED_AVOID_POINT;
 	helicopter.firstDropReferencePoint = ( player.origin[0], player.origin[1], RAPS_HELICOPTER_FLY_HEIGHT);
+	/#	helicopter.__last_dynamic_avoidance_action = 0;	#/
 	
 	helicopter clientfield::set( "enemyvehicle", ENEMY_VEHICLE_ACTIVE );
 
@@ -596,6 +757,7 @@ function SpawnRapsHelicopter( killstreakId )
 	helicopter thread WaitForHelicopterShutdown();
 	helicopter thread HelicopterThink();
 	helicopter thread WatchGameEnded();
+/#	helicopter thread HelicopterThinkDebugVisitAll(); #/
 		
 	return helicopter;
 }
@@ -720,6 +882,19 @@ function GetRandomHelicopterPosition( avoidPoint = RAPS_HEDEPS_UNSPECIFIED_AVOID
 		if ( i == RAPS_HEDEPS_REDUCE_RADIUS_RETRIES )
 			avoidRadiusSqr = -1.0;
 		
+/#		if ( RAPS_HEDEPS_DEBUG > 0 )
+		{
+			server_frames_to_persist = INT( 3.0 / SERVER_FRAME );
+			circle( avoidPoint, RAPS_HEDEPS_AVOID_RADIUS, 	( 1, 0, 0 ), true, true, server_frames_to_persist );
+			circle( avoidPoint, RAPS_HEDEPS_AVOID_RADIUS - 1, 	( 1, 0, 0 ), true, true, server_frames_to_persist );
+			circle( avoidPoint, RAPS_HEDEPS_AVOID_RADIUS - 2, 	( 1, 0, 0 ), true, true, server_frames_to_persist );
+			
+			circle( otherAvoidPoint, RAPS_HEDEPS_AVOID_RADIUS, 	( 1, 0, 0 ), true, true, server_frames_to_persist );
+			circle( otherAvoidPoint, RAPS_HEDEPS_AVOID_RADIUS - 1, 	( 1, 0, 0 ), true, true, server_frames_to_persist );
+			circle( otherAvoidPoint, RAPS_HEDEPS_AVOID_RADIUS - 2, 	( 1, 0, 0 ), true, true, server_frames_to_persist );
+		}
+#/
+			
 		while( !found && tries < game["raps_helicopter_positions"].size )
 		{
 			index = RandomIntRange( 0, game["raps_helicopter_positions"].size );
@@ -813,6 +988,11 @@ function PickNextDropLocation( heli, drop_index, firstDropReferencePoint, assign
 
 function HelicopterThink()
 {
+/#
+	if ( RAPS_HELICOPTER_NAV_DEBUG_VISIT_ALL )
+	return;
+#/
+
 	self endon( "raps_helicopter_shutdown" );
 
 	for( i = 0; i < RAPS_HELICOPTER_DROP_LOCATION_COUNT; i++ )
@@ -857,6 +1037,54 @@ function HelicopterThink()
 	self notify( "raps_helicopter_shutdown", false );
 }
 
+/#
+function HelicopterThinkDebugVisitAll()
+{
+	self endon( "death" );
+
+	if ( RAPS_HELICOPTER_NAV_DEBUG_VISIT_ALL == 0 )
+		return;
+
+	for( i = 0; i < 100; i++ )
+	{
+		for( j = 0; j < game["raps_helicopter_positions"].size; j++ )
+		{
+			self.targetDropLocation = ( game["raps_helicopter_positions"][ j ][0], game["raps_helicopter_positions"][ j ][1],  self.assigned_fly_height );
+			
+			while ( Distance2DSquared( self.origin, self.targetDropLocation ) > RAPS_HELICOPTER_DROP_LOCATION_TOLERANCE_SQR )
+			{
+				self WaitForStoppingMoveToExpire();
+				self UpdateHelicopterSpeed();
+				self setVehGoalPos( self.targetDropLocation, 1 );
+				self waittill( "goal" );
+			}
+			
+			self DropRaps();
+			
+			wait( 1.0 );
+			
+			if ( RAPS_HELICOPTER_NAV_DEBUG_VISIT_ALL_FAKE_LEAVE > 0 )
+			{
+				if ( (j+1) % 3 == 0 )
+				{
+					
+					// fake a leave and then return
+					self.targetDropLocation = GetRandomHelicopterStartOrigin( self.assigned_fly_height, self.origin ); //TODO: make this debug function work at some point, not now, too close to ship
+					while ( Distance2DSquared( self.origin, self.targetDropLocation ) > RAPS_HELICOPTER_DROP_LOCATION_TOLERANCE_SQR )
+					{
+						self WaitForStoppingMoveToExpire();
+						self UpdateHelicopterSpeed();
+						self setVehGoalPos( self.targetDropLocation, 1 );
+						self waittill( "goal" );
+					}					
+				}
+			}
+		}
+	}
+		
+	self notify( "raps_helicopter_shutdown", false );
+}
+#/
 
 function DropRaps()
 {
@@ -1210,6 +1438,11 @@ function InitialWaitUntilSettled()
 		waitTime += RAPS_IWUS_WAIT_INTERVAL;
 	}
 
+/#
+	if ( RAPS_IWUS_FORCE_TIMEOUT_TEST )
+		waitTime += RAPS_IWUS_SETTLE_ON_MESH_TIMEOUT;
+#/
+	
 	// return true if raps settled without timing out
 	return ( waitTime < RAPS_IWUS_SETTLE_ON_MESH_TIMEOUT );
 }

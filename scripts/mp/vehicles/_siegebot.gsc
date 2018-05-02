@@ -3,8 +3,12 @@
 // ----------------------------------------------------------------------------
 #using scripts\codescripts\struct;
 
+#using scripts\shared\_oob;
+#using scripts\shared\callbacks_shared;
+#using scripts\shared\clientfield_shared;
 #using scripts\shared\gameskill_shared;
 #using scripts\shared\math_shared;
+#using scripts\shared\scoreevents_shared;
 #using scripts\shared\statemachine_shared;
 #using scripts\shared\system_shared;
 #using scripts\shared\array_shared;
@@ -20,18 +24,49 @@
 #using scripts\shared\turret_shared;
 #using scripts\shared\weapons\_spike_charge_siegebot;
 
-#using scripts\mp\killstreaks\_killstreaks;
-#using scripts\mp\killstreaks\_killstreak_bundles;
-
+#insert scripts\mp\_hacker_tool.gsh;
 #insert scripts\shared\shared.gsh;
 #insert scripts\shared\statemachine.gsh;
 #insert scripts\shared\archetype_shared\archetype_shared.gsh;
+
+#using scripts\mp\killstreaks\_killstreaks;
+#using scripts\mp\killstreaks\_killstreak_bundles;
+#using scripts\mp\gametypes\_loadout;
+
 #insert scripts\shared\ai\utility.gsh;
+#insert scripts\shared\version.gsh;
 
 #define JUMP_COOLDOWN 7
+#define DEBUG_ON false
 	
 #define SIEGEBOT_BUNDLE "siegebot"
+#define SIEGEBOT_MISSILE_TURRET_INDEX			2				// number similiarly to Gunner1, Gunner2, etc.
+#define SIEGEBOT_MISSILE_COUNT_AFTER_RELOAD		3
 
+#define SIEGEBOT_RIGHT_ARM_TRACE_TAG			"tag_turret"
+#define SIEGEBOT_RIGHT_ARM_TRACE_OFFSET			60				// relative to right axis
+#define SIEGEBOT_RIGHT_ARM_TRACE_START			40				// relative to forward
+#define SIEGEBOT_RIGHT_ARM_TRACE_END			-30				// relative to forward
+	
+#define SIEGEBOT_LEFT_ARM_TRACE_TAG				"tag_turret"
+#define SIEGEBOT_LEFT_ARM_TRACE_OFFSET			-60
+#define SIEGEBOT_LEFT_ARM_TRACE_START			40				// relative to forward
+#define SIEGEBOT_LEFT_ARM_TRACE_END				-30				// relative to forward
+	
+#define SIEGEBOT_ARM_TRACE_CLIP_MASK			PHYSICS_TRACE_MASK_PHYSICS | PHYSICS_TRACE_MASK_CLIP
+
+#define SIEGEBOT_ROCKET_WALL_TRACE_TAG			"tag_gunner_flash2b"
+#define SIEGEBOT_ROCKET_WALL_TRACE_START		12				// relative to forward
+#define SIEGEBOT_ROCKET_WALL_TRACE_END			-12				// relative to forward
+#define SIEGEBOT_ROCKET_WALL_RELATIVE_TAG		"tag_turret"
+	
+#define SIEGEBOT_ROCKET_WALL_TAG				"tag_turret"	// to re-aim when rocket will shoot through a wall
+#define SIEGEBOT_ROCKET_WALL_FORWARD_OFFSET		100
+#define SIEGEBOT_ROCKET_WALL_RIGHT_OFFSET		40
+#define SIEGEBOT_ROCKET_WALL_Z_OFFSET			500
+#define SIEGEBOT_ROCKET_WALL_BLOCKED_FRAMES		10				// how many frames not check wall block after becoming blocked
+
+	
 #namespace siegebot;
 
 REGISTER_SYSTEM( "siegebot_mp", &__init__, undefined )
@@ -41,6 +76,11 @@ REGISTER_SYSTEM( "siegebot_mp", &__init__, undefined )
 function __init__()
 {	
 	vehicle::add_main_callback( "siegebot_mp", &siegebot_initialize );
+	
+	clientfield::register( "vehicle", "siegebot_retract_right_arm", VERSION_TU15, 1, "int" );
+	clientfield::register( "vehicle", "siegebot_retract_left_arm", VERSION_TU15, 1, "int" );
+	
+	callback::on_disconnect( &on_player_disconnected );
 }
 
 function siegebot_initialize()
@@ -51,9 +91,15 @@ function siegebot_initialize()
 	self Blackboard::RegisterVehicleBlackBoardAttributes();
 
 	self.health = self.healthdefault;
+	self.spawnTime = GetTime();
+	self.is_oob_kill_target = true;
+	self.isStunned = false;
+	self.missiles_disabled = false;
+	self.numberRockets = SIEGEBOT_MISSILE_COUNT_AFTER_RELOAD;
 
 	self vehicle::friendly_fire_shield();
 	
+	//Target_Set( self, ( 0, 0, 84 ) );
 	self.targetOffset = ( 0, 0, 84 );
 	
 
@@ -109,11 +155,20 @@ function siegebot_initialize()
 
 	self thread vehicle_ai::target_hijackers();
 
-	killstreak_bundles::register_killstreak_bundle( SIEGEBOT_BUNDLE );
-	self.maxhealth = killstreak_bundles::get_max_health( SIEGEBOT_BUNDLE );
+	self.ignoreme = true;
+	
+	self.killstreakType = SIEGEBOT_BUNDLE;
+	killstreak_bundles::register_killstreak_bundle( self.killstreakType );
+	self.maxhealth = killstreak_bundles::get_max_health( self.killstreakType );
 	self.heatlh = self.maxhealth;
 	
-	self thread monitor_enter_vehicle();
+	self thread monitor_enter_exit_vehicle();
+
+	self thread watch_game_ended();
+	
+	self thread watch_emped();
+	
+	self thread watch_death();
 }
 
 
@@ -268,18 +323,20 @@ function siegebot_player_fireupdate()
 	self endon( "death" );
 	self endon( "exit_vehicle" );
 	
-	weapon = self SeatGetWeapon( 2 );
-	fireTime = weapon.fireTime;
+	weapon = self SeatGetWeapon( SIEGEBOT_MISSILE_TURRET_INDEX );
 	driver = self GetSeatOccupant( 0 );
 
+	if ( !isdefined( driver ) )
+		return;
+
 	self thread siegebot_player_aimUpdate();
-	
-	while( 1 )
+
+	while( isdefined( driver ) )
 	{
-		if( driver attackButtonPressed() )
+		if( driver FragButtonPressed() && !self.missiles_disabled )
 		{
-			self FireWeapon( 2 );
-			wait fireTime;
+			self FireWeapon( SIEGEBOT_MISSILE_TURRET_INDEX );
+			wait weapon.fireTime;
 		}
 		else
 		{
@@ -293,9 +350,36 @@ function siegebot_player_aimUpdate()
 	self endon( "death" );
 	self endon( "exit_vehicle" );
 
+	rocket_wall_blocked_count = 0;
+	use_old_trace = true;
+
 	while( 1 )
-	{
-		self SetGunnerTargetVec( self GetGunnerTargetVec( 0 ), 1 );
+	{		
+		if ( rocket_wall_blocked_count == 0 && self does_rocket_shoot_through_wall( use_old_trace ) )
+		{
+			rocket_wall_blocked_count = SIEGEBOT_ROCKET_WALL_BLOCKED_FRAMES;
+			use_old_trace = true;
+		}
+			
+		if ( rocket_wall_blocked_count > 0 )
+		{
+			aim_origin = self GetTagOrigin( SIEGEBOT_ROCKET_WALL_TAG );
+			ref_angles = self GetTagAngles( SIEGEBOT_ROCKET_WALL_TAG );
+			forward = AnglesToForward( ref_angles );
+			right = AnglesToRight( ref_angles );
+			aim_origin += ( forward * SIEGEBOT_ROCKET_WALL_FORWARD_OFFSET ) + ( right * SIEGEBOT_ROCKET_WALL_RIGHT_OFFSET );
+			// util::debug_sphere( aim_origin, 12, ( 1, 0, 0 ), 0.5, 1 );
+			aim_origin += ( 0, 0, SIEGEBOT_ROCKET_WALL_Z_OFFSET ); // aim down too
+			
+			self SetGunnerTargetVec( aim_origin, SIEGEBOT_MISSILE_TURRET_INDEX - 1 );
+			rocket_wall_blocked_count--;
+		}
+		else
+		{
+			self SetGunnerTargetVec( self GetGunnerTargetVec( 0 ), SIEGEBOT_MISSILE_TURRET_INDEX - 1 );
+			use_old_trace = false;
+		}
+		
 		WAIT_SERVER_FRAME;
 	}
 }
@@ -482,6 +566,7 @@ function GetNextMovePosition_unaware()
 	}
 
 	vehicle_ai::PositionQuery_PostProcess_SortScore( queryResult );
+	self vehicle_ai::PositionQuery_DebugScores( queryResult );
 
 	if( queryResult.data.size == 0 )
 		return self.origin;
@@ -522,6 +607,9 @@ function initJumpStruct()
 	self.jump.in_air = false;
 	self.jump.highgrounds = struct::get_array( "balcony_point" );
 	self.jump.groundpoints = struct::get_array( "ground_point" );
+
+	//assert( self.jump.highgrounds.size > 0 );
+	//assert( self.jump.groundpoints.size > 0 );
 }
 
 function state_jump_can_enter( from_state, to_state, connection )
@@ -537,6 +625,12 @@ function state_jump_enter( params )
 	goal = params.jumpgoal;
 
 	trace = PhysicsTrace( goal + ( 0, 0, 500 ), goal - ( 0, 0, 10000 ), ( -10, -10, -10 ), ( 10, 10, 10 ), self, PHYSICS_TRACE_MASK_VEHICLE );
+	if ( DEBUG_ON )
+	{
+	/#debugstar( goal, 60000, (0,1,0) ); #/
+	/#debugstar( trace[ "position" ], 60000, (0,1,0) ); #/
+	/#line(goal, trace[ "position" ], (0,1,0), 1, false, 60000 ); #/
+	}
 	if ( trace[ "fraction" ] < 1 )
 	{
 		goal = trace[ "position" ];
@@ -572,6 +666,13 @@ function state_jump_update( params )
 
 	self.jump.in_air = true;
 
+	if ( DEBUG_ON ) 
+	{
+	/#debugstar( goal, 60000, (0,1,0) ); #/
+	/#debugstar( goal + (0,0,100), 60000, (0,1,0) ); #/
+	/#line(goal, goal + (0,0,100), (0,1,0), 1, false, 60000 ); #/
+	}
+
 	// calculate distance and forces
 	totalDistance = Distance2D(goal, self.jump.linkEnt.origin);
 	forward = FLAT_ORIGIN( ((goal - self.jump.linkEnt.origin) / totalDistance) );
@@ -598,12 +699,14 @@ function state_jump_update( params )
 	{
 		distanceToGoal = Distance2D(self.jump.linkEnt.origin, goal);
 
-		antiGravityScaleUp = 1.0;
-		antiGravityScale = 1.0;
-		antiGravity = (0,0,0);
+		antiGravityScaleUp = 1.0;//MapFloat( 0, 0.5, 0.6, 0, abs( 0.5 - distanceToGoal / totalDistance ) );
+		antiGravityScale = 1.0;//MapFloat( (self.radius * 1.0), (self.radius * 3), 0, 1, distanceToGoal );
+		antiGravity = (0,0,0);//antiGravityScale * antiGravityScaleUp * (-params.gravityForce) + (0,0,antiGravityByDistance);
+		if ( DEBUG_ON ) /#line(self.jump.linkEnt.origin, self.jump.linkEnt.origin + antiGravity, (0,1,0), 1, false, 60000 ); #/
 
 		velocityForwardScale = MapFloat( (self.radius * 1), (self.radius * 4), 0.2, 1, distanceToGoal );
 		velocityForward = initVelocityForward * velocityForwardScale;
+		if ( DEBUG_ON ) /#line(self.jump.linkEnt.origin, self.jump.linkEnt.origin + velocityForward, (0,1,0), 1, false, 60000 ); #/
 
 		oldVerticleSpeed = velocity[2];
 		velocity = (0,0, velocity[2]);
@@ -629,6 +732,7 @@ function state_jump_update( params )
 			self ASMRequestSubstate( params.landingState );
 		}
 
+		if ( DEBUG_ON ) /#debugstar( self.jump.linkEnt.origin, 60000, (1,0,0) ); #/
 		WAIT_SERVER_FRAME;
 	}
 
@@ -669,6 +773,9 @@ function state_jump_update( params )
 
 	self vehicle::impact_fx( self.settings.landingfx1 );
 	self stopMovementAndSetBrake();
+
+	//rumble for landing from jump
+	//self clientfield::increment( "sarah_rumble_on_landing" );
 
 	wait 0.3;
 
@@ -763,6 +870,7 @@ function GetNextMovePosition_tactical()
 	}
 
 	vehicle_ai::PositionQuery_PostProcess_SortScore( queryResult );
+	self vehicle_ai::PositionQuery_DebugScores( queryResult );
 
 	if( queryResult.data.size == 0 )
 		return self.origin;
@@ -1115,30 +1223,559 @@ function Attack_Thread_Rocket()
 	}
 }
 
-function monitor_enter_vehicle()
+function monitor_enter_exit_vehicle()
 {
 	self endon( "death" );
 
+	player = undefined;
+
 	while( 1 )
 	{
+		self vehicle_unoccupied( player );
+		
 		self waittill( "enter_vehicle", player );
-
-		if ( isdefined( player ) && isPlayer( player ) )
-		{
-			player vehicle::update_damage_as_occupant( self.maxhealth - self.health, self.maxhealth );
-		}
+		self vehicle_occupied( player );
+		
+		self waittill( "exit_vehicle", player );		
 	}
+}
+
+function vehicle_occupied( player )
+{
+	self clientfield::set( "enemyvehicle", ENEMY_VEHICLE_ACTIVE );
+
+/#
+	// self thread arm_test(); // if testing, comment out watch_left_arm() and watch_right_arm() below
+#/
+	
+	self.ignoreme = false;
+	
+	self thread siegebot_player_fireupdate();
+	self thread weapon_doors_state( true );
+	self thread watch_left_arm();
+	self thread watch_right_arm();
+		
+	if ( IsPlayer( player ) )
+	{
+		player.using_map_vehicle = true;
+		player.current_map_vehicle = self;
+		player.ignoreme = true;
+		self.current_driver = player;
+		player SetClientUIVisibilityFlag( "weapon_hud_visible", 0 );
+		player vehicle::update_damage_as_occupant( self.maxhealth - self.health, self.maxhealth );
+		player DisableWeaponCycling();
+		self thread watch_rockets( player );
+		self update_emped_driver_visuals();
+		player.siegebot_kills = undefined;
+		player Ghost();
+	}	
+}
+
+function vehicle_unoccupied( player )
+{
+	self clientfield::set( "enemyvehicle", ENEMY_VEHICLE_INACTIVE );
+
+	self.ignoreme = true;
+
+	self thread weapon_doors_state( false );
+
+	if ( IsPlayer( player ) )
+	{
+		player.using_map_vehicle = undefined;
+		player.current_map_vehicle = undefined;
+		player.ignoreme = false;
+		player SetClientUIVisibilityFlag( "weapon_hud_visible", 1 );
+		player EnableWeaponCycling();
+		update_emped_visuals( player, false );
+		player Show();
+	}
+
+	self.current_driver = undefined;
+
+	//if ( self oob::IsTouchingAnyOOBTrigger() )
+	//{
+	//	self destroy_siegebot();
+	//}
 }
 
 function siegebot_callback_damage( eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, weapon, vPoint, vDir, sHitLoc, vDamageOrigin, psOffsetTime, damageFromUnderneath, modelIndex, partName, vSurfaceNormal )
 {
-	iDamage = self killstreaks::OnDamagePerWeapon( SIEGEBOT_BUNDLE, eAttacker, iDamage, iDFlags, sMeansOfDeath, weapon, self.maxhealth, undefined, self.maxhealth * 0.4, undefined, 0, undefined, true, 1.0 );
+	time_alive = GetTime() - self.spawnTime;
+	
+	if ( time_alive < 500 && sMeansOfDeath == "MOD_TRIGGER_HURT" )
+		return 0;
+	
 
+	iDamage = self killstreaks::OnDamagePerWeapon( SIEGEBOT_BUNDLE, eAttacker, iDamage, iDFlags, sMeansOfDeath, weapon, self.maxhealth, undefined, self.maxhealth * 0.4, undefined, 0, undefined, true, 1.0 );
+	
+	fmj = loadout::isFMJDamage( weapon, sMeansOfDeath, eAttacker );
+	
+	if( IS_TRUE( fmj ) && ( !isdefined( weapon.isHeroWeapon ) || !weapon.isHeroWeapon ) )
+	{
+		iDamage = iDamage / 2;
+	}
+
+	if ( vehicle_ai::should_emp( self, weapon, sMeansOfDeath, eInflictor, eAttacker ) )
+	{
+		minEmpDownTime = 0.8 * self.settings.empdowntime;
+		maxEmpDownTime = 1.2 * self.settings.empdowntime;
+		self notify ( "emped", RandomFloatRange( minEmpDownTime, maxEmpDownTime ), eAttacker, eInflictor );
+	}
+
+	DEFAULT( self.damageLevel, 0 );
+	newDamageLevel = vehicle::should_update_damage_fx_level( self.health, iDamage, self.healthdefault );
+	if ( newDamageLevel > self.damageLevel )
+	{		
+		self.damageLevel = newDamageLevel;
+		vehicle::set_damage_fx_level( self.damageLevel );		
+	}
+	
 	driver = self GetSeatOccupant( 0 );
 	if ( isPlayer( driver ) )
 	{
 		driver vehicle::update_damage_as_occupant( self.maxhealth - ( self.health - iDamage ), self.maxhealth );
+		
+		if ( iDamage > self.health )
+		{
+			driver Show();
+		}
 	}
 
 	return iDamage;
+}
+
+function watch_emped()
+{
+	self endon( "death" );
+	
+	while ( 1 )
+	{
+		self waittill( "emped", down_time, attacker, inflictor );
+
+		self thread emped( down_time );	
+	}
+}
+
+function emped( down_time )
+{
+	self notify( "emped_singleton" );
+	self endon( "death" );
+	self endon( "emped_singleton" );
+	
+	self SetBrake( 1 ); // TODO: not working ask expect... the handbrake doesn't work to slow down the siegebot
+	self.emped = true;
+	self update_emped_driver_visuals();
+	
+	wait down_time;
+	
+	self SetBrake( 0 );
+	
+	self.emped = false;
+	self update_emped_driver_visuals();
+}
+
+function update_emped_driver_visuals()
+{
+	update_emped_visuals( self GetSeatOccupant( 0 ), self.emped );
+}
+
+function update_emped_visuals( driver, emped )
+{
+	if ( IsPlayer( driver ) )
+	{
+		value = ( VAL( emped, 0 ) ? 1 : 0 );
+		driver clientfield::set_to_player( "empd", value );
+		driver clientfield::set_to_player( "static_postfx", value );
+		driver SetEMPJammed( value );
+	}
+}
+
+function watch_game_ended()
+{
+	self endon( "death" );
+	
+	level waittill("game_ended");
+	
+	self thread wait_then_hide( 3.0 );
+	self destroy_siegebot();
+}
+
+function destroy_siegebot()
+{
+	self DoDamage( self.health + 1, self.origin + (0, 0, 60), undefined, undefined, "none", "MOD_EXPLOSIVE", 0 );
+}
+
+function wait_then_hide( wait_time )
+{
+	wait wait_time;
+	
+	// hide vehicle after destruction
+	if ( isdefined( self ) )
+	{
+		self Hide();
+	}
+}
+
+function watch_death()
+{
+	self notify( "siegebot_watch_death" );
+	self endon( "siegebot_watch_death" );
+	
+	self waittill( "death" );
+	
+	self process_siegebot_kill( self.current_driver );
+	
+	// driver = self GetSeatOccupant( 0 ); // NOTE: this always fails, so use self.current_driver instead
+	if ( IsPlayer( self.current_driver ) )
+	{
+		self vehicle_unoccupied( self.current_driver );
+	}
+	
+	// Need to prep the death model
+	StreamerModelHint( self.deathmodel, 6 );	
+
+	// self waittill( "model_swap" ); // give the streamer time to load (NOTE: this wait doesn't work right now)
+	self vehicle_death::set_death_model( self.deathmodel, self.modelswapdelay );
+	self vehicle::do_death_dynents();
+	self vehicle_death::death_radius_damage();
+	
+	self vehicle_death::DeleteWhenSafe( 0.25 );
+}
+
+function process_siegebot_kill( driver )
+{
+	if ( !isdefined( self ) )
+		return;
+	
+	if ( self.team == "neutral" )
+		return;
+	
+	if ( !IsPlayer( driver ) )
+		return;
+	
+	if ( IsPlayer( self.attacker ) )
+	{
+		if ( driver == self.attacker )
+			return;
+		
+		scoreevents::processScoreEvent( "destroyed_siegebot", self.attacker );
+	}
+
+	if ( isdefined( self.attackers ) )
+	{
+		foreach( kill_assist in self.attackers )
+		{
+			if ( IsPlayer( kill_assist ) )
+			{
+				if ( self.attacker === kill_assist )
+					continue;
+				
+				if ( !isdefined( self.attacker ) || kill_assist.team == self.attacker.team )
+				{
+					scoreevents::processScoreEvent( "destroyed_siegebot_assist", kill_assist );
+				}
+			}
+		}
+	}
+}
+
+function reload_rockets( player )
+{
+	bundle = level.killstreakBundle[ SIEGEBOT_BUNDLE ];
+	self disable_missiles();
+	
+	// setup the "reload" time for the player's vehicle HUD
+	weapon_wait_duration_ms = Int( bundle.ksWeaponReloadTime * 1000 );
+	player SetVehicleWeaponWaitDuration( weapon_wait_duration_ms );
+	player SetVehicleWeaponWaitEndTime( GetTime() + weapon_wait_duration_ms );
+
+	wait ( bundle.ksWeaponReloadTime );
+
+	self set_rocket_count( SIEGEBOT_MISSILE_COUNT_AFTER_RELOAD );
+
+	wait 0.4;
+
+	if ( !self.isStunned )
+		self enable_missiles();
+}
+
+function set_rocket_count( rocket_count )
+{
+	self.numberRockets = rocket_count;
+	self update_client_ammo( self.numberRockets );
+}
+
+function enable_missiles()
+{
+	self.missiles_disabled = false;
+	self DisableGunnerFiring( SIEGEBOT_MISSILE_TURRET_INDEX - 1, false );
+}
+
+function disable_missiles()
+{
+	self.missiles_disabled = true;
+	self DisableGunnerFiring( SIEGEBOT_MISSILE_TURRET_INDEX - 1, true );
+}
+
+function watch_rockets( player )
+{
+	self endon( "death" );
+	self endon( "exit_vehicle" );
+
+	if ( self.numberRockets <= 0 )
+	{
+		self reload_rockets( player );
+	}
+	else
+	{
+		self update_client_ammo( self.numberRockets );
+	}
+
+	if ( !self.isStunned )
+		self enable_missiles();
+		
+	while( true )
+	{
+		player waittill( "missile_fire", missile );
+		
+		missile.ignore_team_kills = self.ignore_team_kills;
+
+		self set_rocket_count( self.numberRockets - 1 );
+
+		// self perform_recoil_missile_turret( player ); // not needed for siegebot
+		
+		if ( self.numberRockets <= 0 )
+			self reload_rockets( player );
+	}
+}
+
+function update_client_ammo( ammo_count, driver_only_update = false ) // self == vehicle
+{
+	if ( !driver_only_update )
+	{
+		self clientfield::set( "ai_tank_missile_fire", ammo_count );
+	}
+
+	if ( IsPlayer( self.current_driver ) )
+	{
+		self.current_driver clientfield::increment_to_player( "ai_tank_update_hud", 1 );
+	}
+}
+
+/#
+function arm_test()
+{
+	self notify( "arm_test" );
+	self endon( "arm_test" );
+	
+	level endon( "game_ended" );
+
+	delay = 10.0;
+	
+	while( 1 )
+	{
+		self thread retract_left_arm();
+		self thread retract_right_arm();
+		wait delay;
+		
+		self thread extend_left_arm();		
+		self thread extend_right_arm();
+		wait delay;
+	}
+}
+#/
+
+function retract_left_arm()
+{
+	DEFAULT( self.left_arm_retracted, false );
+	if ( self.left_arm_retracted )
+		return;
+	
+	self.left_arm_retracted = true;
+	
+	self UseAnimTree( #animtree );
+	self clientfield::set( "siegebot_retract_left_arm", 1 );
+	self ClearAnim( %ai_siegebot_base_mp_left_arm_extend, 0.2 );	
+	self SetAnim( %ai_siegebot_base_mp_left_arm_retract, 1.0 );	
+}
+
+function extend_left_arm()
+{
+	DEFAULT( self.left_arm_retracted, false );
+	if ( !self.left_arm_retracted )
+		return;
+	
+	self.left_arm_retracted = false;
+	
+	self UseAnimTree( #animtree );
+
+	self clientfield::set( "siegebot_retract_left_arm", 0 );	
+	self ClearAnim( %ai_siegebot_base_mp_left_arm_retract, 0.2 );
+	self SetAnim( %ai_siegebot_base_mp_left_arm_extend, 1.0, 0.0 );
+	
+	wait 0.1;
+	
+	if ( self.left_arm_retracted == false ) // if still extended
+		self ClearAnim( %ai_siegebot_base_mp_left_arm_extend, 0.1 );	
+}
+
+function retract_right_arm()
+{
+	DEFAULT( self.right_arm_retracted, false );
+	if ( self.right_arm_retracted )
+		return;
+	
+	self.right_arm_retracted = true;
+	
+	self UseAnimTree( #animtree );
+	self clientfield::set( "siegebot_retract_right_arm", 1 );
+	self ClearAnim( %ai_siegebot_base_mp_right_arm_extend, 0.2 );
+	self SetAnim( %ai_siegebot_base_mp_right_arm_retract, 1.0 );	
+}
+
+function extend_right_arm()
+{
+	DEFAULT( self.right_arm_retracted, false );
+	if ( !self.right_arm_retracted )
+		return;
+	
+	self.right_arm_retracted = false;
+
+	self UseAnimTree( #animtree );
+	self clientfield::set( "siegebot_retract_right_arm", 0 );
+	self ClearAnim( %ai_siegebot_base_mp_right_arm_retract, 0.2 );
+	self SetAnim( %ai_siegebot_base_mp_right_arm_extend, 1.0 );
+	
+	wait 0.1;
+	
+	if ( self.right_arm_retracted == false ) // if still extended
+		self ClearAnim( %ai_siegebot_base_mp_right_arm_extend, 0.1 );
+}
+	
+function watch_left_arm()
+{
+	self endon( "death" );
+	self endon( "exit_vehicle" );
+	
+	wait RandomFloatRange( 0.05, 0.3 );
+	
+	while( 1 )
+	{
+		ref_origin = self GetTagOrigin( SIEGEBOT_LEFT_ARM_TRACE_TAG );
+		ref_angles = self GetTagAngles( SIEGEBOT_LEFT_ARM_TRACE_TAG );
+		
+		forward = AnglesToForward( ref_angles );
+		right = AnglesToRight( ref_angles );
+		ref_origin += ( right * SIEGEBOT_LEFT_ARM_TRACE_OFFSET );
+
+		trace_start = ref_origin + ( forward * SIEGEBOT_LEFT_ARM_TRACE_START );
+		trace_end = ref_origin + ( forward * SIEGEBOT_LEFT_ARM_TRACE_END );
+	
+		// util::debug_sphere( ref_origin, 8, ( 1, 0, 1 ), 0.5, 1 );		
+		// util::debug_sphere( trace_start, 8, ( 1, 0, 1 ), 0.5, 1 );
+		// util::debug_sphere( trace_end, 8, ( 1, 0, 1 ), 0.5, 1 );
+		
+		trace = PhysicsTrace( trace_start, trace_end, (-8, -8, -8), (8, 8, 8), self, SIEGEBOT_ARM_TRACE_CLIP_MASK );
+		
+		if ( trace["fraction"] < 1.0 )
+			self retract_left_arm();
+		else
+			self extend_left_arm();
+			
+		wait 0.2;
+	}
+}
+
+function watch_right_arm()
+{
+	self endon( "death" );
+	self endon( "exit_vehicle" );
+	
+	wait RandomFloatRange( 0.05, 0.3 );
+	
+	while( 1 )
+	{
+		ref_origin = self GetTagOrigin( SIEGEBOT_RIGHT_ARM_TRACE_TAG );
+		ref_angles = self GetTagAngles( SIEGEBOT_RIGHT_ARM_TRACE_TAG );
+		
+		forward = AnglesToForward( ref_angles );
+		right = AnglesToRight( ref_angles );
+		ref_origin += ( right * SIEGEBOT_RIGHT_ARM_TRACE_OFFSET );
+				
+		trace_start = ref_origin + ( forward * SIEGEBOT_RIGHT_ARM_TRACE_START );
+		trace_end = ref_origin + ( forward * SIEGEBOT_RIGHT_ARM_TRACE_END );
+		
+		// util::debug_sphere( ref_origin, 8, ( 1, 0, 1 ), 0.5, 1 );
+		// util::debug_sphere( trace_start, 8, ( 1, 0, 1 ), 0.5, 1 );
+		// util::debug_sphere( trace_end, 8, ( 1, 0, 1 ), 0.5, 1 );
+		
+		trace = PhysicsTrace( trace_start, trace_end, (-8, -8, -8), (8, 8, 8), self, SIEGEBOT_ARM_TRACE_CLIP_MASK );
+		
+		if ( trace["fraction"] < 1.0 )
+			self retract_right_arm();
+		else
+			self extend_right_arm();
+			
+		wait 0.2;
+	}
+}
+
+function does_rocket_shoot_through_wall( use_old_trace )
+{
+	if ( use_old_trace && isdefined( self.rocket_wall_origin_offset ) )
+	{
+		base_tag_angles = self GetTagAngles( SIEGEBOT_ROCKET_WALL_RELATIVE_TAG );
+		base_forward = AnglesToForward( base_tag_angles );
+		base_right = AnglesToRight( base_tag_angles );
+		base_up = AnglesToUp( base_tag_angles );
+
+		offset = self.rocket_wall_origin_offset;
+		ref_origin = self.origin + ( offset[0] * base_forward ) + ( offset[1] * base_right ) + ( offset[2] * base_up );
+		ref_angles = base_tag_angles + self.rocket_wall_angles_offset;
+	}
+	else
+	{
+		ref_origin = self GetTagOrigin( SIEGEBOT_ROCKET_WALL_TRACE_TAG );
+		ref_angles = self GetTagAngles( SIEGEBOT_ROCKET_WALL_TRACE_TAG );
+	}
+
+	forward = AnglesToForward( ref_angles );
+	
+	trace_start = ref_origin + ( forward * SIEGEBOT_ROCKET_WALL_TRACE_START );
+	trace_end = ref_origin + ( forward * SIEGEBOT_ROCKET_WALL_TRACE_END );
+	
+	// util::debug_sphere( trace_start, 8, ( 1, 0, 1 ), 0.5, 1 );
+	// util::debug_sphere( trace_end, 8, ( 1, 0, 1 ), 0.5, 1 );
+	
+	trace = PhysicsTrace( trace_start, trace_end, (-2, -2, -2), (2, 2, 2), self, SIEGEBOT_ARM_TRACE_CLIP_MASK );
+	
+	shoot_through_wall = ( trace["fraction"] < 1.0 );
+	
+	if ( shoot_through_wall )
+	{
+		if ( !isdefined( base_tag_angles ) )
+		{
+			base_tag_angles = self GetTagAngles( SIEGEBOT_ROCKET_WALL_RELATIVE_TAG );	
+			base_forward = AnglesToForward( base_tag_angles );
+			base_right = AnglesToRight( base_tag_angles );
+			base_up = AnglesToUp( base_tag_angles );
+		}
+		
+		ref_offset = ref_origin - self.origin;;
+		
+		self.rocket_wall_origin_offset = ( VectorDot( ref_offset, base_forward), VectorDot( ref_offset, base_right ), VectorDot( ref_offset, base_up ) ) ;
+		self.rocket_wall_angles_offset = ref_angles - base_tag_angles;
+	}
+	
+	return shoot_through_wall;
+}
+
+function on_player_disconnected()
+{
+	player = self;
+	
+	if ( isdefined( player ) && isdefined( player.current_map_vehicle ) )
+	{
+		player.current_map_vehicle notify( "exit_vehicle", player );
+	}
 }

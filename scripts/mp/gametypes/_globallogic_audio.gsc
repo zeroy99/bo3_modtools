@@ -12,9 +12,9 @@
 #using scripts\mp\gametypes\_globallogic_utils;
 
 #using scripts\codescripts\struct;
-	
-#using scripts\mp\_util;
 
+#using scripts\mp\_util;
+	
 #namespace globallogic_audio;
 	
 REGISTER_SYSTEM( "globallogic_audio", &__init__, undefined )

@@ -1397,13 +1397,13 @@ function gameHistoryPlayerKicked()
 	scoreboardPosition = getPlacementForPlayer( self );
 	if ( scoreboardPosition < 0 )
 		 scoreboardPosition = level.players.size;
-
+/#
 	assert( isdefined( self.kills ) );
 	assert( isdefined( self.deaths ) );
 	assert( isdefined( self.score ) );
 	assert( isdefined( scoreboardPosition ) );
 	assert( isdefined( teamScoreRatio ) );
-
+#/
 	self GameHistoryFinishMatch( MATCH_KICKED, self.kills, self.deaths, self.score, scoreboardPosition, teamScoreRatio );
 
 	if ( isdefined( self.pers["matchesPlayedStatsTracked"] ) )
@@ -1903,89 +1903,7 @@ function getRoundLength()
 
 function awardLootXP( ) // self == player
 {
-	if( !GetDvarInt( "loot_enabled" ) )
-	{
-		return;
-	}
 	
-	maxPlayableGameTime = game["playabletimepassed"] / 1000;	
-	timePlayed = self getTotalTimePlayed( maxPlayableGameTime );
-	lootXPAwarded = 0;		
-	
-	if ( self.pers["participation"] >= 1 )
-	{
-		lootXPPerKey = int( GetDvarInt( "loot_cryptokeyCost", 100 ) );
-		avgGameLen = int( GetDvarInt( "loot_earnTime", 267 ) );
-		minPlayTime = int( GetDvarInt( "loot_earnPlayThreshold", 10 ) );
-		maxLootXp = int( GetDvarInt( "loot_earnMax", 10000 ) );
-		minLootXp = int( GetDvarInt( "loot_earnMin", 0 ) );
-		winMultiplier = int( GetDvarInt( "loot_winBonusPercent", 30 ) );
-				
-		if( maxPlayableGameTime > 0 && timePlayed > minPlayTime )
-		{
-			// account for time spent in arena ban/protect
-			if( level.arenaMatch )
-			{
-				draftEnabled = ( GetGametypeSetting( "pregameDraftEnabled" ) == 1 );
-				voteEnabled = ( GetGametypeSetting( "pregameItemVoteEnabled" ) == 1 );
-
-				if( draftEnabled && voteEnabled )
-				{
-					arenaMin = GetDvarInt( "arena_minPregameCryptoSeconds", 0 );
-					arenaMax = GetDvarInt( "arena_maxPregameCryptoSeconds", 0 );
-					
-					if( arenaMax > 0 && arenaMin >= 0 && arenaMin <= arenaMax )
-					{
-						bonusTime = RandomIntRange( arenaMin, arenaMax );
-						timePlayed += bonusTime;
-					}
-				}
-			} 
-			
-			// award enough lootxp for 1 cryptokey for each 'avgGameLen' seconds of time played
-			lootXpScale = timePlayed / avgGameLen;
-			lootXPAwarded = lootXPPerKey * lootXpScale;
-			
-			// bonus for winner
-			if( isDefined( self.lootXpMultiplier ) && self.lootXpMultiplier == true )
-			{
-				lootXPAwarded = lootXPAwarded + ( lootXPAwarded * ( winMultiplier / 100 ) );
-			}
-			 
-			// scale for double lootxp
-			lootXPAwarded *= math::clamp( GetDvarFloat( "lootxp_multiplier", 1.0 ), 0.0, 4.0 );
-			
-			lootXPAwarded = int( lootXPAwarded );
-			
-			// sanity
-			if( lootXPAwarded > maxLootXp )
-			{
-				lootXPAwarded = maxLootXp;
-			}
-			else if( lootXPAwarded < minLootXp )
-			{
-				lootXPAwarded = minLootXp;
-			}
-			
-			otherLootXPAwarded = self awardOtherLootXP();
-			lootXPAwarded += otherLootXPAwarded;
-			
-			if( lootXPAwarded > 0 )
-			{
-				self ReportLootReward( 1, lootXPAwarded );
-			}
-			
-			// if other loot xp was awarded, let client receive stats before requesting an upload
-			if ( otherLootXPAwarded > 0 )
-			{
-				level thread WaitAndUploadStats( self, GetDvarFloat( "src_other_lootxp_uploadstat_waittime", OTHER_LOOTXP_UPLOADSTAT_WAITTIME ) );
-			}
-		}
-	}
-	
-	self setAARStat( "lootXpEarned", lootXPAwarded ); 
-	recordPlayerStats( self, "lootXpEarned", lootXPAwarded );
-	recordPlayerStats( self, "lootTimePlayed", timePlayed );
 }
 
 function WaitAndUploadStats( player, waitTime )
@@ -3871,6 +3789,8 @@ function Callback_StartGameType()
 	
 	level.droppedTagRespawn = GetGametypeSetting( "droppedTagRespawn" );
 
+	level.disableVehicleSpawners = GetGametypeSetting( "disableVehicleSpawners" );
+	    
 	if( IS_TRUE( level.droppedTagRespawn ) )
 		dogtags::init();
 
@@ -4230,7 +4150,7 @@ function shake_and_rumble( n_delay, shake_size, shake_time, rumble_num )
 
 function DoWeaponSpecificKillEffects(eInflictor, attacker, iDamage, sMeansOfDeath, weapon, vDir, sHitLoc, psOffsetTime)
 {
-	if( weapon.name=="hero_pineapplegun" && isPlayer( attacker ) && sMeansOfDeath == "MOD_GRENADE" ) 
+	if( weapon.name=="hero_pineapplegun" && isPlayer( attacker ) && sMeansOfDeath == "MOD_GRENADE" )
 	{
 		attacker playLocalSound( "wpn_pineapple_grenade_explode_flesh_2D" );
 	}

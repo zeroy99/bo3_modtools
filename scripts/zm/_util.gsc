@@ -12,8 +12,20 @@
 
 #namespace util;
 
+/#
+function error(msg)
+{
+	println("^c*ERROR* ", msg);
+	wait .05;	// waitframe
+
+	if (GetDvarString( "debug") != "1")
+		assertmsg("This is a forced error - attach the log file");
+}
+#/
+
 function warning( msg )
 {
+/#	println( "^1WARNING: " + msg );	#/
 }
 
 function brush_delete()

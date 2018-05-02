@@ -1,13 +1,16 @@
 #using scripts\codescripts\struct;
+
 #using scripts\shared\callbacks_shared;
 #using scripts\shared\persistence_shared;
 #using scripts\shared\system_shared;
 #using scripts\shared\util_shared;
-#using scripts\mp\gametypes\_globallogic_ui;
-#using scripts\mp\gametypes\_spectating;
-#using scripts\mp\_util;
 
 #insert scripts\shared\shared.gsh;
+
+#using scripts\mp\gametypes\_globallogic_ui;
+#using scripts\mp\gametypes\_spectating;
+
+#using scripts\mp\_util;
 
 #precache( "material", "mpflag_spectator" );
 #precache( "string", "MP_AUTOBALANCE_NOW" );
@@ -177,6 +180,8 @@ function update_player_times()
 
 function update_played_time()
 {
+	pixbeginevent("updatePlayedTime");
+
 	if ( level.rankedMatch || level.leagueMatch )
 	{
 		foreach( team in level.teams )
@@ -211,6 +216,8 @@ function update_played_time()
 		timeAlive = int( min( self.timePlayed["alive"], level.timeplayedcap ) );
 		self.pers["time_played_alive"] += timeAlive;
 	}
+	
+	pixendevent();
 	
 	if ( game["state"] == "postgame" )
 		return;

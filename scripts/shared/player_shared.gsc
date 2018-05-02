@@ -80,7 +80,12 @@ function last_valid_position()
 		}
 
 		// position is already good
-		if ( IsPointOnNavMesh( self.origin, self ) )
+		if ( IsDefined( level.last_valid_position_override ) && self [[ level.last_valid_position_override ]]() )
+		{
+			wait 0.1;
+			continue;
+		}
+		else if ( IsPointOnNavMesh( self.origin, self ) )
 		{
 			self.last_valid_position = self.origin;
 		}

@@ -1,10 +1,12 @@
 #using scripts\codescripts\struct;
+
 #using scripts\shared\challenges_shared;
 #using scripts\shared\clientfield_shared;
 #using scripts\shared\scoreevents_shared;
 #using scripts\shared\util_shared;
 #using scripts\shared\weapons\_heatseekingmissile;
 #using scripts\shared\weapons\_weaponobjects;
+
 #using scripts\mp\gametypes\_battlechatter;
 #using scripts\mp\_challenges;
 #using scripts\mp\_util;
@@ -60,6 +62,14 @@ function init()
 	level.strafeRunExplodeSound = "evt_helicopter_midair_exp";
 	level.strafeRunShellShock = "straferun";
 	
+	//killstreaks::register( "straferun", "straferun", "killstreak_straferun", "straferun_used",&useKillstreakStrafeRun, true);
+	//killstreaks::register_strings( "straferun", &"MP_EARNED_STRAFERUN", &"KILLSTREAK_STRAFERUN_NOT_AVAILABLE", &"MP_WAR_STRAFERUN_INBOUND", &"MP_WAR_STRAFERUN_INBOUND_NEAR_YOUR_POSITION", &"KILLSTREAK_STRAFERUN_HACKED" );
+	//killstreaks::register_dialog( "straferun", "mpl_killstreak_straferun", "kls_straferun_used", "","kls_straferun_enemy", "", "kls_straferun_ready");
+	//killstreaks::register_tos_dvar( "scr_teamops" );
+	//killstreaks::register_alt_weapon( "straferun", level.strafeRunGunWeapon.name );
+	//killstreaks::register_alt_weapon( "straferun", level.strafeRunRocketWeapon.name );
+	//killstreaks::set_team_kill_penalty_scale( "straferun", 0.0 );
+
 	// killcams are created on level start and live all game
 	createKillcams( level.strafeRunNumKillcams, level.strafeRunNumRockets );
 }
@@ -162,9 +172,14 @@ function useKillstreakStrafeRun( hardpointType )
 	Target_Set( plane, (0,0,0) );
 	Target_SetTurretAquire( plane, false );
 	
+	//plane thread playContrail();
+	
 	// Setup vehicle weapons
+	//plane setVehWeapon( level.strafeRunGunWeapon );
 	plane.gunSoundEntity = spawn( "script_model", plane GetTagOrigin( "tag_flash" ) );
 	plane.gunSoundEntity LinkTo( plane, "tag_flash", (0,0,0), (0,0,0) );
+	
+	//plane.killCamEntities = level.strafeRunKillcams.strafes;
 	
 	plane resetKillcams();
 
@@ -224,6 +239,10 @@ function watchdamage()
 		
 		if( !isdefined( attacker ) || !isplayer( attacker ) )
 			continue;
+		
+/#
+		self.damage_debug = ( damage + " (" + weapon.name + ")" );
+#/
 		
 		if ( mod == "MOD_PROJECTILE" || mod == "MOD_PROJECTILE_SPLASH" || mod == "MOD_EXPLOSIVE" )
 		{
@@ -340,6 +359,12 @@ function doStrafeRuns()
 			self.strafeRunGunRadius = level.strafeRunGunRadius;
 			self.strafeRunGunOffset = level.strafeRunGunOffset;
 			
+/#
+			self.strafeRunGunLookahead = GetDvarInt( #"scr_straferunlookahead", level.strafeRunGunLookahead ); 
+			self.strafeRunGunRadius = GetDvarInt( #"scr_straferunradius", level.strafeRunGunRadius ); ;
+			self.strafeRunGunOffset = GetDvarInt( #"scr_straferunoffset", level.strafeRunGunOffset ); ;
+#/
+			
 			if ( isdefined( noteworthyNode ) )
 			{
 				if ( isdefined( noteworthyNode.script_parameters ) )
@@ -455,6 +480,18 @@ function startStrafe(  )
 		//self.gunSoundEntity PlayLoopSound( level.strafeRunGunSound );
 		self shellShockPlayers( trace["position"] );
 		
+/#
+		if (  GetDvarInt( #"scr_devStrafeRunBulletsDebugDraw", 0 ) )
+		{
+			time = 300;
+			airsupport::debug_line( attackStartVector, trace["position"] - ( 0,0,20 ), (1,0,0), time, false );
+			if( count % 30 == 0 )
+			{
+				trace = BulletTrace( perfectAttackStartVector, (perfectAttackStartVector[0],perfectAttackStartVector[1],-100000), false, self, false, true );
+				airsupport::debug_line( trace["position"] + ( 0,0,20 ), trace["position"] - ( 0,0,20 ), (0,0,1), time, false );
+			}
+		}
+#/
 		count++;
 		wait weaponShootTime;
 	}
@@ -533,6 +570,11 @@ function fireRockets()
 		rocket.soundMod = "straferun";
 	
 		rocket attachKillcamToRocket( level.strafeRunKillcams.rockets[rocketIndex], selectedTarget, targetOrigin );
+		
+/#
+		if ( GetDvarInt( #"scr_devStrafeRunKillcamsDebugDraw", 0 ) )
+			rocket thread airsupport::debug_draw_bomb_path( undefined, (0,0.5,0), 400 );
+#/
 
 		wait level.strafeRunRocketDelay;
 	}
@@ -648,6 +690,8 @@ function leaveMap()
 	
 	exitOrigin = self.origin + VectorScale( AnglesToForward( self.angles ), level.strafeRunExitUnits );
 	
+	/*self ClearTargetYaw();
+	self ClearGoalYaw();*/
 	self SetYawSpeed( 5, 999, 999 );
 	self SetVehGoalPos( exitOrigin, 1 );
 	
@@ -678,6 +722,11 @@ function explode()
 
 function canTargetEntity( entity )
 {
+	/*if ( distance( entity.origin, self.origin ) > level.heli_visual_range )
+	{
+		return false;
+	}*/
+	
 	heli_centroid = self.origin + ( 0, 0, -160 );
 	heli_forward_norm = anglestoforward( self.angles );
 	heli_turret_point = heli_centroid + 144*heli_forward_norm;
@@ -897,6 +946,10 @@ function createKillcams( numKillcams, numRockets )
 		for ( i = 0; i < numKillcams; i++ )
 		{
 			level.strafeRunKillcams.strafes[level.strafeRunKillcams.strafes.size] = createKillcamEnt( );
+/#
+		if ( GetDvarInt( #"scr_devStrafeRunKillcamsDebugDraw", 0 ) )
+			level.strafeRunKillcams.strafes[i] thread airsupport::debug_draw_bomb_path( undefined, (0,0,0.5), 200 );
+#/	
 		}
 	}
 	
@@ -1123,6 +1176,7 @@ function startStrafeKillcams()
 	{
 		level.strafeRunKillcams.strafes[i] thread strafeKillcam( self, node, current_dist );
 		current_dist += strafe_increment;
+		//wait( 0.5 );
 	}
 }
 
@@ -1132,6 +1186,8 @@ function getStrafeDistance(node)
 	next_node = GetVehicleNode( previous_node.target, "targetname" );
 
 	dist = 0;
+	
+	//dist = Distance( ( self.origin[0], self.origin[1], 0 ), ( node.origin[0], node.origin[1], 0 ) );
 	
 	while ( (!isdefined(previous_node.script_noteworthy) || previous_node.script_noteworthy != "strafe_stop") && next_node != node )
 	{
@@ -1148,6 +1204,11 @@ function getOriginAlongStrafePath(node, start_origin, distance_along)
 {
 	origin_node = SpawnStruct();
 	
+//	previous_node = node;
+//	next_node = GetVehicleNode( previous_node.target, "targetname" );
+
+//	seg_dist = Distance( (previous_node.origin[0], previous_node.origin[1], 0) , ( next_node.origin[0], next_node.origin[1], 0 ) );
+
 	seg_dist = Distance( (start_origin[0], start_origin[1], 0) , ( node.origin[0], node.origin[1], 0 ) );
 	
 	dist = 0;

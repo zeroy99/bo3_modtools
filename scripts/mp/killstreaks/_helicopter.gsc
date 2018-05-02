@@ -722,6 +722,7 @@ function heli_targeting( missilesEnabled,  hardpointType  )
 		}
 		
 		tanks = GetEntArray( "talon", "targetname" );
+		tanks = ArrayCombine( tanks, GetEntArray( "siegebot", "targetname" ), false, false );
 		
 		foreach( tank in tanks )
 		{
@@ -762,6 +763,10 @@ function heli_targeting( missilesEnabled,  hardpointType  )
 			else if( isdefined( targets[0].type ) && (targets[0].type == "dog" || targets[0].type == "tank_drone"))
 			{
 				killstreaks::update_dog_threat( targets[0] );
+			}
+			else if ( isdefined( targets[0].killstreakType ) )
+			{
+				killstreaks::update_non_player_threat( targets[0] );
 			}
 			else
 			{
@@ -1028,6 +1033,9 @@ function canTargetTank_turret( tank )
 	if ( !isdefined( tank ) )
 		return false;
 		
+	if ( tank.ignoreme === true )
+		return false;
+	
 	if ( distance( tank.origin, self.origin ) > level.heli_visual_range )
 		return false;
 	
@@ -1321,7 +1329,9 @@ function heli_damage_monitor( hardpointtype )
 			}
 			else if( type == "MOD_PROJECTILE" || type == "MOD_PROJECTILE_SPLASH" || type == "MOD_EXPLOSIVE" )
 			{
-				shouldUpdateDamage = ( weapon.statIndex != level.weaponPistolEnergy.statIndex ) && ( weapon.statIndex != level.weaponSpecialCrossbow.statIndex );
+				shouldUpdateDamage = ( ( weapon.statIndex != level.weaponPistolEnergy.statIndex )
+										&& ( weapon.statIndex != level.weaponSpecialCrossbow.statIndex )
+										&& ( weapon.statIndex != level.weaponSmgNailGun.statIndex ) );
 				
 				if ( shouldUpdateDamage )
 				{
@@ -2884,8 +2894,11 @@ function turret_target_flag( turrettarget )
 	self endon( "turret reloading" );
 	
 	// ends on target player death or undefined
-	turrettarget endon( "death" );
-	turrettarget endon( "disconnect" );
+	if ( isdefined( turrettarget ) )
+	{
+		turrettarget endon( "death" );
+		turrettarget endon( "disconnect" );
+	}
 	
 	self.targetlost = false;
 	self.turret_last_pos = undefined;

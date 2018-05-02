@@ -415,6 +415,7 @@ function escort_drone_movementupdate()
 			{
 				/#
 				println( "WARNING: Quadrotor can't find path to goal over 4 times." + self.origin + " " + goalpos );
+				line( self.origin, goalpos, (1,1,1), 1, 100 );
 				#/
 				// assign a new goal position because the one we have is probably bad
 				self.goalpos = make_sure_goal_is_well_above_ground( goalpos );

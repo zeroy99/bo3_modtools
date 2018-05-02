@@ -74,12 +74,23 @@ function init_shared()
 	clientfield::register( "scriptmover", "enemyequip", VERSION_SHIP, 2, "int" );
 	clientfield::register( "missile", "teamequip", VERSION_SHIP, 1, "int" );
 	
+	level.weaponObjectDebug = GetDvarInt( "scr_weaponobject_debug", 0 );
+
 	level.supplementalWatcherObjects = [];
 	
+	/#
+	level thread updateDvars();
+	#/
 }
 
 function updateDvars()
 {
+	while(1)
+	{
+		level.weaponObjectDebug = GetDvarInt( "scr_weaponobject_debug", 0 );
+
+		wait(1.0);
+	}
 }
 
 function start_gametype()
@@ -1187,6 +1198,11 @@ function getWeaponObjectWatcherByWeapon( weapon ) // self == player
 		return undefined;
 	}
 	
+	if ( !isdefined( weapon ) )
+	{
+		return undefined;
+	}
+	
 	for ( watcher = 0; watcher < self.weaponObjectWatcherArray.size; watcher++ )
 	{
 		if ( isdefined(self.weaponObjectWatcherArray[watcher].weapon) && ( self.weaponObjectWatcherArray[watcher].weapon == weapon || self.weaponObjectWatcherArray[watcher].weapon == weapon.rootWeapon ) )
@@ -1497,6 +1513,7 @@ function ProximityAlarmLoop( watcher, owner ) // self == weapon entity (for exam
 				continue;
 			}			
 			
+			if ( level.weaponObjectDebug != 1 )
 			{
 				if( owner HasPerk( "specialty_detectexplosive" ) )
 				{
@@ -1561,6 +1578,13 @@ function ProximityAlarmLoop( watcher, owner ) // self == weapon entity (for exam
 // self is the entity with proximity alarm
 function commonOnSpawnUseWeaponObjectProximityAlarm( watcher, owner ) // self == weapon entity (for example: the claymore)
 {	
+	/#
+	if ( level.weaponObjectDebug == 1 )
+	{
+		self thread proximityAlarmWeaponObjectDebug( watcher );
+	}
+	#/
+		
 	// waits until self is dead
 	self ProximityAlarmLoop( watcher, owner );
 	
@@ -1590,6 +1614,13 @@ function onSpawnProximityWeaponObject( watcher, owner ) // self == weapon (for e
 	{
 		self thread proximityWeaponObjectDetonation( watcher );
 	}
+
+	/#
+	if ( level.weaponObjectDebug == 1 )
+	{
+		self thread proximityWeaponObjectDebug( watcher );
+	}
+	#/
 }
 
 function watchWeaponObjectUsage() // self == player
@@ -1673,6 +1704,94 @@ function anyObjectsInWorld( weapon )
 	return objectsInWorld;
 }
 
+/#
+function proximitySphere( origin, innerRadius, inColor, outerRadius, outColor )
+{
+	self endon("death");	
+	
+	while(1)
+	{
+		if ( isdefined( innerRadius ) )
+		{
+			util::debug_sphere( origin, innerRadius, inColor, 0.25, 1 ); // inner
+		}		
+		
+		if ( isdefined( outerRadius ) )
+		{
+			util::debug_sphere( origin, outerRadius, outColor, 0.25, 1 ); // outer
+		}		
+		
+		wait .05;
+	}
+}
+
+function proximityAlarmWeaponObjectDebug( watcher )
+{
+	self endon("death");
+	
+	self util::waitTillNotMoving();
+	
+	if ( !isdefined( self ) )
+	{
+		return;
+	}
+	
+	self thread proximitySphere( self.origin, self.weapon.proximityalarminnerradius, (0,0.75,0), self.weapon.proximityalarmouterradius, (0,0.75,0) );	
+}
+
+function proximityWeaponObjectDebug( watcher )
+{
+	self endon("death");
+	
+	self util::waitTillNotMoving();
+	
+	if ( !isdefined( self ) )
+	{
+		return;
+	}
+	
+	if( isdefined( watcher.ignoreDirection ) )
+	{
+		self thread proximitySphere( self.origin, watcher.detonateRadius, (1,.85,0), self.weapon.explosionRadius, (1,0,0) );	
+	}
+	else
+	{
+		self thread showCone( acos( watcher.detectionDot ), watcher.detonateRadius, (1,.85,0) );
+		self thread showCone( 60, 256, (1,0,0) );
+	}	
+}
+
+function showCone( angle, range, color )
+{
+	self endon("death");
+	
+	start = self.origin;
+	forward = anglestoforward(self.angles);
+	right = vectorcross( forward, (0,0,1) );
+	up = vectorcross( forward, right );
+	
+	fullforward = forward * range * cos( angle );
+	sideamnt = range * sin( angle );
+	
+	while(1)
+	{
+		prevpoint = (0,0,0);
+		for ( i = 0; i <= 20; i++ )
+		{
+			coneangle = i/20.0 * 360;
+			point = start + fullforward + sideamnt * (right * cos(coneangle) + up * sin(coneangle));
+			if ( i > 0 )
+			{
+				line( start, point, color );
+				line( prevpoint, point, color );
+			}
+			prevpoint = point;
+		}
+		wait .05;
+	}
+}
+#/
+
 function weaponObjectDetectionMovable( ownerTeam ) // self == weapon (for example: the claymore)
 {
 	self endon ( "end_detection" );
@@ -1730,8 +1849,8 @@ function hackerTriggerSetVisibility( owner )
 	ownerTeam = owner.pers["team"];
 
 	for ( ;; )
-	{
-		if ( level.teamBased )
+	{		
+		if ( level.teamBased && isdefined( ownerTeam ) )
 		{
 			self SetVisibleToAllExceptTeam( ownerTeam );
 			self SetExcludeTeamForTrigger( ownerTeam );
@@ -1777,6 +1896,10 @@ function hackerInit( watcher )
 
 	// set up a trigger for a hacker
 	self.hackerTrigger = spawn( "trigger_radius_use", triggerOrigin, level.weaponobjects_hacker_trigger_width, level.weaponobjects_hacker_trigger_height );
+
+	/#
+		//_teargrenades::drawcylinder( self.hackerTrigger.origin, level.weaponobjects_hacker_trigger_width, level.weaponobjects_hacker_trigger_height, 0, "hacker_debug" );	
+	#/
 
 	self.hackerTrigger SetHintLowPriority( true );
 	self.hackerTrigger SetCursorHint( "HINT_NOICON", self );
@@ -1873,6 +1996,10 @@ function ItemHacked( watcher, player )
 	{
 		self.cameraHead notify( "hacked", player );
 	}
+
+	/#
+		//level notify ( "hacker_debug" );
+	#/
 
 	WAIT_SERVER_FRAME; // let current threads clean up from the 'hacked' notify
 	
@@ -2087,6 +2214,7 @@ function proximityWeaponObject_CreateDamageArea( watcher )
 
 function proximityWeaponObject_ValidTriggerEntity( watcher, ent )
 {
+	if ( level.weaponObjectDebug != 1 )
 	{
 		if ( isdefined( self.owner ) && ent == self.owner )
 			return false;
@@ -2540,7 +2668,7 @@ function deleteWeaponObjectsOn() // self == player
 	
 	while(1)
 	{
-		msg = self util::waittill_any_return( "joined_team", "joined_spectators", "death" );	
+		msg = self util::waittill_any_return( "joined_team", "joined_spectators", "death", "disconnect" );	
 		
 		// only need this because util::waittill_any_return will endon death if we dont pass it in
 		if ( msg == "death" )
@@ -2552,6 +2680,13 @@ function deleteWeaponObjectsOn() // self == player
 
 function saydamaged(orig, amount)
 {
+	/#
+	for (i = 0; i < 60; i++)
+	{
+		print3d(orig, "damaged! " + amount);
+		wait .05;
+	}
+	#/
 }
 
 function showHeadIcon( trigger )
@@ -2788,6 +2923,10 @@ function onSpawnSpecialCrossbowTrigger( watcher, player ) // self == weapon_inst
 
 	self thread watchSpecialCrossbowTrigger( self.hatchetPickUpTrigger, watcher.pickUp, watcher.pickUpSoundPlayer, watcher.pickUpSound );
 
+	/#
+	thread switch_team( self, watcher, player );
+	#/
+
 	self thread watchShutdown( player );
 }
 
@@ -2887,6 +3026,10 @@ function onSpawnHatchetTrigger( watcher, player ) // self == weapon_instance (fo
 	}
 
 	self thread watchHatchetTrigger( self.hatchetPickUpTrigger, watcher.pickUp, watcher.pickUpSoundPlayer, watcher.pickUpSound );
+
+	/#
+	thread switch_team( self, watcher, player );
+	#/
 
 	self thread watchShutdown( player );
 }
@@ -3103,6 +3246,10 @@ function onSpawnRetrievableWeaponObject( watcher, player ) // self == weapon (fo
 
 		self thread watchUseTrigger( self.enemyTrigger, watcher.onDestroyed );
 	}	
+
+	/#
+	thread switch_team( self, watcher, player );
+	#/	
 
 	self thread watchShutdown( player );
 }
@@ -3433,3 +3580,51 @@ function watch_supplemental_object_death() // self == object
 	ArrayRemoveValue( level.supplementalWatcherObjects, self ); 
 }
 
+/#
+function switch_team( entity, watcher, owner ) // self == ??
+{
+	self notify( "stop_disarmthink" );
+	self endon( "stop_disarmthink" );
+	self endon( "death" );
+
+	//Init my dvar
+	SetDvar("scr_switch_team", "");
+
+	while( true )
+	{
+		wait(0.5);
+
+		//Grab my dvar every .5 seconds in the form of an int
+		devgui_int = GetDvarint( "scr_switch_team");
+
+		//"" returns as zero with GetDvarInt
+		if(devgui_int != 0)
+		{
+			// spawn a larry to be the opposing team
+			team = "autoassign";
+			
+			if( isdefined( level.getEnemyTeam ) && isdefined( owner ) && isdefined( owner.team ) )
+			{
+				team = [[level.getEnemyTeam]]( owner.team );
+			}
+
+			if ( isdefined( level.devOnGetOrMakeBot ) )
+			{
+				player = [[level.devOnGetOrMakeBot]]( team );
+			}
+			
+			if( !isdefined( player ) ) 
+			{
+				println("Could not add test client");
+				wait 1;
+				continue;
+			}
+
+			entity ItemHacked( watcher, player );
+
+			SetDvar("scr_switch_team", "0");
+		}
+	}
+}
+
+#/

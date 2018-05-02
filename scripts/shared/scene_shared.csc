@@ -629,6 +629,29 @@ class cScene : cScriptBundleBase
 			self thread initialize();
 		}
 	}
+
+/*	
+	function init( str_scenedef, s_scenedef, e_align, a_ents, b_test_run )
+	{
+		cScriptBundleBase::init( str_scenedef, s_scenedef, b_test_run );
+		
+		_e_root = e_align;
+		
+		ARRAY_ADD( level.active_scenes[ _str_name ], _e_root );
+		ARRAY_ADD( _e_root.scenes, self );
+		
+		a_objs = get_valid_object_defs();
+		
+		foreach ( s_obj in a_objs )
+		{
+			add_object( [[new cSceneObject()]]->first_init( s_obj, self ) );
+		}
+		
+		_e_root thread scene::debug_display();
+			
+		self thread initialize();
+	}
+*/
 	
 	function get_valid_object_defs()
 	{
@@ -1053,6 +1076,10 @@ function __init__()
 		{
 			n_clientbits = GetMinBitCountForNum( 3 );
 			
+			/#
+				n_clientbits = GetMinBitCountForNum( 6 );
+			#/
+			
 			clientfield::register( "world", s_scenedef.name, VERSION_SHIP, n_clientbits, "int", &cf_server_sync, !CF_HOST_ONLY, !CF_CALLBACK_ZERO_ON_NEW_ENT );
 		}
 	}
@@ -1089,7 +1116,10 @@ function in_igc( localClientNum, oldVal, newVal, bNewEnt, bInitialSnap, fieldNam
 	}
 	
 	IGCactive( localClientNum, b_igc_active );
-
+	
+	/#
+		//PrintTopRightln( "CLIENT " + n_entnum + ": 'in_igc' set to " + b_igc_active, ( b_igc_active ? RED : GREEN ), -1 );
+	#/
 }
 
 #define TRANSITION_FILTER_INDEX 5
@@ -1596,7 +1626,9 @@ function _trigger_stop( trig )
 @/
 function add_scene_func( str_scenedef, func, str_state = "play", ... )
 {
+	/#
 	Assert( isdefined( get_scenedef( str_scenedef ) ), "Trying to add a scene function for scene '" + str_scenedef + "' that doesn't exist." );
+	#/
 		
 	DEFAULT( level.scene_funcs, [] );
 	DEFAULT( level.scene_funcs[ str_scenedef ], [] );
@@ -1617,7 +1649,9 @@ function add_scene_func( str_scenedef, func, str_state = "play", ... )
 @/
 function remove_scene_func( str_scenedef, func, str_state = "play" )
 {
+	/#
 	Assert( isdefined( get_scenedef( str_scenedef ) ), "Trying to remove a scene function for scene '" + str_scenedef + "' that doesn't exist." );
+	#/
 		
 	DEFAULT( level.scene_funcs, [] );
 	
@@ -1741,7 +1775,9 @@ function init( arg1, arg2, arg3, b_test_run )
 			{
 				a_instances = struct::get_array( str_value, str_key );
 				
-				Assert( a_instances.size, "No scene instances with KVP '" + str_key + "'/'" + str_value + "'." );
+				/#
+					Assert( a_instances.size, "No scene instances with KVP '" + str_key + "'/'" + str_value + "'." );
+				#/
 			}
 			else
 			{
@@ -1809,8 +1845,12 @@ function _init_instance( str_scenedef, a_ents, b_test_run = false )
 	
 	s_bundle = get_scenedef( str_scenedef );
 	
+	/#
+	
 	Assert( isdefined( str_scenedef ), "Scene at (" + ( isdefined( self.origin ) ? self.origin : "level" ) + ") is missing its scene def." );
 	Assert( isdefined( s_bundle ), "Scene at (" + ( isdefined( self.origin ) ? self.origin : "level" ) + ") is using a scene name '" + str_scenedef + "' that doesn't exist." );
+	
+	#/
 	
 	o_scene = get_active_scene( str_scenedef );
 	
@@ -1894,7 +1934,9 @@ function play( arg1, arg2, arg3, b_test_run = false, str_mode = "" )
 				
 				str_scenedef = undefined; // use struct scenedef
 				
-				Assert( a_instances.size, "No scene instances with KVP '" + str_key + "'/'" + str_value + "'." );
+				/#
+					Assert( a_instances.size, "No scene instances with KVP '" + str_key + "'/'" + str_value + "'." );
+				#/
 			}
 			else
 			{
@@ -2068,7 +2110,9 @@ function stop( arg1, arg2, arg3, b_cancel, b_no_assert = false )
 			{
 				a_instances = struct::get_array( str_value, str_key );
 				
-				Assert( b_no_assert || a_instances.size, "No scene instances with KVP '" + str_key + "'/'" + str_value + "'." );
+				/#
+					Assert( b_no_assert || a_instances.size, "No scene instances with KVP '" + str_key + "'/'" + str_value + "'." );
+				#/
 					
 				str_value = undefined;
 			}

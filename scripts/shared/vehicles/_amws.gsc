@@ -308,6 +308,8 @@ function state_stationary_update( params )
 
 	while ( true )
 	{
+		// /# self vehicle_ai::UpdatePersonalThreatBias_Bots( 800, 2.0 ); #/ // give bots more threat (for testing purposes -- DO NOT CHECK IN active)
+
 		evade_now = ( ( ( self.settings.evade_enemies_locked_on_me === true ) && self.locked_on ) || ( ( self.settings.evade_enemies_locking_on_me === true ) && self.locking_on ) );
 		
 		if ( vehicle_ai::TimeSince( startTime ) > maxTime || evade_now )
@@ -518,6 +520,9 @@ function state_combat_update( params )
 		}
 		
 
+		// /# self vehicle_ai::UpdatePersonalThreatBias_Bots( 800, 2.0 ); #/ // give bots more threat (for testing purposes -- DO NOT CHECK IN active)
+		
+		
 		// evaluate lock threats to engage them
 		if ( self.settings.engage_enemies_locked_on_me === true && self.locked_on )
 		{
@@ -771,12 +776,17 @@ function GetNextMovePosition_wander() // no self.enemy
 		}
 	}
 	
+	/# self.debug_ai_move_to_points_considered = queryResult.data; #/
 
 	if( !isdefined( best_point ) )
 	{
+		/# self.debug_ai_movement_type = "wander ( 0 / " + queryResult.data.size + " )"; #/
+		/# self.debug_ai_move_to_point = undefined; #/
 		return undefined;
 	}
 
+	/# self.debug_ai_movement_type = "wander - " + queryResult.data.size; #/
+	/# self.debug_ai_move_to_point = best_point.origin; #/
 	return best_point.origin;
 }
 
@@ -870,12 +880,17 @@ function GetNextMovePosition_evasive( client_flags )
 
 	self vehicle_ai::PositionQuery_DebugScores( queryResult );
 
+	/# self.debug_ai_move_to_points_considered = queryResult.data; #/
 
 	if( !isdefined( best_point ) )
 	{
+		/# self.debug_ai_movement_type = "evasive ( 0 / " + queryResult.data.size + " )"; #/
+		/# self.debug_ai_move_to_point = undefined; #/
 		return undefined;
 	}
 
+	/# self.debug_ai_movement_type = "evasive - " + queryResult.data.size; #/
+	/# self.debug_ai_move_to_point = best_point.origin; #/
 	return best_point.origin;
 }
 
@@ -968,11 +983,25 @@ function GetNextMovePosition_tactical( enemy )
 	
 	self vehicle_ai::PositionQuery_DebugScores( queryResult );
 
+	/# self.debug_ai_move_to_points_considered = queryResult.data; #/
 
 	if( !isdefined( best_point ) )
 	{
+		/# self.debug_ai_movement_type = "tactical ( 0 / " + queryResult.data.size + " )"; #/
+		/# self.debug_ai_move_to_point = undefined; #/
 		return undefined;
 	}
+
+/#
+	if ( IS_TRUE( GetDvarInt("hkai_debugPositionQuery") ) )
+	{
+		recordLine( self.origin, best_point.origin, (0.3,1,0) );
+		recordLine( self.origin, enemy.origin, (1,0,0.4) );
+	}
+#/
+		
+	/# self.debug_ai_movement_type = "tactical - "  + queryResult.data.size; #/
+	/# self.debug_ai_move_to_point = best_point.origin; #/
 
 	return best_point.origin;
 }
@@ -989,6 +1018,10 @@ function path_update_interrupt_by_attacker() //self == vehicle
 	
 	if ( self.locked_on || self.locking_on )
 	{
+		/# self.debug_ai_move_to_points_considered = []; #/
+		/# self.debug_ai_movement_type = "interrupted"; #/
+		/# self.debug_ai_move_to_point = undefined; #/
+
 		self ClearVehGoalPos(); // do this to prevent the "stopping" of the vehicle
 		
 		self.lock_evade_now = true;

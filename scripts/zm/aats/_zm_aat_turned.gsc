@@ -53,6 +53,7 @@ function result( death, attacker, mod, weapon )
 	self.n_aat_turned_zombie_kills = 0;
 	self.allowDeath = false;
 	self.allowpain = false;
+	self.no_gib = true; 
 
 	// make sure it's the fastest type of zombie
 	self zombie_utility::set_zombie_run_cycle( "sprint" );

@@ -183,20 +183,19 @@ function showTopThreePlayers( localClientNum )
 	PlayMainCamXCam( localClientNum, level.endGameXCamName, 0, "cam_topscorers", "topscorers", position.origin, position.angles );
 	PlayRadiantExploder( localClientNum, "exploder_mp_endgame_lights" );
 
-	// if the player joins the game into the top scorers screen make sure that we give enough
-	// time for the lui to get up and running
-	if ( !IsStreamerReady() )
-	{
-		while ( !IsStreamerReady() )
-		{
-			WAIT_CLIENT_FRAME;
-		}
-		wait(0.25);
-	}
-
 	SetUIModelValue( CreateUIModel( GetUIModelForController( localClientNum ), "displayTop3Players" ), 1 );
 
+	thread spamUIModelValue( localClientNum );
 	thread checkForGestures( localClientNum );
+}
+
+function spamUIModelValue( localClientNum )
+{
+	while( 1 )
+	{
+		wait (0.25);
+		SetUIModelValue( CreateUIModel( GetUIModelForController( localClientNum ), "displayTop3Players" ), 1 );
+	}
 }
 
 function checkForGestures( localClientNum )
@@ -304,6 +303,7 @@ function showScoreboard( localClientNum, oldVal, newVal, bNewEnt, bInitialSnap, 
 	if ( isdefined( newVal ) && newVal > 0 && isDefined( level.endGameXCamName ) )
 	{
 		end_game_taunts::stop_stream_epic_models();
+		end_game_taunts::deleteCameraGlass( undefined );
 		position = struct::get( "endgame_top_players_struct", "targetname" );
 		PlayMainCamXCam( localClientNum, level.endGameXCamName, 0, "cam_topscorers", "", position.origin, position.angles );
 		SetUIModelValue( CreateUIModel( GetUIModelForController( localClientNum ), "forceScoreboard" ), 1 );

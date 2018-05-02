@@ -146,7 +146,7 @@ function death_check_for_challenge_updates( e_attacker )//self = zombie
 		w_damage = w_damage.dualWieldWeapon;
 	}
 
-	w_damage = zm_weapons::switch_from_alt_weapon( w_damage );
+	w_damage = zm_weapons::get_nonalternate_weapon( w_damage ); //switch_from_alt_weapon( w_damage );
 	
 	//Check for headshot kills
 	if( zm_utility::is_headshot( w_damage, self.damagelocation, str_damagemod ) )

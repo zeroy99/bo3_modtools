@@ -273,6 +273,31 @@ function DestroyOtherTeamsActiveVehicles( attacker, weapon )
 	}
 	
 	//DestroyActiveVehicles( attacker, undefined, weapon );
+	
+	DestroyNeutralGameplayVehicles( attacker, weapon );
+}
+
+function DestroyNeutralGameplayVehicles( attacker, weapon )
+{
+	script_vehicles = GetEntArray( "script_vehicle", "classname" );
+	foreach( vehicle in script_vehicles )
+	{
+		if( IsVehicle( vehicle ) && ( !isdefined( vehicle.team ) || vehicle.team == "neutral" ) )
+		{
+			if( isdefined( vehicle.DetonateViaEMP ) && IS_TRUE( weapon.isEmpKillstreak ) )
+			{
+				vehicle [[vehicle.DetonateViaEMP]]( attacker, weapon );
+			}
+			
+			if( isdefined( vehicle.archetype ) )
+			{
+				if ( vehicle.archetype == "siegebot" )
+				{
+					vehicle DoDamage( vehicle.health + 1, vehicle.origin, attacker, attacker, "", "MOD_EXPLOSIVE", 0, weapon );
+				}
+			}
+		}
+	}	
 }
 
 function DestroyActiveVehicles( attacker, team, weapon )
@@ -305,7 +330,7 @@ function DestroyActiveVehicles( attacker, team, weapon )
 				{
 					vehicle raps::detonate( attacker );	
 				}
-				else if( vehicle.archetype == "turret" || vehicle.archetype == "rcbomb" || vehicle.archetype == "wasp" )
+				else if( vehicle.archetype == "turret" || vehicle.archetype == "rcbomb" || vehicle.archetype == "wasp" || vehicle.archetype == "siegebot" )
 				{
 					vehicle DoDamage( vehicle.health + 1, vehicle.origin, attacker, attacker, "", "MOD_EXPLOSIVE", 0, weapon );
 				}

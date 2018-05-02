@@ -52,6 +52,10 @@ function __init__()
 
 	foreach ( trig in get_all() )
 	{
+		/#
+			trig check_spawnflags();
+		#/
+		
 		if ( trig.classname != "trigger_damage" )
 		{
 			if ( trig.classname != "trigger_hurt" )

@@ -135,9 +135,10 @@ function turn_revive_on()
 		
 		for( i = 0; i < machine.size; i++ )
 		{
-			if( flag::exists("solo_game") && flag::exists("solo_revive") && level flag::get("solo_game") && level flag::get("solo_revive") )
+			if( level flag::exists("solo_game") && level flag::exists("solo_revive") && level flag::get("solo_game") && level flag::get("solo_revive") )
 			{
-				machine[i] hide();
+				machine[i] Ghost();
+				machine[i] NotSolid();
 			}
 			
 			machine[i] SetModel(level.machine_assets[PERK_QUICK_REVIVE].off_model);
@@ -211,7 +212,7 @@ function turn_revive_on()
 			machine_model.ishidden = false;
 		}
 		
-		notify_str = level util::waittill_any_return("revive_off","revive_hide");
+		notify_str = level util::waittill_any_return("revive_off","revive_hide", "stop_quickrevive_logic" );
 		should_hide = false;
 		if(notify_str == "revive_hide")
 		{
@@ -638,8 +639,9 @@ function unhide_quickrevive()
 		level.quick_revive_trigger.blocker_model hide();
 	}
 	
-	level.quick_revive_machine show();
-	
+	level.quick_revive_machine Show();
+	level.quick_revive_machine Solid();
+
 	if(isDefined(level.quick_revive_machine.original_pos) )
 	{
 		level.quick_revive_default_origin = level.quick_revive_machine.original_pos;

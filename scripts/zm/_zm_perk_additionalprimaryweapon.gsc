@@ -44,6 +44,7 @@ function __init__()
 	enable_additional_primary_weapon_perk_for_level();
 	
 	callback::on_laststand( &on_laststand );
+	level.return_additionalprimaryweapon = &return_additionalprimaryweapon;
 }
 
 function enable_additional_primary_weapon_perk_for_level()
@@ -129,10 +130,12 @@ function take_additionalprimaryweapon()
 		}
 	}
 
+	self.weapons_taken_by_losing_specialty_additionalprimaryweapon = [];
 	pwtcbt = primary_weapons_that_can_be_taken.size;
 	while ( pwtcbt >= 3 )
 	{
 		weapon_to_take = primary_weapons_that_can_be_taken[pwtcbt - 1];
+		self.weapons_taken_by_losing_specialty_additionalprimaryweapon[weapon_to_take] = zm_weapons::get_player_weapondata( self, weapon_to_take );
 		pwtcbt--;
 		if ( weapon_to_take == self GetCurrentWeapon() )
 		{
@@ -151,3 +154,16 @@ function on_laststand()
 		self.weapon_taken_by_losing_specialty_additionalprimaryweapon = take_additionalprimaryweapon();
  	}	
 }
+
+function return_additionalprimaryweapon( w_returning )
+{
+	if ( isdefined( self.weapons_taken_by_losing_specialty_additionalprimaryweapon[w_returning] ) )
+	{
+		self zm_weapons::weapondata_give( self.weapons_taken_by_losing_specialty_additionalprimaryweapon[w_returning] );
+	}
+	else
+	{
+		self zm_weapons::give_build_kit_weapon( w_returning );
+	}
+}
+

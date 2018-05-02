@@ -1080,7 +1080,7 @@ function hide_hint_text(b_fade_before_hiding=true)
 		if (b_fade_before_hiding)
 		{
 			lui::play_animation(self.hint_menu_handle, "fadeout");
-			util::waittill_any_timeout(N_HINT_TEXT_FADE_TIME,  "kill_hint_text", "death");
+			util::waittill_any_timeout(N_HINT_TEXT_FADE_TIME,  "kill_hint_text", "death", "hint_text_removed" );
 		}
 		
 		self CloseLUIMenu(self.hint_menu_handle);
@@ -1099,7 +1099,7 @@ function fade_hint_text_after_time(n_display_time, str_turn_off_notify)
 	self endon( "death" );
 	self endon( "kill_hint_text" );
 	
-	util::waittill_any_timeout(n_display_time - N_HINT_TEXT_FADE_TIME, str_turn_off_notify);
+	util::waittill_any_timeout(n_display_time - N_HINT_TEXT_FADE_TIME, str_turn_off_notify, "hint_text_removed", "kill_hint_text" );
 	
 	hide_hint_text(true);
 }
@@ -1111,7 +1111,7 @@ function hide_hint_text_listener(n_time)
 	self endon( "hint_text_removed" );
 	self endon( "disconnect" );
 	
-	util::waittill_any_timeout(n_time,  "kill_hint_text", "death");
+	util::waittill_any_timeout(n_time,  "kill_hint_text", "death", "hint_text_removed", "disconnect" );
 	
 	hide_hint_text(false);
 }
@@ -1207,3 +1207,6 @@ function is_objective_game( game_type )
 			return true;
 	}
 }
+
+
+

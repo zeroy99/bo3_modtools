@@ -341,6 +341,11 @@ function MigrationAwareWait( durationMs )
 	{
 		event = level util::waittill_level_any_timeout( timeRemaining / 1000, self, "game_ended", "host_migration_begin" );
 		
+		if ( !isdefined( event ) )
+		{
+			return;
+		}
+		
 		if( event != "host_migration_begin" )
 		{
 			return;

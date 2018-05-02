@@ -537,6 +537,8 @@ function Prolog( context )
 	
 	AiUtility::AddAIOverrideDamageCallback( combatRobot, &combatRobotDamageOverride );	
 	
+	combatRobot.vehicle = helicopter;
+	combatRobot.vehicle.ignore_seat_check = true;
 	combatRobot vehicle::get_in( helicopter , "driver", true );	
 	
 	combatRobot.overrideDropPosition = player.markerPosition;

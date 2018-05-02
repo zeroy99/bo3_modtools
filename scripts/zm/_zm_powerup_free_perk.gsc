@@ -72,6 +72,11 @@ function free_perk_powerup( item )
 			{
 				player thread disable_perk_before_power( free_perk );
 			}
+			
+			if ( isDefined( free_perk ) && isDefined( level.perk_bought_func ) )
+			{
+				player [[ level.perk_bought_func ]]( free_perk );
+			}
 		}
 	}
 }

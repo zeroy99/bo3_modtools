@@ -1,7 +1,8 @@
 #using scripts\codescripts\struct;
-#using scripts\mp\teams\_teamset;
 
 #insert scripts\shared\shared.gsh;
+
+#using scripts\mp\teams\_teamset;
 
 #define HEAD_ICON_ALLIES		"faction_allies"
 
@@ -46,6 +47,8 @@ function init( team )
 
 	// scoreboard
 	SetDvar("g_TeamName_" + team, &"MPUI_ALLIES_SHORT");
+	//SetDvar("g_TeamColor_" + team, "0.6 0.64 0.69");
+	//SetDvar("g_ScoresColor_" + team, "0.6 0.64 0.69");
 	SetDvar("g_FactionName_" + team, "allies" );
 
 	game["strings"][team + "_win"] = &"MP_BLACK_OPS_WIN_MATCH";

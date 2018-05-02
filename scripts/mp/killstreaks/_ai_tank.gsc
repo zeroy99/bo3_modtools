@@ -1,4 +1,5 @@
 #using scripts\codescripts\struct;
+
 #using scripts\shared\_oob;
 #using scripts\shared\array_shared;
 #using scripts\shared\callbacks_shared;
@@ -13,6 +14,7 @@
 #using scripts\shared\vehicle_ai_shared;
 #using scripts\shared\vehicle_shared;
 #using scripts\shared\vehicles\_amws;
+
 #using scripts\mp\_challenges;
 #using scripts\mp\_util;
 #using scripts\mp\gametypes\_dev;
@@ -49,6 +51,7 @@
 #define AI_TANK_GUNNER_FLASH_TAG		"tag_flash_gunner1"
 #define AI_TANK_GUNNER_AIM_TAG			"tag_gunner_aim1"
 #define AI_TANK_GUNNER_AIM_OFFSET		-24
+#define AI_TANK_THINK_DEBUG				GetDvarInt( "scr_ai_tank_think_debug" )
 #define AI_TANK_TIME_TO_WAIT_FOR_LOST_TARGET	5
 #define AI_TANK_FURTHEST_FROM_NAVMESH_ALLOWED	( 40 * 12 )
 	

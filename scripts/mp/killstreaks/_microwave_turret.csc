@@ -2,7 +2,6 @@
 #using scripts\shared\clientfield_shared;
 #using scripts\shared\system_shared;
 #using scripts\shared\util_shared;
-
 #insert scripts\shared\shared.gsh;
 #insert scripts\shared\version.gsh;
 #insert scripts\mp\killstreaks\_killstreaks.gsh;
@@ -165,6 +164,23 @@ function microwave_close_anim( localClientNum, oldVal, newVal, bNewEnt, bInitial
 	self SetAnimRestart( %o_turret_guardian_close, 1.0, 0.0, 1.0 );
 }
 
+/#
+function debug_trace(origin, trace)
+{
+	if ( trace[ "fraction" ] < 1.0 )
+	{
+		color = ( 0.95, 0.05, 0.05 );
+	}
+	else
+	{
+			color = ( 0.05, 0.95, 0.05 );
+	}
+	
+	Sphere( trace[ "position" ], 5, color, 0.75, true, 10, 100 );
+	util::debug_line( origin, trace[ "position" ], color, 100 );
+}
+#/
+
 function StartMicrowaveFx( localClientNum )
 {
 	turret = self;
@@ -192,6 +208,13 @@ function StartMicrowaveFx( localClientNum )
 	
 	while( true )
 	{
+/#
+		if ( GetDvarInt( "scr_microwave_turret_fx_debug" )  )
+		{
+			turret.should_update_fx = true;
+			microwaveFXEnt.fxHashs["center"] = 0;
+		}
+#/
 		if ( turret.should_update_fx == false )
 		{
 			wait MICROWAVE_TURRET_FX_CHECK_TIME;
@@ -203,6 +226,7 @@ function StartMicrowaveFx( localClientNum )
 		{
 			wait(0.05);
 			
+			// /# IPrintLnBold( "Delaying microwave turret fx!  Time: " + GetTime() ); #/
 			continue;
 		}
 
@@ -219,6 +243,15 @@ function StartMicrowaveFx( localClientNum )
 		traceRight = BulletTrace( origin, origin + forwardRight, false, turret );
 		traceLeft = BulletTrace( origin, origin + forwardLeft, false, turret );
 		
+/#
+		if ( GetDvarInt( "scr_microwave_turret_fx_debug" ) )
+		{
+			debug_trace( origin, trace );
+			debug_trace( origin, traceRight );
+			debug_trace( origin, traceLeft );
+		}
+#/
+
 		need_to_rebuild = microwaveFXEnt MicrowaveFxHash( trace, origin, "center" );
 		need_to_rebuild |= microwaveFXEnt MicrowaveFxHash( traceRight, origin, "right" );
 		need_to_rebuild |= microwaveFXEnt MicrowaveFxHash( traceLeft, origin, "left" );
@@ -334,21 +367,48 @@ function stop_fx_on_tag( localClientNum, fxName, tag )
 	}
 }
 
+/#
+function render_debug_sphere( tag, color, fxName )
+{
+	if ( GetDvarInt( "scr_microwave_turret_fx_debug" ) )
+	{
+		origin = self GetTagOrigin( tag );
+		
+		Sphere( origin, 2, color, 0.75, true, 10, 100 );
+	}
+}
+#/
+
 function stop_or_start_fx( localClientNum, fxName, tag, start )
 {
 	if ( start )
 	{
 		self play_fx_on_tag( localClientNum, fxName, tag );
+/#
+		if ( fxName == MICROWAVE_TURRET_FX_HALF )
+		{
+			render_debug_sphere( tag, ( 0.5, 0.5, 0 ), fxName );
+		}
+		else
+		{
+			render_debug_sphere( tag, ( 0, 1, 0 ), fxName );
+		}
+#/
 	}
 	else
 	{
 		stop_fx_on_tag( localClientNum, fxName, tag );
+/#
+		render_debug_sphere( tag, ( 1, 0, 0 ), fxName );
+#/
 	}
 }
 
 function PlayMicrowaveFx( localCLientNum, trace, traceRight, traceLeft, origin )
 {
 	rows = 5;
+	
+	// /# IPrintLnBold( "Playing Microwave Fx: " + GetTime() ); #/
 	
 	for ( i = 0; i < rows; i++ )
 	{
@@ -428,4 +488,6 @@ function PlayMicrowaveFx( localCLientNum, trace, traceRight, traceLeft, origin )
 			break;
 		}
 	}
+
+	// /# IPrintLnBold( "Done playing Microwave Fx: " + GetTime() ); #/
 }

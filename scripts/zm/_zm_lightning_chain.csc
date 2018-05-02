@@ -48,6 +48,9 @@ function init()
 
 function lc_shock_fx(localClientNum, oldVal, newVal, bNewEnt, bInitialSnap, fieldName, bWasTimeJump)
 {
+	self endon( "entityshutdown" );
+	self util::waittill_dobj(localClientNum);
+	
 	if( newVal )
 	{
 		if ( !isdefined( self.lc_shock_fx ) )
@@ -80,6 +83,9 @@ function lc_shock_fx(localClientNum, oldVal, newVal, bNewEnt, bInitialSnap, fiel
 
 function lc_play_death_fx(localClientNum, oldVal, newVal, bNewEnt, bInitialSnap, fieldName, bWasTimeJump)
 {
+	self endon( "entityshutdown" );
+	self util::waittill_dobj(localClientNum);
+	
 	str_tag = "J_SpineUpper";
 
 	if ( IS_TRUE(self.isdog)  )

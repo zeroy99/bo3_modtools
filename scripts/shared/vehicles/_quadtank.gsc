@@ -11,6 +11,7 @@
 #using scripts\shared\damagefeedback_shared;
 #using scripts\shared\laststand_shared;
 #using scripts\shared\gameobjects_shared;
+#using scripts\cp\_objectives;
 
 #insert scripts\shared\shared.gsh;
 #insert scripts\shared\statemachine.gsh;
@@ -21,9 +22,13 @@
 #using scripts\shared\ai\blackboard_vehicle;
 #insert scripts\shared\ai\utility.gsh;
 
+#using scripts\cp\gametypes\_globallogic_ui;
+
 #using scripts\shared\vehicle_shared;
 #using scripts\shared\vehicle_ai_shared;
 #using scripts\shared\vehicle_death_shared;
+
+#using scripts\cp\_oed;
 
 #define SCAN_HEIGHT_OFFSET 40
 	
@@ -101,8 +106,8 @@ function quadtank_initialize()
 	self.settings = struct::get_script_bundle( "vehiclecustomsettings", self.scriptbundlesettings );
 	
 	
-//	objectives::set( "cp_quadtank_rocket_icon", self );
-//	objectives::hide_for_target( "cp_quadtank_rocket_icon", self );
+	objectives::set( "cp_quadtank_rocket_icon", self );
+	objectives::hide_for_target( "cp_quadtank_rocket_icon", self );
 	
 
 	self.variant = "cannon";
@@ -358,7 +363,7 @@ function state_driving_update( params )
 	self ClearVehGoalPos();
 
 	self vehicle::toggle_ambient_anim_group( 2, true );
-//	objectives::hide_for_target( "cp_quadtank_rocket_icon", self );
+	objectives::hide_for_target( "cp_quadtank_rocket_icon", self );
 
 	driver = self GetSeatOccupant( 0 );
 	if( isdefined(driver) )
@@ -439,7 +444,7 @@ function quadtank_death( params )
 
 	self set_trophy_state( false );
 	self quadtank_weakpoint_display( false );
-//	objectives::hide_for_target( "cp_quadtank_rocket_icon", self );
+	objectives::hide_for_target( "cp_quadtank_rocket_icon", self );
 	self remove_repulsor();
 	self HidePart( "tag_lidar_null", "", true );
 	self vehicle::set_damage_fx_level( 0 );
@@ -591,11 +596,11 @@ function quadtank_disabletrophy()
 	driver = self GetSeatOccupant( 0 );
 	if( !isdefined( driver ) && self vehicle_ai::get_current_state() != "off" && self vehicle_ai::get_next_state() !== "off" )
 	{
-//		objectives::show_for_target( "cp_quadtank_rocket_icon", self );
+		objectives::show_for_target( "cp_quadtank_rocket_icon", self );
 	}
 	else
 	{
-//		objectives::hide_for_target( "cp_quadtank_rocket_icon", self );
+		objectives::hide_for_target( "cp_quadtank_rocket_icon", self );
 	}
 	
 	self set_side_turrets_enabled( false );
@@ -660,7 +665,7 @@ function quadtank_enabletrophy()
 	self.attackerAccuracy = 1;
 	self ShowPart( "tag_defense_active" );
 	//self ShowPart( "tag_target_upper" );
-//	objectives::hide_for_target( "cp_quadtank_rocket_icon", self );
+	objectives::hide_for_target( "cp_quadtank_rocket_icon", self );
 
 	self quadtank_projectile_watcher();
 	self thread quadtank_automelee_update();
@@ -1443,6 +1448,14 @@ function QuadtankCallback_VehicleDamage( eInflictor, eAttacker, iDamage, iDFlags
 				self.trophy_system_health = self.settings.trophySystemHealth;
 			}
 
+			//debug display information regarding damage done to weak spot
+//			damage_amount = STR( iDamage );
+//			trophy_health = STR( self.trophy_system_health );
+//			damage_string = "Damage Done = " + damage_amount + " || Remaining Health = " + trophy_health;
+//			/#
+//        		PrintTopRightln( damage_string );
+// 			#/    
+
 			if( !trophy_disabled() )
 			{
 				self.trophy_system_health -= iDamage;
@@ -1725,7 +1738,7 @@ function quadtank_weakpoint_trigger()
 {
 	if( IS_TRUE( self.displayweakpoint ) )
 	{
-//		self globallogic_ui::triggerWeakpointDamage( &WEAKSPOT_BONE_NAME );
+		self globallogic_ui::triggerWeakpointDamage( &WEAKSPOT_BONE_NAME );
 	}
 }
 
@@ -1738,14 +1751,14 @@ function quadtank_weakpoint_display( state )
 		if( !self.displayweakpoint && self.weakpointobjective === 1 )
 		{
 			self.weakpointobjective = 0;
-//			self globallogic_ui::destroyWeakpointWidget( &WEAKSPOT_BONE_NAME );
+			self globallogic_ui::destroyWeakpointWidget( &WEAKSPOT_BONE_NAME );
 		}
 		
 		player = level.players[0];
 		if( self.displayweakpoint && self.combatactive && self.weakpointobjective !== 1 && ( !isdefined( player ) || player.team !== self.team ) )
 		{
 			self.weakpointobjective = 1;
-//			self globallogic_ui::createWeakpointWidget( &WEAKSPOT_BONE_NAME );
+			self globallogic_ui::createWeakpointWidget( &WEAKSPOT_BONE_NAME );
 		}
 	}
 }

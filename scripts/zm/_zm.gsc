@@ -44,7 +44,7 @@
 #using scripts\zm\_zm_equipment;
 #using scripts\zm\_zm_ffotd;
 #using scripts\zm\_zm_game_module;
-#using scripts\zm\_zm_hero_weapon;
+//#using scripts\zm\_zm_hero_weapon;
 #using scripts\zm\_zm_laststand;
 #using scripts\zm\_zm_melee_weapon;
 #using scripts\zm\_zm_perks;
@@ -149,7 +149,6 @@
 #precache( "menu", "InitialBlack" );
 
 #precache( "eventstring", "force_scoreboard" );
-#precache( "eventstring", "game_timer_reset" ); 
 #precache( "eventstring", "open_ingame_menu" );
 #precache( "eventstring", "play_promo_anim" );
 
@@ -376,6 +375,8 @@ function init()
 	
 	level thread post_all_players_connected();
 	
+	level start_zm_dash_counter_watchers();
+	
 	zm_utility::init_utility();
 
 	util::registerClientSys( "lsm" );
@@ -425,8 +426,29 @@ function post_main()
 
 function cheat_enabled( val )
 {
+	if ( GetDvarInt( "zombie_cheat" ) >= val )
+	{
+/#
+		return true;
+#/
+	}
+
 	return false;
 }
+
+
+function set_round_number( new_round ) 
+{
+	if ( new_round > 255 )
+		new_round = 255; 
+	level.round_number = new_round; 
+}
+
+function get_round_number() 
+{
+	return level.round_number; 
+}
+
 
 function startUnitriggers()
 {
@@ -463,26 +485,25 @@ function fade_out_intro_screen_zm( hold_black_time, fade_out_time, destroyed_aft
 	}
 	
 	array::thread_all(GetPlayers(),	&initialBlackEnd);
-	lui::screen_fade_in( fade_out_time, undefined );
-	
 	level clientfield::set( "sndZMBFadeIn", 1 );
+	lui::screen_fade_in( fade_out_time, undefined );
 	
 	//level notify("fade_introblack");
 
 	wait 1.6;
 
-	level.passed_introscreen = true;	
+	level.passed_introscreen = true;
 
 	players = GetPlayers();
 	for(i = 0; i < players.size; i++)
 	{
-		players[i] setClientUIVisibilityFlag( "hud_visible", 1 );
-		players[i] setClientUIVisibilityFlag( "weapon_hud_visible", 1 );
-		
-		if( !IS_TRUE( players[i].seen_promo_anim ) && SessionModeIsOnlineGame() )
+		if( IsDefined( level.customHudReveal ) )
 		{
-			players[i] LUINotifyEvent( &"play_promo_anim", 0 );
-			players[i].seen_promo_anim = true;
+			players[i] thread [[level.customHudReveal]]();
+		}
+		else
+		{
+			players[i] ShowHudAndPlayPromo();
 		}
 		
 		if(!IS_TRUE(level.host_ended_game))
@@ -490,12 +511,16 @@ function fade_out_intro_screen_zm( hold_black_time, fade_out_time, destroyed_aft
 			if (isdefined(level.player_movement_suppressed))
 			{
 				players[i] FreezeControls(level.player_movement_suppressed);
+				/# println(" Unfreeze controls 4"); #/
+				
 			}
 			else
 			{
 				if(!IS_TRUE(players[i].hostMigrationControlsFrozen))
 				{
 					players[i] FreezeControls(false);
+					
+					/# println(" Unfreeze controls 5"); #/
 				}
 			}
 		}
@@ -504,6 +529,18 @@ function fade_out_intro_screen_zm( hold_black_time, fade_out_time, destroyed_aft
 	
 	level flag::set("initial_blackscreen_passed");
 	level clientfield::set("gameplay_started", 1);
+}
+
+function ShowHudAndPlayPromo()
+{
+	self setClientUIVisibilityFlag( "hud_visible", 1 );
+	self setClientUIVisibilityFlag( "weapon_hud_visible", 1 );
+	
+	if( !IS_TRUE( self.seen_promo_anim ) && SessionModeIsOnlineGame() )
+	{
+		self LUINotifyEvent( &"play_promo_anim", 0 );
+		self.seen_promo_anim = true;
+	}
 }
 
 function onAllPlayersReady()
@@ -516,6 +553,7 @@ function onAllPlayersReady()
 		wait(0.1);
 	}
 	
+	/#	println( "ZM >> player_count_expected=" + GetNumExpectedPlayers());		#/
 	player_count_actual = 0;
 	while( (GetNumConnectedPlayers() < GetNumExpectedPlayers()) || (player_count_actual != GetNumExpectedPlayers()) )
 	{
@@ -530,6 +568,7 @@ function onAllPlayersReady()
 			} 
 		}
 	
+		/#	println( "ZM >> Num Connected =" + GetNumConnectedPlayers() + " Expected : " + GetNumExpectedPlayers());	#/
 		wait( 0.1 );	
 	}
 
@@ -538,6 +577,10 @@ function onAllPlayersReady()
 	level flag::set( "all_players_connected" );
 	SetDvar( "all_players_are_connected", "1" );
 
+	/#	println( "ZM >> We have all players - START ZOMBIE LOGIC" );	#/
+
+
+	
 	//Check to see if we should spawn some bots to help
 	if ( (1 == GetNumConnectedPlayers()) && (GetDvarInt( "scr_zm_enable_bots" )==1) )
 	{
@@ -567,6 +610,11 @@ function onAllPlayersReady()
 			WAIT_SERVER_FRAME;
 		}
 
+		if ( isdefined(level.added_initial_streamer_blackscreen) )
+		{
+			wait(level.added_initial_streamer_blackscreen); 
+		}
+		
 		//level flag::set( "start_zombie_round_logic" );
 		thread start_zombie_logic_in_x_sec( 3.0 );
 	}
@@ -579,10 +627,7 @@ function onAllPlayersReady()
 
 	// Reset the start time
 	level.n_gameplay_start_time = GetTime();
-	foreach( player in level.players )
-	{
-		player LUINotifyEvent( &"game_timer_reset", 0 );
-	}
+	clientfield::set( "game_start_time", level.n_gameplay_start_time );
 }
 
 function initialBlack()
@@ -625,11 +670,31 @@ function getAllOtherPlayers()
 	return aliveplayers;
 }
 
+function updatePlayerNum( player )
+{
+	if(!Isdefined(player.playernum))
+	{
+		if(player.team == "allies")
+		{
+			player.playernum = zm_utility::get_game_var("_team1_num");
+			zm_utility::set_game_var("_team1_num", player.playernum + 1);
+		}	
+		else
+		{
+			player.playernum = zm_utility::get_game_var("_team2_num");
+			zm_utility::set_game_var("_team2_num", player.playernum + 1);
+		}	
+	}	
+}
+
 function getFreeSpawnpoint(spawnpoints, player)
 {
 	// There are no valid spawnpoints in the map
 	if(!isdefined(spawnpoints))
 	{
+/#
+		iprintlnbold( "ZM >> No free spawn points in map" );
+#/
 		return undefined;
 	}
 
@@ -709,19 +774,7 @@ function getFreeSpawnpoint(spawnpoints, player)
 		}	
 	}	
 
-	if(!Isdefined(player.playernum))
-	{
-		if(player.team == "allies")
-		{
-			player.playernum = zm_utility::get_game_var("_team1_num");
-			zm_utility::set_game_var("_team1_num", player.playernum + 1);
-		}	
-		else
-		{
-			player.playernum = zm_utility::get_game_var("_team2_num");
-			zm_utility::set_game_var("_team2_num", player.playernum + 1);
-		}	
-	}	
+	updatePlayerNum( player );
 
 	for( j = 0; j < spawnpoints.size; j++ )
 	{
@@ -797,6 +850,8 @@ function add_bots()
 	for( i = 0; i < players.size; i++ )
 	{
 		players[i] FreezeControls( false );
+		/# println(" Unfreeze controls 6"); #/
+		
 	}
 
 	level.numberBotsAdded = 1;
@@ -813,6 +868,7 @@ function zbot_spawn()
 	bot = AddTestClient();	
 	if ( !IsDefined( bot ) )
 	{
+	/#	println( "Could not add test client" );	#/
 		return;
 	}
 			
@@ -831,6 +887,15 @@ function post_all_players_connected()
 	level thread end_game();
 	
 	level flag::wait_till( "start_zombie_round_logic" );
+	
+	zm_utility::increment_zm_dash_counter( "start_per_game", 1 );
+	zm_utility::increment_zm_dash_counter( "start_per_player", level.players.size );	
+	zm_utility::upload_zm_dash_counters();
+	
+	level.dash_counter_start_player_count = level.players.size;
+/#
+	println( "sessions: mapname=", level.script, " gametype zom isserver 1 player_count=", GetPlayers().size );
+#/
 	// Start the Zombie MODE!
 	level thread round_end_monitor();
 	
@@ -846,6 +911,43 @@ function post_all_players_connected()
 
 	DisableGrenadeSuicide();
 	level.startInvulnerableTime = GetDvarInt( "player_deathInvulnerableTime" );
+}
+
+function start_zm_dash_counter_watchers()
+{	
+	level thread first_consumables_used_watcher();
+	level thread players_reached_rounds_counter_watcher();
+}
+
+function first_consumables_used_watcher()
+{
+	level flag::init( "first_consumables_used" );
+	
+	level flag::wait_till( "first_consumables_used" );
+	
+	zm_utility::increment_zm_dash_counter( "first_consumables_used", 1 );
+	zm_utility::upload_zm_dash_counters();
+}
+
+function players_reached_rounds_counter_watcher()
+{
+	while( true )
+	{
+		level waittill( "start_of_round" );
+		
+		if( !IsDefined( level.dash_counter_round_reached_5 ) && level.round_number >= 5 )
+		{
+			level.dash_counter_round_reached_5 = true;
+			zm_utility::increment_zm_dash_counter( "reached_5", 1 );
+		}
+		
+		if( !IsDefined( level.dash_counter_round_reached_10 ) && level.round_number >= 10 )
+		{
+			level.dash_counter_round_reached_10 = true;
+			zm_utility::increment_zm_dash_counter( "reached_10", 1 );
+			return;
+		}
+	}
 }
 
 function init_custom_ai_type()
@@ -916,9 +1018,9 @@ function player_track_ammo_count()
 		{
 			if ( ammoOutCount < 1 )
 			{
-				WAIT_SERVER_FRAME;
+				wait ( .5 );
 				
-				if( !self zm_equipment::has_player_equipment ( weapon ) )
+				if( (self getcurrentweapon() ) !== weapon ) //This prevents "ammo out" vo from playing in the case that we swap a weapon from the box.
 				{
 					continue;
 				}
@@ -1022,6 +1124,7 @@ function init_sounds()
 	zm_utility::add_sound( "bar_rebuild_slam", "zmb_bar_repair" );
 	zm_utility::add_sound( "zmb_rock_fix", "zmb_break_rock_barrier_fix" );
 	zm_utility::add_sound( "zmb_vent_fix", "evt_vent_slat_repair" );
+	zm_utility::add_sound ("zmb_barrier_debris_move", "zmb_barrier_debris_move");
 
 	// Doors
 	zm_utility::add_sound( "door_slide_open", "zmb_door_slide_open" );
@@ -1048,6 +1151,7 @@ function init_levelvars()
 	level.is_zombie_level				= true; 
 	level.default_laststandpistol 		= GetWeapon( "pistol_standard" );
 	level.default_solo_laststandpistol	= GetWeapon( "pistol_standard_upgraded" );
+	level.super_ee_weapon				= GetWeapon( "pistol_burst" );
 	level.laststandpistol				= level.default_laststandpistol;		// so we dont get the uber colt when we're knocked out
 	level.start_weapon					= level.default_laststandpistol;
 	level.first_round					= true;	
@@ -1080,6 +1184,10 @@ function init_levelvars()
 	level.zm_variant_type_max[ "sprint" ][ "up" ]	= 8;
 	level.zm_variant_type_max[ "super_sprint" ][ "down" ] = 1;
 	level.zm_variant_type_max[ "super_sprint" ][ "up" ]	= 1;
+	level.zm_variant_type_max[ "burned" ][ "down" ] = 1;
+	level.zm_variant_type_max[ "burned" ][ "up" ] = 1;
+	level.zm_variant_type_max[ "jump_pad_super_sprint" ][ "down" ] = 1;
+	level.zm_variant_type_max[ "jump_pad_super_sprint" ][ "up" ] = 1;
 
 	level.current_zombie_array = [];
 	level.current_zombie_count = 0;
@@ -1168,6 +1276,8 @@ function init_levelvars()
 
 	level.speed_change_max = 0;
 	level.speed_change_num = 0;
+
+	set_round_number( level.round_number );
 }
 
 function init_player_levelvars()
@@ -1212,6 +1322,11 @@ function init_dvars()
 	if ( GetDvarString("zombiemode_debug_zombie_count") == "" ) 
 	{
 		SetDvar("zombiemode_debug_zombie_count", "0");
+	}
+
+	if ( level.script != "zombie_cod5_prototype" )
+	{
+		SetDvar( "magic_chest_movable", "1" );
 	}
 
 	SetDvar( "revive_trigger_radius", "75" ); 
@@ -1305,12 +1420,14 @@ function Callback_PlayerDamage( eInflictor, eAttacker, iDamage, iDFlags, sMeansO
 		startedInLastStand = self laststand::player_is_in_laststand();
 	}
 	
+	/# println( "ZM Callback_PlayerDamage"+iDamage+"\n"); #/
 	if ( isdefined( eAttacker ) && isPlayer( eAttacker ) && (eAttacker.sessionteam == self.sessionteam) && !eAttacker HasPerk( "specialty_playeriszombie" ) && !IS_TRUE( self.is_zombie ) )
 	{
 		self process_friendly_fire_callbacks( eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, weapon, vPoint, vDir, sHitLoc, psOffsetTime, boneIndex );
 		if ( self != eAttacker )
 		{
 			//one player shouldn't damage another player, grenades, airstrikes called in by another player
+		/#	println("Exiting - players can't hurt each other.");	#/
 			
 			
 			return;
@@ -1323,12 +1440,19 @@ function Callback_PlayerDamage( eInflictor, eAttacker, iDamage, iDFlags, sMeansO
 				&& sMeansOfDeath != "MOD_BURNED"
 				&& sMeansOfDeath != "MOD_SUICIDE" )
 		{
+		/#	println("Exiting - damage type verbotten.");	#/
 			//player should be able to damage they're selves with grenades and stuff
 			//otherwise don't damage the player, so like airstrikes  won't kill the player
 			return;
 		}
 	}
 	
+	// Notify the player of a zombie swipe if the persistent Insta Kill upgrade is active
+	if( IS_TRUE(level.pers_upgrade_insta_kill) )
+	{
+		self zm_pers_upgrades_functions::pers_insta_kill_melee_swipe( sMeansOfDeath, eAttacker );
+	}
+
 	if( IsDefined( self.overridePlayerDamage ) )
 	{
 		iDamage = self [[self.overridePlayerDamage]]( eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, weapon, vPoint, vDir, sHitLoc, psOffsetTime );
@@ -1377,6 +1501,8 @@ function Callback_PlayerDamage( eInflictor, eAttacker, iDamage, iDFlags, sMeansO
 		}
 	}
 	
+/#	println("CB PD");	#/
+
 	// players can only hurt themselves, zombie players can hurt any other player and be hurt by human players
 /*	if ( isdefined( eAttacker ) && isPlayer( eAttacker ) && !eAttacker HasPerk( "specialty_playeriszombie" ) && !IS_TRUE( self.is_zombie ) )
 	{
@@ -1418,12 +1544,24 @@ function Callback_PlayerDamage( eInflictor, eAttacker, iDamage, iDFlags, sMeansO
 		sHitLoc = "torso_upper";
 	}
 
+/#	PrintLn("Finishplayerdamage wrapper.");		#/
 	wasDowned = 0;
 	if ( isPlayer(self))
 	{
 		wasDowned = !startedInLastStand && self laststand::player_is_in_laststand();
 	}
 
+	/#
+		if(IsDefined(eAttacker))
+		{
+			Record3DText( "D:" + iDamage + " H: " + self.health + " A: " + eAttacker GetEntityNumber(), self.origin, RED, "Script", self );
+		}
+		else
+		{
+			Record3DText( "D:" + iDamage + " H: " + self.health + " A: undefined", self.origin, RED, "Script", self );
+		}
+	#/
+	
 	self finishPlayerDamageWrapper( eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, weapon, vPoint, vDir, sHitLoc, vDamageOrigin, psOffsetTime, boneIndex, vSurfaceNormal );
 }
 
@@ -1526,6 +1664,7 @@ function init_client_field_callback_funcs()
 	clientfield::register("world", "round_complete_num", VERSION_SHIP, 8, "int");
 	clientfield::register("world", "game_end_time", VERSION_SHIP, 20, "int");
 	clientfield::register("world", "quest_complete_time", VERSION_SHIP, 20, "int");
+	clientfield::register("world", "game_start_time", VERSION_TU15_FFOTD_090816_0, 20, "int" );
 }
 
 function init_fx()
@@ -1671,6 +1810,8 @@ function onPlayerSpawned()
 		if(!IS_TRUE(level.host_ended_game))
 		{
 			self freezecontrols( false );
+			/# println(" Unfreeze controls 7"); #/
+
 		}
 		self.hits = 0;
 
@@ -1685,6 +1826,13 @@ function onPlayerSpawned()
 		
 		self RecordPlayerReviveZombies( self );
 		
+/#
+		if ( GetDvarInt( "zombie_cheat" ) >= 1 && GetDvarInt( "zombie_cheat" ) <= 3 ) 
+		{
+			self EnableInvulnerability();
+		}
+#/
+
 		self SetActionSlot( 3, "altMode" );
 		self PlayerKnockback( false );
 
@@ -1873,6 +2021,13 @@ function in_enabled_playable_area()
 
 function get_player_out_of_playable_area_monitor_wait_time()
 {
+/#
+	if ( IS_TRUE( level.check_kill_thread_every_frame ) )
+	{
+		return 0.05;
+	}
+#/
+
 	return 3;
 }
 
@@ -1910,6 +2065,21 @@ function player_out_of_playable_area_monitor()
 		{
 			if ( !isdefined( level.player_out_of_playable_area_monitor_callback ) || self [[level.player_out_of_playable_area_monitor_callback]]() )
 			{
+/#
+				if ( IS_TRUE( level.kill_thread_test_mode ) )
+				{
+					PrintTopRightln( "out of playable area: " + self.origin );
+					wait( get_player_out_of_playable_area_monitor_wait_time() );
+					continue;
+				}
+
+				if ( self isinmovemode( "ufo", "noclip" ) || IS_TRUE( level.disable_kill_thread ) || GetDvarInt( "zombie_cheat" ) > 0 )
+				{
+					wait( get_player_out_of_playable_area_monitor_wait_time() );
+					continue;
+				}
+#/
+
 				//track the cheaters
 				self zm_stats::increment_map_cheat_stat( "cheat_out_of_playable" );
 				self zm_stats::increment_client_stat( "cheat_out_of_playable",false );
@@ -2018,11 +2188,19 @@ function player_too_many_weapons_monitor()
 
 	while ( true )
 	{
-		if ( self zm_utility::has_powerup_weapon() || self laststand::player_is_in_laststand() || self.sessionstate == "spectator" )
+		if ( self zm_utility::has_powerup_weapon() || self laststand::player_is_in_laststand() || self.sessionstate == "spectator" || isdefined( self.laststandpistol ) )
 		{
 			wait( get_player_too_many_weapons_monitor_wait_time() );
 			continue;
 		}
+
+/#
+		if ( GetDvarInt( "zombie_cheat" ) > 0 )
+		{
+			wait( get_player_too_many_weapons_monitor_wait_time() );
+			continue;
+		}
+#/
 
 		weapon_limit = zm_utility::get_player_weapon_limit( self );
 
@@ -2111,7 +2289,7 @@ function player_grenade_multiattack_bookmark_watcher( grenade )
 	if ( isDefined( grenade.birthTime ) )
 		inflictorBirthTime = grenade.birthTime;
 
-	ret_val = grenade util::waittill_any_timeout( 15, "explode" );
+	ret_val = grenade util::waittill_any_ex( 15, "explode", "death", self, "disconnect" );
 
 	if ( !IsDefined( self ) || (IsDefined( ret_val ) && "timeout" == ret_val) )
 	{
@@ -2253,6 +2431,13 @@ function player_revive_monitor()
 			// Check to see how much money you lost from being down.
 			points = self.score_lost_when_downed;
 			
+			if ( !isdefined( points ) )
+			{
+				points = 0;
+			}
+			
+		/#	println( "ZM >> LAST STAND - points = " + points);	#/
+			
 			reviver zm_score::player_add_points( "reviver", points );
 			self.score_lost_when_downed = 0;
 
@@ -2316,6 +2501,8 @@ function remote_revive_watch()
 
 function player_laststand( eInflictor, attacker, iDamage, sMeansOfDeath, weapon, vDir, sHitLoc, psOffsetTime, deathAnimDuration )
 {
+/#	println( "ZM >> LAST STAND - player_laststand called" );	#/
+	
 	b_alt_visionset = false;
 		
 	self AllowJump(false);
@@ -2323,6 +2510,12 @@ function player_laststand( eInflictor, attacker, iDamage, sMeansOfDeath, weapon,
 	currWeapon = self GetCurrentWeapon();
 	
 	self AddWeaponStat( currWeapon, "deathsDuringUse", 1 );
+
+	// Grab the perks if we have the player persistent ability "perk lose"
+	if( IS_TRUE(self.pers_upgrades_awarded["perk_lose"]) )
+	{
+		self zm_pers_upgrades_functions::pers_upgrade_perk_lose_save();
+	}
 
 	players = GetPlayers();
 	if ( players.size == 1 && level flag::get( "solo_game" ) )
@@ -2409,6 +2602,9 @@ function failsafe_revive_give_back_weapons(excluded_player)
 			}
 	
 			// he's not reviving anyone but he still has revive stuff up, clean it all up
+		/#
+		iprintlnbold( "FAILSAFE CLEANING UP REVIVE HUD AND GUN" );
+		#/
 			// pass in "none" since we have no idea what the weapon they should be showing is
 			player zm_laststand::revive_give_back_weapons( level.weaponNone );
 		
@@ -2493,6 +2689,7 @@ function spawnSpectator()
 	self.spawnTime = GetTime(); 
 	self.afk = false; 
 
+/#	println( "*************************Zombie Spectator***" );	#/
 	self detachAll();
 
 	if( isdefined( level.custom_spectate_permissions ) )
@@ -2660,7 +2857,7 @@ function last_stand_pistol_swap()
 	{
 		self SetWeaponAmmoStock( self.laststandpistol, doubleclip );
 	}
-	else if ( !isdefined( self.stored_weapon_info[ self.laststandpistol ] ) )
+	else if ( !isdefined( self.stored_weapon_info ) || !isdefined( self.stored_weapon_info[ self.laststandpistol ] ) )
 	{
 		self SetWeaponAmmoStock( self.laststandpistol, doubleclip ); // PORTIZ: in the case that we awarded a temporary last stand weapon, just set the stock and skip the ammo tracking
 	}
@@ -3079,6 +3276,7 @@ function spectator_respawn_player()
 
 function spectator_respawn()
 {
+/#	println( "*************************Respawn Spectator***" );	#/
 	assert( IsDefined( self.spectator_respawn ) );
 
 	origin = self.spectator_respawn.origin;
@@ -3482,6 +3680,9 @@ function round_spawning()
 	level endon( "intermission" );
 	level endon( "end_of_round" );
 	level endon( "restart_round" );
+/#
+	level endon( "kill_round" );
+#/
 
 	if( level.intermission )
 	{
@@ -3871,9 +4072,11 @@ function round_start()
 {
 	if ( !isdefined( level.zombie_spawners) || level.zombie_spawners.size == 0 )
 	{
+		/#PrintLn("***Warning: No spawners found for this level.***");#/
 			level flag::set( "begin_spawning" );
 			return;
 	}
+/#	PrintLn( "ZM >> round_start start" );	#/
 
 	if ( IsDefined(level.round_prestart_func) )
 	{
@@ -3917,6 +4120,13 @@ function round_start()
 		level.move_spawn_func	= &zm_utility::move_zombie_spawn_location;
 	}	
 	
+/#
+	if (GetDvarInt( "zombie_rise_test") )
+	{
+		level.round_spawn_func = &round_spawning_test;		// FOR TESTING, one zombie at a time, no round advancement
+	}
+#/
+
 	if ( !isDefined(level.round_wait_func) )
 	{
 		level.round_wait_func = &round_wait;
@@ -4124,6 +4334,8 @@ function recordRoundEndStats() //self == player
 
 function round_think( restart = false )
 {
+/#	PrintLn( "ZM >> round_think start" );	#/
+	
 	level endon("end_round_think");
 	
 	if(!IS_TRUE(restart))
@@ -4141,6 +4353,7 @@ function round_think( restart = false )
 				if(!IS_TRUE(player.hostMigrationControlsFrozen))
 				{
 					player FreezeControls(false);
+					/# println(" Unfreeze controls 8"); #/
 				}
 
 				// set the initial round_number
@@ -4195,6 +4408,8 @@ function round_think( restart = false )
 			level thread award_grenades_for_survivors();
 		}
 		
+	/#	PrintLn( "ZM >> round_think, round="+level.round_number+", player_count=" + players.size );		#/
+
 		level.round_start_time = GetTime();
 	
 		//Not great fix for this being zero - which it should NEVER be! (post ship - PETER)
@@ -4203,10 +4418,21 @@ function round_think( restart = false )
 			wait( 0.1 );
 		}
 
+	/#
+		//Reset spawn counter for zones
+		zkeys = GetArrayKeys( level.zones );
+		for ( i = 0; i < zkeys.size; i++ )
+		{
+			zoneName = zkeys[i];
+			level.zones[zoneName].round_spawn_count = 0;
+		}
+	#/
+
 		level thread [[level.round_spawn_func]]();
 
 		level notify( "start_of_round" );
 		RecordZombieRoundStart();
+
 		players = GetPlayers();
 		for ( index = 0; index < players.size; index++ )
 		{
@@ -4221,6 +4447,7 @@ function round_think( restart = false )
 
 		level.first_round = false;
 		level notify( "end_of_round" );
+
 		UploadStats();
 		
 		if(isDefined(level.round_end_custom_logic))
@@ -4267,17 +4494,12 @@ function round_think( restart = false )
 			level.zombie_move_speed			= level.round_number * level.zombie_vars["zombie_move_speed_multiplier"]; 
 		}
 
-
-		level.round_number++;
-		if ( 255 < level.round_number )
-		{
-			level.round_number = 255;
-		}
-		SetRoundsPlayed( level.round_number );
+		set_round_number( 1 + get_round_number() );
+		SetRoundsPlayed( get_round_number() );
 
 		// Here's the difficulty increase over time area
 		//level.zombie_vars["zombie_spawn_delay"] = get_zombie_spawn_delay( level.round_number );
-		level.zombie_vars["zombie_spawn_delay"] = [[level.func_get_zombie_spawn_delay]]( level.round_number );
+		level.zombie_vars["zombie_spawn_delay"] = [[level.func_get_zombie_spawn_delay]]( get_round_number() );
 
 		//	round_text( &"ZOMBIE_ROUND_END" );
 		
@@ -4286,8 +4508,15 @@ function round_think( restart = false )
 		players = GetPlayers(); // delay in round_over allows a player that leaves during that time to remain in the players array - leading to round based SRES.  Bad.
 		foreach(player in players)
 		{
-			player zm_stats::set_global_stat( "rounds", level.round_number );
+			if ( level.curr_gametype_affects_rank && get_round_number() > (3 + level.start_round) )
+			{
+				player zm_stats::add_client_stat( "weighted_rounds_played",get_round_number() );
+			}
+			player zm_stats::set_global_stat( "rounds", get_round_number() );
 
+			// update the game played time
+			player zm_stats::update_playing_utc_time( matchUTCTime );
+			
 			// Reset the health if necessary
 			player zm_perks::perk_set_max_health_if_jugg( "health_reboot", true, true );
 
@@ -4301,7 +4530,7 @@ function round_think( restart = false )
 			{
 				player zm_stats::increment_challenge_stat( "SURVIVALIST_SURVIVE_ROUNDS" );
 
-				score_number = level.round_number - 1;
+				score_number = get_round_number() - 1;
 				if ( score_number < 1 )
 				{
 					score_number = 1;
@@ -4319,6 +4548,8 @@ function round_think( restart = false )
 			[[ level.check_quickrevive_hotjoin ]]();
 		}
 		
+		level.round_number = get_round_number();  
+
 		level round_over();
 
 		level notify( "between_round_over" );
@@ -4405,18 +4636,97 @@ function get_zombie_spawn_delay( n_round )
 }
 
 
+/#
+function round_spawn_failsafe_debug()
+{
+	level notify( "failsafe_debug_stop" );
+	level endon( "failsafe_debug_stop" );
+
+	start = GetTime();
+	level.chunk_time = 0;
+
+	while ( 1 )
+	{
+		level.failsafe_time = GetTime() - start;
+
+		if ( isdefined( self.lastchunk_destroy_time ) )
+		{
+			level.chunk_time = GetTime() - self.lastchunk_destroy_time;
+		}
+		util::wait_network_frame();
+	}
+}
+#/
+
+/#
+function print_zombie_counts()
+{
+	while ( true )
+	{
+		if( GetDvarInt("zombiemode_debug_zombie_count") )
+		{	
+			if( !isdefined( level.debug_zombie_count_hud ) )
+			{
+				level.debug_zombie_count_hud= NewDebugHudElem();
+				level.debug_zombie_count_hud.alignX = "right";
+				level.debug_zombie_count_hud.x = 100;
+				level.debug_zombie_count_hud.y = 10;
+				level.debug_zombie_count_hud SetText( "COUNTS" );
+			}
+
+			currentCount = zombie_utility::get_current_zombie_count();
+			number_to_kill = level.zombie_total;
+			level.debug_zombie_count_hud SetText( "ALIVE=" + currentCount + " / TOGO=" + number_to_kill );
+			//println( "ALIVE=" + currentCount + " / TOGO=" + number_to_kill );
+		}
+		else
+		{
+			if( isdefined( level.debug_zombie_count_hud ) )
+			{
+				level.debug_zombie_count_hud Destroy();
+				level.debug_zombie_count_hud = undefined;
+			}
+		}	
+
+		wait( 0.1 );
+	}
+}
+#/
+
+
 // Waits for the time and the ai to die
 function round_wait()
 {
 	level endon("restart_round");
+/#
 	level endon( "kill_round" );
+#/
+
+/#
+    if (GetDvarInt( "zombie_rise_test") )
+	{
+		level waittill("forever"); // TESTING: don't advance rounds
+	}
+#/
 
 	if ( cheat_enabled( 2 ) )
 	{
 		level waittill("forever");
 	}
 
+/#
+	if ( GetDvarInt( "zombie_default_max" ) == 0 )
+	{
+		level waittill( "forever" );
+	}
+#/
+
 	wait( 1 );
+
+/#
+	level thread print_zombie_counts();
+	level thread sndMusicOnKillRound();
+#/
 
 	while( 1 )
 	{
@@ -4803,6 +5113,11 @@ function player_damage_override( eInflictor, eAttacker, iDamage, iDFlags, sMeans
 	{
 		return 0;
 	}
+
+	if ( IsDefined( eAttacker ) && IS_TRUE( eAttacker.b_aat_fire_works_weapon ) )
+	{
+		return 0;
+	}
 	
 	if ( IS_TRUE( self.use_adjusted_grenade_damage ) )
     {
@@ -4936,7 +5251,19 @@ function player_damage_override( eInflictor, eAttacker, iDamage, iDFlags, sMeans
 	if ( isDefined( self.player_damage_override ) )
 	{
 		self thread [[ self.player_damage_override ]]( eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, weapon, vPoint, vDir, sHitLoc, psOffsetTime );
-	}	
+	}
+
+	// exploding quads should not kill player
+	if ( IsDefined( eInflictor ) && IsDefined( eInflictor.archetype ) && eInflictor.archetype == ARCHETYPE_ZOMBIE_QUAD )
+	{
+		if ( sMeansOfDeath == "MOD_EXPLOSIVE" )
+		{
+			if ( self.health > 75 )
+			{
+				return 75;
+			}
+		}
+	}
 	
 	// Players can't die from cooked grenade if trhey have the bgb Danger Closet
 	if ( sMeansOfDeath == "MOD_SUICIDE" && self bgb::is_enabled( "zm_bgb_danger_closest" ) )
@@ -5215,6 +5542,12 @@ function wait_and_revive()
 		return;
 	}
 
+	// Grab the perks if we have the player persistent ability "perk lose"
+	if( IS_TRUE(self.pers_upgrades_awarded["perk_lose"]) )
+	{
+		self zm_pers_upgrades_functions::pers_upgrade_perk_lose_save();
+	}
+
 	self.waiting_to_revive = true;
 	self.lives--;
 
@@ -5226,7 +5559,12 @@ function wait_and_revive()
 	{
 		if ( GetPlayers().size == 1 )
 		{
-			level.move_away_points =  PositionQuery_Source_Navigation( GetPlayers()[0].origin, ZM_POSITION_QUERY_LAST_STAND_MOVE_DIST_MIN, ZM_POSITION_QUERY_LAST_STAND_MOVE_DIST_MAX, ZM_POSITION_QUERY_MOVE_DIST_MAX, ZM_POSITION_QUERY_RADIUS );
+			player = GetPlayers()[0];
+			level.move_away_points =  PositionQuery_Source_Navigation( player.origin, ZM_POSITION_QUERY_LAST_STAND_MOVE_DIST_MIN, ZM_POSITION_QUERY_LAST_STAND_MOVE_DIST_MAX, ZM_POSITION_QUERY_MOVE_DIST_MAX, ZM_POSITION_QUERY_RADIUS );
+			if ( !isdefined( level.move_away_points ) )
+			{
+				level.move_away_points =  PositionQuery_Source_Navigation( player.last_valid_position, ZM_POSITION_QUERY_LAST_STAND_MOVE_DIST_MIN, ZM_POSITION_QUERY_LAST_STAND_MOVE_DIST_MAX, ZM_POSITION_QUERY_MOVE_DIST_MAX, ZM_POSITION_QUERY_RADIUS );
+			}
 		}
 	}
 
@@ -5248,6 +5586,12 @@ function wait_and_revive()
 
 	self zm_laststand::auto_revive( self );
 	self.waiting_to_revive = false;
+
+	// Give player his perks back if he has the "perk_lose" persistent ability
+	if( IS_TRUE(self.pers_upgrades_awarded["perk_lose"]) )
+	{
+		self thread zm_pers_upgrades_functions::pers_upgrade_perk_lose_restore();
+	}
 }
 
 function register_vehicle_damage_callback( func )
@@ -5307,8 +5651,8 @@ function actor_damage_override( inflictor, attacker, damage, flags, meansofdeath
 		if ( isdefined( self.idgun_damage_cb ) )
 		{
 			self [[ self.idgun_damage_cb ]]( inflictor, attacker );
+			return 0;
 		}
-		return 0;
 	}
 	
 	
@@ -5343,6 +5687,8 @@ function actor_damage_override( inflictor, attacker, damage, flags, meansofdeath
 			return 0;
 		}
 	}
+	
+	attacker thread zm_audio::sndPlayerHitAlert( self, meansofdeath, inflictor, weapon );
 	
 	if ( !isplayer( attacker ) && isdefined( self.non_attacker_func ) )
 	{
@@ -5403,6 +5749,11 @@ function actor_damage_override( inflictor, attacker, damage, flags, meansofdeath
 	}
 
 	// debug
+/#
+		if ( GetDvarInt( "scr_perkdebug") )
+			println( "Perk/> Damage Factor: " + final_damage/old_damage + " - Pre Damage: " + old_damage + " - Post Damage: " + final_damage );
+#/
+
 	if ( IS_TRUE( self.in_water ) )
 	{
 		if ( int( final_damage ) >= self.health )
@@ -5504,6 +5855,7 @@ function actor_damage_override_wrapper( inflictor, attacker, damage, flags, mean
 			self thread [[ func_override ]]( willBeKilled, inflictor, attacker, damage, flags, meansofdeath, weapon, vpoint, vdir, sHitLoc, psOffsetTime, boneIndex, surfaceType );
 		}
 	}
+
 	if ( !willBeKilled || !IS_TRUE( self.dont_die_on_me ) )
 	{
 		self finishActorDamage( inflictor, attacker, damage_override, flags, meansofdeath, weapon, vpoint, vdir, sHitLoc, vDamageOrigin, psOffsetTime, boneIndex, surfaceType, vSurfaceNormal );
@@ -5593,6 +5945,7 @@ function round_end_monitor()
 
 		demo::bookmark( "zm_round_end", gettime(), undefined, undefined, 1 );
 		BBPostDemoStreamStatsForRound( level.round_number );
+		zm_utility::upload_zm_dash_counters();
 
 		WAIT_SERVER_FRAME;
 	}
@@ -5602,11 +5955,43 @@ function round_end_monitor()
 //*****************************************************************************
 //*****************************************************************************
 
+function updateEndOfMatchCounters()
+{
+	zm_utility::increment_zm_dash_counter( "end_per_game", 1 );
+	zm_utility::increment_zm_dash_counter( "end_per_player", level.players.size );
+	
+	if( !IS_TRUE( level.dash_counter_round_reached_5 ) )
+	{
+		zm_utility::increment_zm_dash_counter( "end_less_5", 1 );
+	}
+	else
+	{
+		if( !IS_TRUE( level.dash_counter_round_reached_10 ) )
+		{
+			zm_utility::increment_zm_dash_counter( "end_reached_5_less_10", 1 );
+		}
+		else
+		{
+			zm_utility::increment_zm_dash_counter( "end_reached_10", 1 );
+		}
+	}
+	
+	if( !zm_utility::is_solo_ranked_game() )
+	{
+		if( level.dash_counter_start_player_count != level.players.size )
+		{
+			zm_utility::increment_zm_dash_counter( "end_player_count_diff", 1 );
+		}
+	}
+}
+
 function end_game()
 {
 	level waittill ( "end_game" );
 	
 	check_end_game_intermission_delay();
+
+/#	println( "end_game TRIGGERED " );	#/
 
 	setmatchflag( "game_ended", 1 );
 
@@ -5631,6 +6016,7 @@ function end_game()
 			players[i] RecordPlayerDeathZombies();
 			players[i] zm_stats::increment_player_stat( "deaths" );
 			players[i] zm_stats::increment_client_stat( "deaths" );
+			players[i] zm_pers_upgrades_functions::pers_upgrade_jugg_player_death_stat();
 		}
 		
 		//clean up the revive text hud if it's active
@@ -5722,6 +6108,21 @@ function end_game()
 			//OLD COUNT METHOD
 			if( level.round_number < 2 )
 			{
+				if( level.script == "zm_moon" )
+				{
+					if( !isdefined(level.left_nomans_land) )
+					{
+						nomanslandtime = level.nml_best_time;
+						player_survival_time = int( nomanslandtime/1000 );
+						player_survival_time_in_mins = zm::to_mins( player_survival_time );
+						survived[i] SetText( &"ZOMBIE_SURVIVED_NOMANS", player_survival_time_in_mins );
+					}
+					else if( level.left_nomans_land == 2 )
+					{
+						survived[i] SetText( &"ZOMBIE_SURVIVED_ROUND" );
+					}
+				}
+				else
 				{
 					survived[i] SetText( &"ZOMBIE_SURVIVED_ROUND" );
 				}
@@ -5750,6 +6151,8 @@ function end_game()
 		//players[i] setDStat( "AfterActionReportStats", "lobbyPopup", "summary" );
 
 		players[i] notify( "report_bgb_consumption" );
+		
+		players[i] zm_utility::zm_dash_stats_game_end();
 	}
 
 	//LUINotifyEvent( &"force_scoreboard", 0 );
@@ -5757,11 +6160,19 @@ function end_game()
 	UploadStats();
 	zm_stats::update_players_stats_at_match_end( players );
 	zm_stats::update_global_counters_on_match_end();
+
 	upload_leaderboards();
 	
 	recordGameResult( "draw" );
 	globallogic::recordZMEndGameComScoreEvent( "draw" );
 	globallogic_player::recordActivePlayersEndGameMatchRecordStats();
+	updateEndOfMatchCounters();
+	
+	//update dash and promo counters
+	if( SessionModeIsOnlineGame() )
+	{
+	   	level thread zm_utility::upload_zm_dash_counters_end_game();
+	}
 	
 	// Finalize Match Record
 	finalizeMatchRecord();
@@ -5779,6 +6190,15 @@ function end_game()
 	}
 	WAIT_SERVER_FRAME;
 
+	/#	
+		if ( !IS_TRUE(level.host_ended_game) && GetDvarInt( "scr_restart_on_wipe" ) > 1 )
+		{
+			LUINotifyEvent( &"force_scoreboard", 0 );
+			map_restart( true );
+			wait( 666 );
+		}
+	#/	
+		
 	players = GetPlayers();
 
 	LUINotifyEvent( &"force_scoreboard", 1, 1 );
@@ -5818,6 +6238,15 @@ function end_game()
 		players[i] CameraActivate( false );
 	}
 	
+	/#	
+		if ( !IS_TRUE(level.host_ended_game) && GetDvarInt( "scr_restart_on_wipe" ) )
+		{
+			LUINotifyEvent( &"force_scoreboard", 1, 0 );
+			map_restart( true );
+			wait( 666 );
+		}
+	#/	
+		    
 	ExitLevel( false );
 
 	// Let's not exit the function
@@ -6210,6 +6639,7 @@ function player_intermission()
 		points = getentarray( "info_intermission", "classname" ); 
 		if( points.size < 1 )
 		{
+		/#	println( "NO info_intermission POINTS IN MAP" ); 	#/
 			return;
 		}	
 	}
@@ -6347,7 +6777,7 @@ function default_find_exit_point()
 	away = VectorNormalize( self.origin - player.origin );
 	endPos = self.origin + VectorScale( away, 600 );
 
-	if ( isdefined( level.zm_loc_types[ "wait_location" ] && level.zm_loc_types[ "wait_location" ].size > 0 ) )
+	if ( isdefined( level.zm_loc_types[ "wait_location" ] ) && level.zm_loc_types[ "wait_location" ].size > 0 )
     {
 		locs = array::randomize( level.zm_loc_types[ "wait_location" ] );
     }
@@ -6422,7 +6852,7 @@ function register_sidequest( id, sidequest_stat )
 	level.zombie_sidequest_previously_completed[id] = false;
 
 	// don't do stats stuff if it's not an online game
-	if ( level.systemLink || GetDvarInt( "splitscreen_playerCount" ) == GetPlayers().size )
+	if ( !level.onlineGame )
 	{
 		return;
 	}
@@ -6457,11 +6887,7 @@ function set_sidequest_completed(id)
 	level.zombie_sidequest_previously_completed[id] = true;
 
 	// don't do stats stuff if it's not an online game
-	if ( level.systemLink )
-	{
-		return; 
-	}
-	if ( GetDvarInt( "splitscreen_playerCount" ) == GetPlayers().size )
+	if ( !level.onlineGame )
 	{
 		return;
 	}
@@ -6535,7 +6961,15 @@ function zm_on_player_connect()
 	{
 		self setClientUIVisibilityFlag( "hud_visible", 1 );
 		self setClientUIVisibilityFlag( "weapon_hud_visible", 1 );
+		
+		zm_utility::increment_zm_dash_counter( "hotjoined", 1 );
+		zm_utility::upload_zm_dash_counters();
 	}
+	
+	self flag::init( "used_consumable" );
+	self thread zm_utility::zm_dash_stats_game_start();
+	self thread zm_utility::zm_dash_stats_wait_for_consumable_use();
+	
 	thread  refresh_player_navcard_hud();
 	self thread watchDisconnect();
 
@@ -6549,15 +6983,14 @@ function zm_on_player_connect()
 	self.hud_damagefeedback setShader( "damage_feedback", 24, 48 );
 	self.hitSoundTracker = true;
 	
-	if( IsDefined( level.n_gameplay_start_time ) ) //ensures that this is only called for players who are hotjoining
-	{
-		self LUINotifyEvent( &"game_timer_reset", 1, level.n_gameplay_start_time );
-	}
 }
 
 function zm_on_player_disconnect()
 {
 	thread refresh_player_navcard_hud();
+	
+	zm_utility::increment_zm_dash_counter( "left_midgame", 1 );
+	zm_utility::upload_zm_dash_counters();
 }
 
 function watchDisconnect()
@@ -6634,7 +7067,7 @@ function set_default_laststand_pistol(solo_mode)
 function player_too_many_players_check()
 {
 	max_players = 4;
-	if ( level.scr_zm_ui_gametype == "zgrief" )
+	if ( level.scr_zm_ui_gametype == "zgrief" || level.scr_zm_ui_gametype == "zmeat" )
 	{
 		max_players = 8;
 	}
@@ -6700,3 +7133,62 @@ function update_zone_name()
 	}
 }
 
+/#
+function printHashIDs()
+{
+	outputString = "\n------------------- BEGIN HASH ID DUMP -----------------------------\n";
+		
+	
+	//Print Craftables
+	outputString += "** CRAFTABLES **\n";
+	foreach( s_craftable in level.zombie_include_craftables )
+	{
+		outputString += "+" + s_craftable.name + "," + s_craftable.hash_id + "\n";
+		if (!isDefined(s_craftable.a_piecestubs))
+		{
+			continue;	
+		}
+		
+		foreach( s_piece in s_craftable.a_piecestubs )
+		{
+			outputString += s_piece.pieceName + "," + s_piece.hash_id + "\n";
+		}
+	}
+	
+	//Print Powerups
+	outputString += "** POWERUPS **\n";
+	foreach ( powerup in level.zombie_powerups)
+	{
+		outputString += powerup.powerup_name + "," + powerup.hash_id + "\n";
+	}
+	
+	//Print AATs
+	outputString += "** AAT **\n";
+	if( IS_TRUE( level.aat_in_use ) )
+	{
+		foreach (aat in level.aat)
+		{
+			if (!isDefined(aat) || !isDefined(aat.name) || aat.name == "none")
+			{
+				continue;	
+			}
+			outputString += aat.name + "," + aat.hash_id + "\n";
+		}
+	}
+	
+	//Print AATs
+	outputString += "** PERKS **\n";
+	foreach (perk in level._custom_perks)
+	{
+		if (!isDefined(perk) || !isDefined(perk.alias))
+		{
+			continue;	
+		}
+		outputString += perk.alias + "," + perk.hash_id + "\n";
+	}
+	
+	outputString += "------------------- END HASH ID DUMP -----------------------------\n";
+	PrintLn(outputString);
+}
+	
+#/

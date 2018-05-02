@@ -142,6 +142,91 @@ function streamer_wait( n_stream_request_id, n_wait_frames = 0, n_timeout = 0, b
 		while ( !( isdefined( n_stream_request_id ) ? self IsStreamerReady( n_stream_request_id ) : self IsStreamerReady() ) );
 	}
 }
+
+//-- Other / Unsorted --//
+/#
+function draw_debug_line(start, end, timer)
+{
+	for (i=0;i<timer*20;i++)
+	{
+		line (start, end, (1,1,0.5));
+		WAIT_SERVER_FRAME;
+	}
+}
+
+function debug_line( start, end, color, alpha, depthTest, duration )
+{
+	if ( !isdefined( color ) )
+	{
+		color = (1, 1, 1 );
+	}
+	
+	if ( !isdefined( alpha ) )
+	{
+		alpha = 1;
+	}
+	
+	if ( !isdefined( depthTest ) )
+	{
+		depthTest = 0;
+	}
+	
+	if ( !isdefined( duration ) )
+	{
+		duration = 100;
+	}
+	
+	line(start, end, color, alpha, depthTest, duration );	
+}
+
+
+function debug_spherical_cone( origin, domeApex, angle, slices, color, alpha, depthTest, duration )
+{
+	if ( !isdefined( slices ) )
+	{
+		slices = 10;
+	}
+
+	if ( !isdefined( color ) )
+	{
+		color = ( 1, 1, 1 );
+	}
+	
+	if ( !isdefined( alpha ) )
+	{
+		alpha = 1;
+	}
+	
+	if ( !isdefined( depthTest ) )
+	{
+		depthTest = 0;
+	}
+	
+	if ( !isdefined( duration ) )
+	{
+		duration = 100;
+	}
+	
+	sphericalcone( origin, domeApex, angle, slices, color, alpha, depthTest, duration );	
+}
+
+function debug_sphere( origin, radius, color, alpha, time )
+{
+
+	if ( !isdefined(time) )
+	{
+		time = 1000;
+	}
+	if ( !isdefined(color) )
+	{
+		color = (1,1,1);
+	}
+	
+	sides = Int(10 * ( 1 + Int(radius) % 100 ));
+	sphere( origin, radius, color, alpha, true, sides, time );
+
+}
+#/
 	
 function waittillend(msg)
 {
@@ -254,13 +339,13 @@ function break_glass( n_radius = 50 )
 "Name: waittill_multiple_ents( ... )"
 "Summary: Waits for all of the the specified notifies on their associated entities."
 "MandatoryArg:	List of ents and the notifies to wait on."
-"Example: waittill_multiple_ents( guy, "goal", guy, "pain", guy, "near_goal", player, "weapon_change" );"
+"Example: waittill_multiple_ents( guy, "goal", "pain", "near_goal", player, "weapon_change" );"
 @/
 function waittill_multiple_ents( ... )
 {
 	a_ents = [];
 	a_notifies = [];
-	
+
 	for ( i = 0; i < vararg.size; i++ )
 	{
 		if ( i % 2 )
@@ -359,6 +444,84 @@ function waittill_any_return( string1, string2, string3, string4, string5, strin
 	ent notify ("die");
 	return msg;
 }
+
+
+/@
+"Name: waittill_any_ex( <timeout>, <ent1>, <string1_1>, <string1_2>, <string1_3>... <ent2>, <string2_1>, <string2_2>... ... )"
+"Summary: Waits for any of the the specified notifies and returns which one it got.  NOTE: you can send any number of ents and arguments that you want.  The first <ent1> is optional.  In this case, self will be used as the first ent."
+"Module: Utility"
+"CallOn: Entity"
+"OptionalArg:	<timeout> timeout value (in seconds)"
+"OptionalArg:	<ent1> name of a notify to wait on"
+"OptionalArg:	<string1_1> name of a notify to wait on (ent1 or self)"
+"OptionalArg:	<string1_2> name of a notify to wait on (ent1 or self)"
+"OptionalArg:	<string1_3> name of a notify to wait on (ent1 or self)"
+"MandatoryArg:	<ent2> name of a notify to wait on"
+"OptionalArg:	<string2_1> name of a notify to wait on (ent2)"
+"OptionalArg:	<string2_2> name of a notify to wait on (ent2)"
+"OptionalArg:	<string2_3> name of a notify to wait on (ent2)"
+"Example: which_notify = self waittill_any( "stop_waiting", guy1, "goal", "pain", "near_goal", "bulletwhizby", guy2, "death" );"
+"SPMP: both"
+@/
+function waittill_any_ex( ... )
+{
+	s_common = SpawnStruct();
+
+	// You can run on an ent if you like instead of passing in an ent as the first argument.
+	e_current = self;
+
+	// if the first parameter is a number, it's a timeout value
+	n_arg_index = 0;
+	if ( StrIsNumber( vararg[ 0 ] ) )
+	{
+		n_timeout = vararg[ 0 ];
+		n_arg_index++;
+		
+		if ( n_timeout > 0 )
+		{
+			s_common thread _timeout( n_timeout );
+		}
+	}
+	
+	// If we have an array, use that as the argument list
+	if ( IsArray( vararg[ n_arg_index ] ) )
+	{
+		a_params = vararg[ n_arg_index ];
+		n_start_index = 0;
+	}
+	// Otherwise use the full parameter list.
+	else
+	{
+		a_params = vararg;
+		n_start_index = n_arg_index;
+	}
+
+	// Run through the parameter list.
+	//	If the parameter is a string, assume it's for the last specified ent
+	//  If the paramter is not a string, assume it's a new ent specification.
+	for( i=n_start_index; i<a_params.size; i++ )
+	{
+		if ( !IsString( a_params[i] ) )
+		{
+			// Non string parameter == ent specification.  All strings that follow are notifies to wait for on this ent.
+			e_current = a_params[i];
+	    }
+		else
+		{
+			// string parameter == notify to check for
+			if ( isdefined( e_current ) )
+			{
+				e_current thread waittill_string ( a_params[i], s_common );
+			}
+		}
+	}
+
+	s_common waittill ( "returned", str_notify );
+	s_common notify ( "die" );
+	
+	return str_notify;
+}
+
 
 /@
 "Name: waittill_any_array_return( <a_notifies> )"
@@ -1161,13 +1324,13 @@ function registerClientSys(sSysName)
 	
 	if(level._clientSys.size >= 32)	
 	{
-		AssertMsg("Max num client systems exceeded.");
+		/#AssertMsg("Max num client systems exceeded.");#/
 		return;
 	}
 	
 	if(isdefined(level._clientSys[sSysName]))
 	{
-		AssertMsg("Attempt to re-register client system : " + sSysName);
+		/#AssertMsg("Attempt to re-register client system : " + sSysName);#/
 		return;
 	}
 	else
@@ -1181,13 +1344,13 @@ function setClientSysState(sSysName, sSysState, player)
 {
 	if(!isdefined(level._clientSys))
 	{
-		AssertMsg("setClientSysState called before registration of any systems.");
+		/#AssertMsg("setClientSysState called before registration of any systems.");#/
 		return;
 	}
 	
 	if(!isdefined(level._clientSys[sSysName]))
 	{
-		AssertMsg("setClientSysState called on unregistered system " + sSysName);
+		/#AssertMsg("setClientSysState called on unregistered system " + sSysName);#/
 		return;
 	}
 	
@@ -1206,13 +1369,13 @@ function getClientSysState(sSysName)
 {
 	if(!isdefined(level._clientSys))
 	{
-		AssertMsg("Cannot getClientSysState before registering any client systems.");
+		/#AssertMsg("Cannot getClientSysState before registering any client systems.");#/
 		return "";
 	}
 	
 	if(!isdefined(level._clientSys[sSysName]))
 	{
-		AssertMsg("Client system " + sSysName + " cannot return state, as it is unregistered.");
+		/#AssertMsg("Client system " + sSysName + " cannot return state, as it is unregistered.");#/
 		return "";
 	}
 	
@@ -1798,6 +1961,11 @@ function magic_bullet_shield( ent )
 	ent.allowdeath = false;
 	ent.magic_bullet_shield = true;
 
+	/#
+	ent notify("_stop_magic_bullet_shield_debug");
+	level thread debug_magic_bullet_shield_death( ent );
+	#/
+
 	assert( IsAlive( ent ), "Tried to do magic_bullet_shield on a dead or undefined guy." );
 
 	if ( IsAI( ent ) )
@@ -1809,6 +1977,20 @@ function magic_bullet_shield( ent )
 
 		ent.attackerAccuracy = 0.1;
 	}
+}
+
+function debug_magic_bullet_shield_death( guy )
+{
+	targetname = "none";
+	if ( isdefined( guy.targetname ) )
+	{
+		targetname = guy.targetname;
+	}
+
+	guy endon( "stop_magic_bullet_shield" );
+	guy endon( "_stop_magic_bullet_shield_debug" );
+	guy waittill( "death" );
+	Assert( !isdefined( guy ), "Guy died with magic bullet shield on with targetname: " + targetname );
 }
 
 #using_animtree( "all_player" );
@@ -2326,6 +2508,26 @@ function get_start_time() // in microseconds
 @/
 function note_elapsed_time( start_time, label = "unknown" ) // in microseconds
 {
+
+/#	// note: this line may be commented out locally, but never submit it commented out
+
+	elapsed_time = get_elapsed_time( start_time, GetMicrosecondsRaw() );
+
+	if ( !isdefined( start_time ) )
+		return;
+
+	elapsed_time = elapsed_time * 0.001; // display in milliseconds
+	// elapsed_time -= 0.005; // approximate time it takes to note the elapsed time just after using get_start_time()
+
+	if ( !level.orbis )
+		elapsed_time = int( elapsed_time );
+
+	msg = label + " elapsed time: " + elapsed_time + " ms";
+	
+	IPrintLn( msg );
+
+#/ // note: this line may be commented out locally, but never submit it commented out
+
 }
 
 /@	returns elapsed cpu time in microseconds
@@ -2506,10 +2708,55 @@ function deleteAfterTimeAndNetworkFrame( time )
 
 function drawcylinder( pos, rad, height, duration, stop_notify, color, alpha )
 {
+/#
+	if ( !isdefined( duration ) )
+	{
+		duration = 0;
+	}
+	
+	level thread drawcylinder_think( pos, rad, height, duration, stop_notify, color, alpha );
+#/
 }
 
 function drawcylinder_think( pos, rad, height, seconds, stop_notify, color, alpha )
 {
+/#
+	if ( isdefined( stop_notify ) )
+	{
+		level endon( stop_notify );
+	}
+
+	stop_time = GetTime() + ( seconds * 1000 );
+
+	currad = rad; 
+	curheight = height; 
+
+	if ( !isdefined( color ) )
+		color = ( 1, 1, 1 );
+	
+	if ( !isdefined( alpha ) )
+		alpha = 1;
+	
+	for ( ;; )
+	{
+		if ( seconds > 0 && stop_time <= GetTime() )
+		{
+			return;
+		}
+
+		for( r = 0; r < 20; r++ )
+		{
+			theta = r / 20 * 360; 
+			theta2 = ( r + 1 ) / 20 * 360; 
+
+			line( pos +( cos( theta ) * currad, sin( theta ) * currad, 0 ), pos +( cos( theta2 ) * currad, sin( theta2 ) * currad, 0 ), color, alpha ); 
+			line( pos +( cos( theta ) * currad, sin( theta ) * currad, curheight ), pos +( cos( theta2 ) * currad, sin( theta2 ) * currad, curheight ), color, alpha ); 
+			line( pos +( cos( theta ) * currad, sin( theta ) * currad, 0 ), pos +( cos( theta ) * currad, sin( theta ) * currad, curheight ), color, alpha ); 
+		}
+
+		WAIT_SERVER_FRAME;
+	}
+#/
 }
 
 //entities_s.a[]

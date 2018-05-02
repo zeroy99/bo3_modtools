@@ -17,6 +17,7 @@
 #define CLIENTFIELD_POWERUP_MINI_GUN			"powerup_mini_gun"
 #define CLIENTFIELD_POWERUP_TESLA				"powerup_tesla"
 #define CLIENTFIELD_POWERUP_INSTANT_KILL_UG		"powerup_instant_kill_ug"
+#define CLIENTFIELD_POWERUP_ZOMBIE_BLOOD		"powerup_zombie_blood"
 
 
 #define CLIENTFIELD_POWERUP_FX_NAME	"powerup_fx"

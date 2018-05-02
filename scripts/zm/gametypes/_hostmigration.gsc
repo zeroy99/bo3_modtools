@@ -1,5 +1,6 @@
 #using scripts\codescripts\struct;
 
+#using scripts\shared\array_shared;
 #using scripts\shared\callbacks_shared;
 #using scripts\shared\flag_shared;
 #using scripts\shared\hud_shared;
@@ -80,6 +81,9 @@ function Callback_HostMigration()
 	
 	setSlowMotion( 1, 1, 0 );
 	//makeDvarServerInfo( "ui_guncycle", 0 );
+	
+	//make sure we upload any dirty counters from the current round
+	zm_utility::upload_zm_dash_counters();
 
 	level.hostMigrationReturnedPlayerCount = 0;
 
@@ -293,6 +297,7 @@ function matchStartTimerConsole_Internal( countTime, matchStartTimer )
 
 function matchStartTimerConsole( type, duration )
 {
+	thread matchStartBlacscreen( duration ); 
 	level notify( "match_start_timer_beginning" );
 	WAIT_SERVER_FRAME;
 	
@@ -331,6 +336,18 @@ function matchStartTimerConsole( type, duration )
 	matchStartText hud::destroyElem();
 }
 
+function matchStartBlacscreen( duration )
+{
+	array::thread_all(GetPlayers(),	&zm::initialBlack);
+
+	fade_time = 4.0; 
+	
+	n_black_screen = duration - fade_time;
+	level thread zm::fade_out_intro_screen_zm( n_black_screen, fade_time, true );
+	wait fade_time;
+}
+
+
 function hostMigrationWait()
 {
 	level endon( "game_ended" );
@@ -345,7 +362,7 @@ function hostMigrationWait()
 		hostMigrationWaitForPlayers();
 	}
 	
-	thread matchStartTimerConsole( "match_starting_in", 5.0 );
+	thread matchStartTimerConsole( "match_starting_in", 9.0 );
 	wait 5;
 }
 

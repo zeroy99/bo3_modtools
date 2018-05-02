@@ -1,4 +1,5 @@
 #using scripts\codescripts\struct;
+#using scripts\shared\ai\systems\blackboard;
 #using scripts\shared\audio_shared;
 #using scripts\shared\callbacks_shared;
 #using scripts\shared\system_shared;

@@ -1,9 +1,11 @@
 #using scripts\codescripts\struct;
+
 #using scripts\shared\clientfield_shared;
 #using scripts\shared\killstreaks_shared;
 #using scripts\shared\popups_shared;
 #using scripts\shared\system_shared;
 #using scripts\shared\util_shared;
+
 #using scripts\mp\_util;
 #using scripts\mp\killstreaks\_killstreaks;
 
@@ -359,8 +361,12 @@ function get_weapon_damage( killstreakType, maxhealth, attacker, weapon, type, d
 					}
 				}
 			}
-			else if (( type == "MOD_PROJECTILE" || type == "MOD_EXPLOSIVE" ) && ( !isdefined( weapon.isEmpKillstreak ) || !weapon.isEmpKillstreak )
-			         && ( weapon.statIndex != level.weaponPistolEnergy.statIndex ) && ( weapon.statIndex != level.weaponSpecialCrossbow.statIndex ) && ( weapon.statIndex != level.weaponBouncingBetty.statIndex ) )
+			else if ( ( type == "MOD_PROJECTILE" || type == "MOD_EXPLOSIVE" )
+			         && ( !isdefined( weapon.isEmpKillstreak ) || !weapon.isEmpKillstreak )
+			         && ( weapon.statIndex != level.weaponPistolEnergy.statIndex )
+			         && ( weapon.statIndex != level.weaponSpecialCrossbow.statIndex )
+			         && ( weapon.statIndex != level.weaponSmgNailGun.statIndex )
+			         && ( weapon.statIndex != level.weaponBouncingBetty.statIndex ) )
 			{
 				if (  weapon.statIndex == level.weaponShotgunEnergy.statIndex )
 				{

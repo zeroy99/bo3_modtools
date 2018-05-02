@@ -24,29 +24,32 @@ function __init__()
 	//to prevent exert sounds on the client from stepping on VO sounds on the server. 
 	clientfield::register( "toplayer", "isspeaking", VERSION_SHIP, 1, "int", &isspeaking_cb, !CF_HOST_ONLY, CF_CALLBACK_ZERO_ON_NEW_ENT ); 
 	
-	level.exert_sounds = [];
+	if( !isdefined( level.exert_sounds ) )
+	{
+		level.exert_sounds = [];
+	}
 	
-	// sniper hold breath
-	level.exert_sounds[0]["playerbreathinsound"] = "vox_exert_generic_inhale";
+		// sniper hold breath
+		level.exert_sounds[0]["playerbreathinsound"] = "vox_exert_generic_inhale";
+		
+		// sniper exhale
+		level.exert_sounds[0]["playerbreathoutsound"] = "vox_exert_generic_exhale";
+		
+		// sniper hold breath
+		level.exert_sounds[0]["playerbreathgaspsound"] = "vox_exert_generic_exhale";
 	
-	// sniper exhale
-	level.exert_sounds[0]["playerbreathoutsound"] = "vox_exert_generic_exhale";
+		// falling damage
+		level.exert_sounds[0]["falldamage"] = "vox_exert_generic_pain";
+		
+		// mantle launch
+		level.exert_sounds[0]["mantlesoundplayer"] = "vox_exert_generic_mantle";
+		
+		// melee swipe
+		level.exert_sounds[0]["meleeswipesoundplayer"] = "vox_exert_generic_knifeswipe";
+		
+		// DTP land ** this may need to be expanded to take surface type into account
+		level.exert_sounds[0]["dtplandsoundplayer"] = "vox_exert_generic_pain";
 	
-	// sniper hold breath
-	level.exert_sounds[0]["playerbreathgaspsound"] = "vox_exert_generic_exhale";
-
-	// falling damage
-	level.exert_sounds[0]["falldamage"] = "vox_exert_generic_pain";
-	
-	// mantle launch
-	level.exert_sounds[0]["mantlesoundplayer"] = "vox_exert_generic_mantle";
-	
-	// melee swipe
-	level.exert_sounds[0]["meleeswipesoundplayer"] = "vox_exert_generic_knifeswipe";
-	
-	// DTP land ** this may need to be expanded to take surface type into account
-	level.exert_sounds[0]["dtplandsoundplayer"] = "vox_exert_generic_pain";
-
 	// custom character exerts - most of the exert sounds will be set up here
 	//if (isdefined(level.setupCustomCharacterExerts))
 	//	[[level.setupCustomCharacterExerts]]();
@@ -308,16 +311,28 @@ function sndZmbLaststand(localClientNum, oldVal, newVal, bNewEnt, bInitialSnap, 
 	if( newVal )
 	{
 		PlaySound( localClientNum, "chr_health_laststand_enter", (0,0,0) );
-		forceambientroom( "sndHealth_LastStand" );
 		self.inLastStand = true;
+		setsoundcontext ("laststand", "active");
+		
+		if( !IsSplitScreen() )
+		{
+			forceambientroom( "sndHealth_LastStand" );
+		}
 	}
 	else
 	{
 		if( IS_TRUE( self.inLastStand ) )
 		{
-			forceambientroom( "" );
 			playsound( localClientNum, "chr_health_laststand_exit", (0,0,0) );
 			self.inLastStand = false;
+			
+			if( !IsSplitScreen() )
+			{
+				forceambientroom( "" );
+			}
 		}
+		
+		setsoundcontext ("laststand", "");
 	}
+	
 }

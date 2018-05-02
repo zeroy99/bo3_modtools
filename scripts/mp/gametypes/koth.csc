@@ -1,6 +1,8 @@
 #using scripts\codescripts\struct;
+
 #using scripts\shared\clientfield_shared;
 #using scripts\shared\util_shared;
+
 #using scripts\mp\_shoutcaster;
 
 #insert scripts\shared\shared.gsh;
@@ -62,28 +64,30 @@ function main()
 
 function get_shoutcaster_fx(local_client_num)
 {
-	caster_effects = [];
-	caster_effects["zoneEdgeMarker"]  = shoutcaster::get_color_fx( local_client_num, level.effect_scriptbundles["zoneEdgeMarker"] );
-	caster_effects["zoneEdgeMarkerWndw"]  = shoutcaster::get_color_fx( local_client_num, level.effect_scriptbundles["zoneEdgeMarkerWndw"] );
-	
 	effects = [];
-	effects["zoneEdgeMarker"] = level._effect["zoneEdgeMarker"];
-	effects["zoneEdgeMarkerWndw"] = level._effect["zoneEdgeMarkerWndw"];	
+	effects["zoneEdgeMarker"][KS_NEUTRAL] = level._effect["zoneEdgeMarker"][KS_NEUTRAL];
+	effects["zoneEdgeMarker"][KS_CONTESTED] = level._effect["zoneEdgeMarker"][KS_CONTESTED];
+	effects["zoneEdgeMarkerWndw"][KS_NEUTRAL] = level._effect["zoneEdgeMarkerWndw"][KS_NEUTRAL];	
+	effects["zoneEdgeMarkerWndw"][KS_CONTESTED] = level._effect["zoneEdgeMarkerWndw"][KS_CONTESTED];	
 	
-		if ( GetDvarInt("tu11_programaticallyColoredGameFX") )
-		{
-			effects["zoneEdgeMarker"][KS_ALLIES] = "ui/fx_koth_marker_white";
-			effects["zoneEdgeMarker"][KS_AXIS] = "ui/fx_koth_marker_white";
-			effects["zoneEdgeMarkerWndw"][KS_ALLIES] = "ui/fx_koth_marker_white_window";
-			effects["zoneEdgeMarkerWndw"][KS_AXIS] = "ui/fx_koth_marker_white_window";
-		}
-		else
-		{	
-			effects["zoneEdgeMarker"][KS_ALLIES] = caster_effects["zoneEdgeMarker"]["allies"];
-			effects["zoneEdgeMarker"][KS_AXIS] = caster_effects["zoneEdgeMarker"]["axis"];
-			effects["zoneEdgeMarkerWndw"][KS_ALLIES] = caster_effects["zoneEdgeMarkerWndw"]["allies"];
-			effects["zoneEdgeMarkerWndw"][KS_AXIS] = caster_effects["zoneEdgeMarkerWndw"]["axis"];
-		}
+	if ( GetDvarInt("tu11_programaticallyColoredGameFX") )
+	{
+		effects["zoneEdgeMarker"][KS_ALLIES] = "ui/fx_koth_marker_white";
+		effects["zoneEdgeMarker"][KS_AXIS] = "ui/fx_koth_marker_white";
+		effects["zoneEdgeMarkerWndw"][KS_ALLIES] = "ui/fx_koth_marker_white_window";
+		effects["zoneEdgeMarkerWndw"][KS_AXIS] = "ui/fx_koth_marker_white_window";
+	}
+	else
+	{	
+		caster_effects = [];
+		caster_effects["zoneEdgeMarker"]  = shoutcaster::get_color_fx( local_client_num, level.effect_scriptbundles["zoneEdgeMarker"] );
+		caster_effects["zoneEdgeMarkerWndw"]  = shoutcaster::get_color_fx( local_client_num, level.effect_scriptbundles["zoneEdgeMarkerWndw"] );
+
+		effects["zoneEdgeMarker"][KS_ALLIES] = caster_effects["zoneEdgeMarker"]["allies"];
+		effects["zoneEdgeMarker"][KS_AXIS] = caster_effects["zoneEdgeMarker"]["axis"];
+		effects["zoneEdgeMarkerWndw"][KS_ALLIES] = caster_effects["zoneEdgeMarkerWndw"]["allies"];
+		effects["zoneEdgeMarkerWndw"][KS_AXIS] = caster_effects["zoneEdgeMarkerWndw"]["axis"];
+	}
 	
 	return effects;
 }
@@ -122,7 +126,7 @@ function setup_hardpoint_fx( local_client_num, zone_index, state )
 	
 	if ( shoutcaster::is_shoutcaster_using_team_identity(local_client_num) )
 	{
-		effects = get_shoutcaster_fx(local_client_num);
+			effects = get_shoutcaster_fx(local_client_num);
 	}
 	else
 	{
@@ -219,11 +223,7 @@ function watch_for_team_change( localClientNum )
 
 	level waittill( "team_changed" );
 	
-	// the local player might not be valid yet and will cause the team detection functionality not to work
-	while ( !isdefined(	GetNonPredictedLocalPlayer( localClientNum ) ) )
-   {
-		wait(0.05);
-   }
+	wait(0.05);
 
 	thread setup_hardpoint_fx( localClientNum, level.current_zone[localClientNum], level.current_state[localClientNum] );
 }

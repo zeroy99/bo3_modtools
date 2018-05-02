@@ -22,6 +22,7 @@
 #precache( "fx", "weapon/fx_hero_firefly_sparks_os" );
 #precache( "fx", "weapon/fx_hero_chem_gun_blob_death" );
 #precache( "fx", "weapon/fx_hero_firefly_start" );
+//#precache( "fx", "weapon/fx_hero_firefly_start_entity" );
 
 function init_shared()
 {			
@@ -52,8 +53,24 @@ function init_shared()
 	callback::add_weapon_damage( level.firefly_pod_weapon, &on_damage_firefly_pod );
 
 	level thread register();
+	
+/# 
+	level thread update_dvars();
+#/
 }
 
+/#
+function update_dvars()
+{
+	while(1)
+	{
+		wait(1);
+		level.fireflies_min_speed = getDvarInt( "scr_firefly_speed", 250 );
+		level.fireflies_attack_speed_scale = getDvarFloat( "scr_firefly_attack_attack_speed_scale", 1.15 );
+		level.firefly_debug = GetDvarInt( "scr_firefly_debug", 0 );
+	}
+}
+#/
 function register()
 {
 	clientfield::register( "scriptmover", "firefly_state", VERSION_SHIP, 3, "int" );
@@ -106,6 +123,13 @@ function on_spawn_firefly_pod( watcher, owner ) // self == betty ent
 
 function start_damage_effects()
 {
+/#
+	If ( IsGodMode( self ) )
+	{
+		return;
+	}
+#/
+
 //	visionset_mgr::activate( "overlay", "hive_gungun_splat", self, firefly_pod_SPLAT_DURATION_MAX, firefly_pod_SPLAT_DURATION_MAX );
 
 	//self clientfield::set( "damaged_by_firefly_pod", 1 );
@@ -658,6 +682,38 @@ function get_crumb_position( target )
 	return target.origin + (0,0,height);
 }
 
+/#
+function target_bread_crumbs_render( target )
+{
+	self endon("death");
+	self endon("attack");
+	
+	
+	while(1)
+	{
+		previous_crumb = self.origin;
+		
+		for( i = 0; i < self.target_breadcrumbs.size; i++ )
+		{
+
+			if ( (self.target_breadcrumb_current_index + i) > self.target_breadcrumb_last_added )
+				break;
+			
+			crumb_index = (self.target_breadcrumb_current_index + i) % self.target_breadcrumbs.size;
+			crumb = self.target_breadcrumbs[crumb_index ];
+			
+			sphere( crumb, 2, (0,1,0), 1, true, 10, self.debug_time );
+			
+			if ( i > 0 )
+				line(previous_crumb, crumb, (0,1,0), 1.0, true, self.debug_time );
+			
+			previous_crumb = crumb;
+		}
+		
+		WAIT_SERVER_FRAME;
+	}
+}
+#/
 
 function target_bread_crumbs( target )
 {
@@ -673,6 +729,13 @@ function target_bread_crumbs( target )
 	
 	self.target_breadcrumbs[self.target_breadcrumb_last_added] = get_crumb_position( target );
 	
+/#
+	if ( level.firefly_debug )
+	{
+		self thread target_bread_crumbs_render( target );
+	}
+#/
+
 	while( 1 )
 	{
 		wait( 0.25 );
@@ -756,6 +819,18 @@ function firefly_chase( target ) // self == script mover spawned at weaponobject
 		{
 			target_origin = get_target_bread_crumb( target );
 			
+/#
+			if ( level.firefly_debug )
+				sphere( self.origin, 2, (1,0,0), 1, true, 10, self.debug_time );
+#/
+
+		// this code will give some randomness to the target point.
+//			delta = target_origin - self.origin;
+//			normal = VectorNormalize( delta );
+//			right = VectorCross( normal, up );
+//			offset = RotatePointAroundAxis( (right * max_offset), normal, RandomInt(359) );
+//				
+//			target_origin = target_origin + offset;		
 		}
 		delta = target_origin - self.origin;
 		angles = VectorToAngles(delta);
@@ -786,6 +861,11 @@ function firefly_pod_start( start_pos, target, linked ) // self == script mover 
 	self endon("death");
 	self notify("attack");
 	
+/#
+	if ( level.firefly_debug )
+		sphere( self.origin, 4, (1,0,0), 1, true, 10, self.debug_time );
+#/
+		
 	level.fireflies_height_variance = 30;
 	level.fireflies_radius = 100;
 	
@@ -811,16 +891,19 @@ function firefly_pod_start( start_pos, target, linked ) // self == script mover 
 		self MoveTo( start_pos, level.fireflies_emit_time, 0, level.fireflies_emit_time );
 		self waittill( "movedone" );
 
-		delta = target.origin - self.origin;
-		angles = VectorToAngles(delta);
-		self.angles = angles;
-
-//	self thread firefly_spyrograph_patrol( 60, 1, level.fireflies_radius );
-		self thread firefly_chase( target );
+		if ( isdefined( target ) && isdefined( target.origin ) )
+		{
+			delta = target.origin - self.origin;
+			angles = VectorToAngles(delta);
+			self.angles = angles;
+	
+			//	self thread firefly_spyrograph_patrol( 60, 1, level.fireflies_radius );
+			self thread firefly_chase( target );
+		}
 	}
-	
-	wait(30);
-	
+
+	wait( 30 );
+
 	if ( isdefined( self.killcamEnt ) )
 	{
 		self.killcamEnt delete();

@@ -1,4 +1,5 @@
 #using scripts\codescripts\struct;
+
 #using scripts\shared\audio_shared;
 #using scripts\shared\callbacks_shared;
 #using scripts\shared\challenges_shared;
@@ -13,6 +14,7 @@
 #using scripts\shared\weapons\_weaponobjects;
 #using scripts\shared\weapons\_hacker_tool;
 #using scripts\shared\visionset_mgr_shared;
+
 #using scripts\mp\_util;
 #using scripts\mp\gametypes\_globallogic;
 #using scripts\mp\gametypes\_globallogic_audio;
@@ -385,6 +387,22 @@ function HelicopterGunner_hacked_health_callback()
 	{
 		return;
 	}
+	
+// Not sure what design wants here.  
+//	for( seatIndex = 0; seatIndex < HELICOPTER_GUNNER_ASSISTANT_SEAT_COUNT; seatIndex++ )
+//	{
+//		assistant = helicopter.assistants[seatIndex];
+//		if( !assistant.destroyed )
+//		{
+//			damage = 1000;
+//			helicopter.noDamageFeedback = 1;
+//			helicopter DoDamage( damage, assistant.targetEnt.origin, undefined, undefined, undefined, "MOD_UNKNOWN", 0, undefined, seatIndex + 8 );
+//			helicopter.noDamageFeedback = 0;
+//			
+//			SupportTurretDestroyed( helicopter, seatIndex );
+//		}
+//	}
+//	helicopter AllowMainTurretLockon();
 	
 	hackedHealth = killstreak_bundles::get_hacked_health( HELICOPTER_GUNNER_NAME );
 	assert( isdefined( hackedHealth ) );
@@ -893,7 +911,7 @@ function HelicopterGunnerDamageOverride( eInflictor, eAttacker, iDamage, iDFlags
 	
 	// handle rocket damage
 	handleAsRocketDamage = ( ( sMeansOfDeath == "MOD_PROJECTILE" ) || ( sMeansOfDeath == "MOD_EXPLOSIVE" ) );
-	if ( weapon.statIndex == level.weaponShotgunEnergy.statIndex || weapon.statIndex == level.weaponPistolEnergy.statIndex )
+	if ( weapon.statIndex == level.weaponShotgunEnergy.statIndex || weapon.statIndex == level.weaponPistolEnergy.statIndex || weapon.statIndex == level.weaponSmgNailGun.statIndex )
 		handleAsRocketDamage = false;
 
 	if( handleAsRocketDamage )
@@ -904,7 +922,11 @@ function HelicopterGunnerDamageOverride( eInflictor, eAttacker, iDamage, iDFlags
 		
 		vtol_shake();
 		
-		helicopter.totalRocketHits++;
+		rocketHit = 1.0;
+		if ( weapon.statIndex == level.weaponLauncherMulti.statIndex )
+			rocketHit = 0.5;
+					
+		helicopter.totalRocketHits += rocketHit;
 		
 		if( isdefined( missileTarget ) ) 
 		{
@@ -915,7 +937,7 @@ function HelicopterGunnerDamageOverride( eInflictor, eAttacker, iDamage, iDFlags
 				
 				if( !assistant.destroyed && ( assistant.targetEnt == missileTarget ) )
 				{
-					assistant.rocketHits++;
+					assistant.rocketHits += rocketHit;
 					
 					if ( assistant.rocketHits >= 2 )
 					{
@@ -929,7 +951,7 @@ function HelicopterGunnerDamageOverride( eInflictor, eAttacker, iDamage, iDFlags
 			// handle rocket damage to the main turrets
 			if( isdefined( helicopter.targetEnt ) && ( helicopter.targetEnt == missileTarget ) )
 			{
-				helicopter.turretRocketHits++;
+				helicopter.turretRocketHits += rocketHit;
 				
 				// main turret need 2 rockets
 				if( helicopter.turretRocketHits >= 2 )
@@ -987,6 +1009,7 @@ function HelicopterGunnerDamageOverride( eInflictor, eAttacker, iDamage, iDFlags
 			iDamage = helicopter.health - 1; // keep it alive. We want it to go away not explode
 	}
 
+	///#iprintln( partName + " health:" + helicopter.health + " damage:" + iDamage );#/
 	return iDamage;
 }
 
@@ -1045,6 +1068,10 @@ function WatchMissilesThread()
 		
 		missiles  = getentarray( "rocket", "classname" );
 		
+		/#
+		//Box( end_origin, (-4, -4, 0 ), ( 4, 4, 1000 ), 0, ( 0, 0.7, 0 ), 0.6, false, 9999999 );
+		#/
+			
 		foreach( missile in missiles )
 		{
 			if( missile.item == heliMissile )

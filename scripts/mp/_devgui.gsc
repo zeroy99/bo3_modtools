@@ -12,6 +12,7 @@
 #using scripts\shared\weapons\_weapons;
 #using scripts\shared\vehicle_ai_shared;
 #using scripts\shared\vehicle_shared;
+#using scripts\mp\_vehicle;
 
 #insert scripts\shared\shared.gsh;
 

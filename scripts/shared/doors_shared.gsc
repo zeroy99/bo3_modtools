@@ -1023,6 +1023,25 @@ function trigger_check_for_ents_touching( str_kill_trigger_notify )
 //*****************************************************************************
 //*****************************************************************************
 
+// self = door trigger
+function door_debug_line( v_origin )
+{
+	self endon( "death" );
+
+	while( 1 )
+	{
+		v_start = v_origin;
+		v_end = v_start + ( 0, 0, 1000 );
+		v_col = ( 0, 0, 1 );
+
+/#
+		line( v_start, v_end, (0,0,1) );
+#/
+
+		wait( 0.1 );
+	}
+}
+
 function player_has_key( str_key_type )
 {
 	if ( !IsDefined( self.collectible_keys ) )

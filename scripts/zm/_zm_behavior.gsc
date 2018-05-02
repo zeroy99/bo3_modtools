@@ -33,7 +33,7 @@
 
 #namespace zm_behavior;
 
-
+#define BHB_BURST "bhb_burst"
 
 function autoexec init()
 {
@@ -81,6 +81,8 @@ function private InitZmBehaviorsAndASM()
 	BT_REGISTER_API( "zombieIsBeingGrappled", &zombieIsBeingGrappled );
 	BT_REGISTER_API( "zombieShouldKnockdown", &zombieShouldKnockdown );
 	BT_REGISTER_API( "zombieIsPushed", &zombieIsPushed );
+	BT_REGISTER_API( "zombieKilledWhileGettingPulled", &zombieKilledWhileGettingPulled );
+	BT_REGISTER_API( "zombieKilledByBlackHoleBombCondition", &zombieKilledByBlackHoleBombCondition );
 	
 	// ------- BEHAVIOR UTILITY -----------//
 	BT_REGISTER_API( "disablePowerups", &disablePowerups);
@@ -106,6 +108,7 @@ function private InitZmBehaviorsAndASM()
 	// ------- ZOMBIE ELECTRIC STUN -----------//
 	BT_REGISTER_API( "zombieStunActionStart", &zombieStunActionStart );
 	BT_REGISTER_API( "zombieStunActionEnd", &zombieStunActionEnd );
+
 	// ------- ZOMBIE GRAPPLE -----------//
 	BT_REGISTER_API( "zombieGrappleActionStart", &zombieGrappleActionStart );
 	
@@ -116,6 +119,10 @@ function private InitZmBehaviorsAndASM()
 	// ------- ZOMBIE PUSHED -----------//
 	BT_REGISTER_API( "zombiePushedActionStart", &zombiePushedActionStart);
 	BT_REGISTER_API( "zombiePushedActionTerminate", &zombiePushedActionTerminate);
+	
+	// ------- ZOMBIE BLACK HOLE BOMB -----------//
+	BT_REGISTER_ACTION( "zombieBlackHoleBombPullAction", &zombieBlackHoleBombPullStart, &zombieBlackHoleBombPullUpdate, &zombieBlackHoleBombPullEnd );
+	BT_REGISTER_ACTION( "zombieBlackHoleBombDeathAction", &zombieKilledByBlackHoleBombStart, undefined, &zombieKilledByBlackHoleBombEnd );
 
 	// ------- ZOMBIE SERVICES -----------//
 	BT_REGISTER_API( "getChunkService", &getChunkService );
@@ -133,6 +140,7 @@ function private InitZmBehaviorsAndASM()
 	// ------- ZOMBIE NOTETRACKS -----------//
 	ASM_REGISTER_NOTETRACK_HANDLER( NOTETRACK_ZOMBIES_BOARD_TEAR, &notetrackBoardTear );
 	ASM_REGISTER_NOTETRACK_HANDLER( NOTETRACK_ZOMBIES_BOARD_MELEE, &notetrackBoardMelee );
+	ASM_REGISTER_NOTETRACK_HANDLER( BHB_BURST, &zombieBHBBurst );
 	
 	SetDvar( "scr_zm_use_code_enemy_selection", 1 );
 }
@@ -170,6 +178,11 @@ function zombieFindFlesh( behaviorTreeEntity )
 	behaviorTreeEntity.ignore_player = [];
 
 	behaviorTreeEntity.goalradius = ZM_FIND_FLESH_RADIUS;
+
+	if ( IS_TRUE( behaviorTreeEntity.ignore_find_flesh ) )
+	{
+		return;
+	}
 
 	if ( behaviorTreeEntity.team == "allies" )
 	{
@@ -231,6 +244,13 @@ function zombieFindFlesh( behaviorTreeEntity )
 			}			
 			behaviorTreeEntity.ignore_player = [];
 		}
+		
+		/#
+		if( IS_TRUE( behaviortreeentity.isPuppet ) )
+		{
+			return;
+		}
+		#/
 		
 		if( isdefined( level.no_target_override ) )
 		{
@@ -368,6 +388,7 @@ function zombieFindFleshCode( behaviorTreeEntity )
 
 	if( level.intermission )
 	{
+		AIProfile_EndEntry();
 		return;
 	}
 
@@ -378,11 +399,14 @@ function zombieFindFleshCode( behaviorTreeEntity )
 	if ( behaviorTreeEntity.team == "allies" )
 	{
 		behaviorTreeEntity findZombieEnemy();
+
+		AIProfile_EndEntry();
 		return;
 	}
 
 	if ( level.wait_and_revive )
 	{
+		AIProfile_EndEntry();
 		return;
 	}
 
@@ -397,6 +421,14 @@ function zombieFindFleshCode( behaviorTreeEntity )
 
 	if( !isDefined( behaviorTreeEntity.enemy ) && !isDefined( zombie_poi ) )
 	{
+		/#
+			if( IS_TRUE( behaviortreeentity.isPuppet ) )
+			{
+				AIProfile_EndEntry();
+				return;
+			}
+		#/
+		
 		if( isdefined( level.no_target_override ) )
 		{
 			[[ level.no_target_override ]]( behaviorTreeEntity );			
@@ -405,7 +437,8 @@ function zombieFindFleshCode( behaviorTreeEntity )
 		{
 			behaviorTreeEntity SetGoal( behaviorTreeEntity.origin );
 		}
-		
+
+		AIProfile_EndEntry();
 		return;
 	}
 	
@@ -427,6 +460,14 @@ function zombieFindFleshCode( behaviorTreeEntity )
 	else if ( IsDefined( behaviorTreeEntity.enemy ) )
 	{
 		behaviorTreeEntity.has_exit_point = undefined;
+
+		/#
+			if ( IS_TRUE( behaviorTreeEntity.is_rat_test ) )
+			{
+				AIProfile_EndEntry();
+				return;
+			}
+		#/
 
 		if ( IsDefined( level.enemy_location_override_func ) )
 		{
@@ -520,6 +561,16 @@ function zombieUpdateGoal()
 				self.keep_moving_time = GetTime() + 250;
 				path = self CalcApproximatePathToPosition( goalPos,false );
 				
+				/#
+				if ( GetDvarInt( "ai_debugZigZag" ) )
+				{
+					for ( index = 1; index < path.size; index++ )
+					{
+						RecordLine( path[index - 1], path[index], ORANGE, "Animscript", self );
+					}
+				}
+				#/
+			
 				deviationDistance = RandomIntRange( level.zigzag_distance_min, level.zigzag_distance_max );  // 20 to 40 feet
 			
 				if( IsDefined( self.zigzag_distance_min ) && IsDefined( self.zigzag_distance_max ) )
@@ -540,6 +591,8 @@ function zombieUpdateGoal()
 					
 						seedPosition = path[index - 1] + ( VectorNormalize( path[index] - path[index - 1] ) * remainingLength );
 					
+						/# RecordCircle( seedPosition, 2, ORANGE, "Animscript", self ); #/
+			
 						innerZigZagRadius = level.inner_zigzag_radius;
 						outerZigZagRadius = level.outer_zigzag_radius;
 						
@@ -630,6 +683,16 @@ function zombieUpdateGoalCode()
 
 				path = self CalcApproximatePathToPosition( goalPos,false );
 				
+				/#
+				if ( GetDvarInt( "ai_debugZigZag" ) )
+				{
+					for ( index = 1; index < path.size; index++ )
+					{
+						RecordLine( path[index - 1], path[index], ORANGE, "Animscript", self );
+					}
+				}
+				#/
+			
 				deviationDistance = RandomIntRange( 240, 480 );  // 20 to 40 feet
 			
 				segmentLength = 0;
@@ -645,6 +708,8 @@ function zombieUpdateGoalCode()
 					
 						seedPosition = path[index - 1] + ( VectorNormalize( path[index] - path[index - 1] ) * remainingLength );
 					
+						/# RecordCircle( seedPosition, 2, ORANGE, "Animscript", self ); #/
+			
 						innerZigZagRadius = level.inner_zigzag_radius;
 						outerZigZagRadius = level.outer_zigzag_radius;
 						
@@ -751,6 +816,11 @@ function zombieMoveAway( behaviorTreeEntity, asmStateName)
 	queryResult = level.move_away_points;
 	
 	AnimationStateNetworkUtility::RequestState( behaviorTreeEntity, asmStateName );
+
+	if ( !IsDefined( queryResult ) )
+	{
+		return BHTN_RUNNING;
+	}
 	
 	for(i = 0; i < queryResult.data.size; i++)
 	{
@@ -949,7 +1019,17 @@ function zombieShouldAttackThroughBoardsCondition( behaviorTreeEntity )
 	{
 		if( !behaviorTreeEntity.first_node.zbarrier ZBarrierSupportsZombieReachThroughAttacks() )
 		{
-			return false;
+			// can only try if all chunks are down
+			chunks = undefined;
+			if ( isdefined( behaviorTreeEntity.first_node ) )
+			{
+				chunks = zm_utility::get_non_destroyed_chunks( behaviorTreeEntity.first_node, behaviorTreeEntity.first_node.barrier_chunks );
+			}
+
+			if ( isdefined( chunks ) && chunks.size > 0 )
+			{
+				return false;
+			}
 		}
 	}
 	
@@ -965,7 +1045,8 @@ function zombieShouldAttackThroughBoardsCondition( behaviorTreeEntity )
     behaviorTreeEntity.player_targets = [];
     for(i=0;i<players.size;i++)
     {
-    	if ( isAlive( players[i] ) && !isDefined( players[i].revivetrigger ) && distance2d( behaviorTreeEntity.origin, players[i].origin ) <= 109.8 && !IS_TRUE( players[i].zombie_vars[ "zombie_powerup_zombie_blood_on" ] ) )
+    	if ( isAlive( players[i] ) && !isDefined( players[i].revivetrigger ) && distance2d( behaviorTreeEntity.origin, players[i].origin ) <= 109.8 && !IS_TRUE( players[i].zombie_vars[ "zombie_powerup_zombie_blood_on" ] ) &&
+			 !IS_TRUE( players[i].ignoreme ) )
         {
             behaviorTreeEntity.player_targets[behaviorTreeEntity.player_targets.size] = players[i];
             attack = true;
@@ -1056,6 +1137,12 @@ function shouldSkipTeardown( behaviorTreeEntity )
 
 function zombieIsThinkDone( behaviorTreeEntity )
 {
+	/#
+		if( IS_TRUE( behaviorTreeEntity.is_rat_test ) )
+			return false;
+	#/
+		
+		
 	if ( IS_TRUE( behaviorTreeEntity.zombie_think_done ) )
 	{
 		return true;
@@ -1574,5 +1661,165 @@ function findZombieEnemy()
 	else
 	{
 		self SetGoal( self.origin );
+	}
+}
+
+function zombieBlackHoleBombPullStart( entity, asmStateName )
+{
+	entity.pullTime = GetTime();
+	entity.pullOrigin = entity.origin;
+	
+	AnimationStateNetworkUtility::RequestState( entity, asmStateName );
+	
+	zombieUpdateBlackHoleBombPullState( entity );
+	
+	if( IsDefined( entity.damageOrigin ) )
+	{
+		entity.n_zombie_custom_goal_radius = 8;
+		entity.v_zombie_custom_goal_pos = entity.damageOrigin;
+	}
+	
+	return BHTN_RUNNING;
+}
+
+#define SOUL_BURST_RANGE	2500 //50*50
+#define PULLED_IN_RANGE		16384 //128*128
+#define INNER_RANGE			1048576 //1024*1024
+#define OUTER_RANGE			4227136 //2056*2056
+
+function zombieUpdateBlackHoleBombPullState( entity )
+{
+	dist_to_bomb = DistanceSquared( entity.origin, entity.damageOrigin );
+	
+	if( dist_to_bomb < PULLED_IN_RANGE )
+	{
+		entity._black_hole_bomb_collapse_death = true;
+	}
+	else if( dist_to_bomb < INNER_RANGE )
+	{
+		Blackboard::SetBlackBoardAttribute( entity, BLACKHOLEBOMB_PULL_STATE, BLACKHOLEBOMB_PULL_FAST );
+	}
+	else if( dist_to_bomb < OUTER_RANGE )
+	{
+		Blackboard::SetBlackBoardAttribute( entity, BLACKHOLEBOMB_PULL_STATE, BLACKHOLEBOMB_PULL_SLOW );
+	}
+}
+	
+function zombieBlackHoleBombPullUpdate( entity, asmStateName )
+{
+	if( !IsDefined( entity.interdimensional_gun_kill ) )
+	{
+		return BHTN_SUCCESS;
+	}
+	
+	zombieUpdateBlackHoleBombPullState( entity );
+	
+	if( IS_TRUE( entity._black_hole_bomb_collapse_death ) )
+	{
+		entity.skipAutoRagdoll = true;
+		entity DoDamage( entity.health + 666, entity.origin + ( 0, 0, 50 ), entity.interdimensional_gun_attacker, undefined, undefined, "MOD_CRUSH" );
+		return BHTN_SUCCESS;
+	}
+	
+	if( IsDefined( entity.damageOrigin ) )
+	{
+		entity.v_zombie_custom_goal_pos = entity.damageOrigin;
+	}
+	
+	if ( !IS_TRUE( entity.missingLegs ) && ( GetTime() - entity.pullTime > ZM_MOVE_TIME ) )
+	{
+		distSq = Distance2DSquared( entity.origin, entity.pullOrigin );
+		if ( distSq < ZM_MOVE_DIST_SQ )
+		{
+			entity SetAvoidanceMask( "avoid all" );
+			entity.cant_move = true;
+
+			if ( IsDefined( entity.cant_move_cb ) )
+			{
+				entity [[ entity.cant_move_cb ]]();
+			}
+		}
+		else
+		{
+			entity SetAvoidanceMask( "avoid none" );
+			entity.cant_move = false;
+		}
+
+		entity.pullTime = GetTime();
+		entity.pullOrigin = entity.origin;
+	}
+	
+	return BHTN_RUNNING;
+}
+
+function zombieBlackHoleBombPullEnd( entity, asmStateName )
+{
+	entity.v_zombie_custom_goal_pos = undefined;
+	entity.n_zombie_custom_goal_radius = undefined;
+	
+	entity.pullTime = undefined;
+	entity.pullOrigin = undefined;
+	
+	return BHTN_SUCCESS;
+}
+
+function zombieKilledWhileGettingPulled( entity )
+{
+	if( !IS_TRUE( self.missingLegs) && IS_TRUE( entity.interdimensional_gun_kill ) && !IS_TRUE( entity._black_hole_bomb_collapse_death ) )
+	{
+		return true;
+	}
+	
+	return false;
+}
+
+function zombieKilledByBlackHoleBombCondition( entity )
+{
+	if( IS_TRUE( entity._black_hole_bomb_collapse_death ) )
+	{
+		return true;
+	}
+	
+	return false;
+}
+
+function zombieKilledByBlackHoleBombStart( entity, asmStateName )
+{
+	AnimationStateNetworkUtility::RequestState( entity, asmStateName );
+
+	if( IsDefined( level.black_hole_bomb_death_start_func ) )
+	{
+		entity thread [[level.black_hole_bomb_death_start_func]]( entity.damageOrigin, entity.interdimensional_gun_projectile );
+	}
+	
+	return BHTN_RUNNING;
+}
+
+function zombieKilledByBlackHoleBombEnd( entity, asmStateName )
+{
+	if( IsDefined( level._effect ) && IsDefined( level._effect[ "black_hole_bomb_zombie_gib" ] ) )
+	{
+		fxOrigin = entity GetTagOrigin( "tag_origin" );
+		
+		forward = AnglesToForward( entity.angles );
+		
+		PlayFX( level._effect[ "black_hole_bomb_zombie_gib" ], fxOrigin, forward, ( 0, 0, 1 ) );
+	}
+	entity Hide();
+	
+	return BHTN_SUCCESS;
+}
+
+function zombieBHBBurst( entity )
+{
+	if( IsDefined( level._effect ) && IsDefined( level._effect[ "black_hole_bomb_zombie_destroy" ] ) )
+	{
+		fxOrigin = entity GetTagOrigin( "tag_origin" );
+		PlayFx(level._effect[ "black_hole_bomb_zombie_destroy" ], fxOrigin );
+	}
+	
+	if( IsDefined( entity.interdimensional_gun_projectile ) )
+	{
+		entity.interdimensional_gun_projectile notify( "black_hole_bomb_kill" );
 	}
 }

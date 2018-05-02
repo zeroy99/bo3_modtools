@@ -29,7 +29,7 @@ REGISTER_SYSTEM( "zm_jump_pad", &__init__, undefined )
 //		the air.
 
 function __init__()
-{
+{	
 	level jump_pad_init();
 }
 
@@ -103,9 +103,18 @@ function jump_pad_think()
 		
 		if( IsPlayer( who ) )
 		{
-			self thread trigger::function_thread( who,&jump_pad_start,&jump_pad_cancel );
+			self thread delayed_jump_pad_start( who );
 		}		
 	}	
+}
+
+function delayed_jump_pad_start( who )
+{
+	wait( 0.5 );
+	if ( who IsTouching( self ) )
+	{
+		self thread trigger::function_thread( who,&jump_pad_start,&jump_pad_cancel );
+	}
 }
 
 // figures out where to send the player then launches them if they haven't left the pad
@@ -127,6 +136,7 @@ function jump_pad_start( ent_player, endon_condition )
 	jump_time = undefined;
 	
 	world_gravity = GetDvarInt( "bg_gravity" ); // 800;
+	
 	gravity_pulls = 13.3 * -1; // this is gravity divided by the amount of frames in a second (800/60).
 	top_velocity_sq = 900 * 900;
 	forward_scaling = 1.0;
@@ -178,6 +188,16 @@ function jump_pad_start( ent_player, endon_condition )
 		end_point = self.destination[ RandomInt( self.destination.size ) ];
 	}
 	
+	/#
+		if( GetDvarInt( "jump_pad_tweaks" ) ) // TODO: Remove check in to dvars for debugging
+		{
+			line( start_point.origin, end_point.origin, ( 1, 1, 0 ), 1, 1, 500 );
+			sphere( start_point.origin, 12, (0,1,0), 1, 1, 12, 500 );
+			sphere( end_point.origin, 12, (1,0,0), 1, 1, 12, 500 );
+
+		}
+	#/
+	
 	// special override to change the velocity and jump timing for a pad
 	if( isdefined( self.script_string ) && isdefined( level._jump_pad_override[ self.script_string ] ) ) 
 	{
@@ -204,13 +224,11 @@ function jump_pad_start( ent_player, endon_condition )
 		
 		// distance
 		pad_dist = Distance( start_point.origin, end_spot );
-
+		
 		z_dist = end_spot[2] - start_point.origin[2];
 		
 		// velocity
 		jump_velocity = end_spot - start_point.origin;
-		
-
 		
 		// the end point is much higher than the start point so we need to double the z_velocity and scale up the x & y
 		if( z_dist > 40 && z_dist < 135 )
@@ -230,37 +248,44 @@ function jump_pad_start( ent_player, endon_condition )
 		}
 			
 			
-			// get the z velocity
-			z_velocity = 2 * z_dist * world_gravity;	
-			
-			// make sure the z velocity isn't a negative
-			if( z_velocity < 0 )
-			{
-				z_velocity *= -1;
-			}
-			
-			// make sure the distance isn't a negative
-			if( z_dist < 0 )
-			{
-				z_dist *= -1;
-			}
-			
-			// time
-			jump_time = Sqrt( 2 * pad_dist / world_gravity );
-			jump_time_2 = Sqrt( 2 * z_dist / world_gravity );
-			jump_time = jump_time + jump_time_2;
-			if( jump_time < 0 )
-			{
-				jump_time *= -1;
-			}
-			
-			// velocity
-			x = jump_velocity[0] * forward_scaling / jump_time;
-			y = jump_velocity[1] * forward_scaling / jump_time;
-			z = z_velocity / jump_time;
+		// get the z velocity
+		N_REDUCTION = 0.0015;//T7 value need to match original shipped velocity
+		/#
+		if( GetDvarFloat( "scr_jump_pad_reduction" ) > 0.0 ) 
+		{
+			N_REDUCTION = GetDvarFloat( "scr_jump_pad_reduction" );
+		}
+		#/		
+		z_velocity = N_REDUCTION * 2 * z_dist * world_gravity;	
 		
-			// final vector
-			fling_this_way = ( x, y, z );
+		// make sure the z velocity isn't a negative
+		if( z_velocity < 0 )
+		{
+			z_velocity *= -1;
+		}
+		
+		// make sure the distance isn't a negative
+		if( z_dist < 0 )
+		{
+			z_dist *= -1;
+		}
+		
+		// time
+		jump_time = Sqrt( 2 * pad_dist / world_gravity );
+		jump_time_2 = Sqrt( 2 * z_dist / world_gravity );
+		jump_time = jump_time + jump_time_2;
+		if( jump_time < 0 )
+		{
+			jump_time *= -1;
+		}
+		
+		// velocity
+		x = jump_velocity[0] * forward_scaling / jump_time;
+		y = jump_velocity[1] * forward_scaling / jump_time;
+		z = z_velocity / jump_time;
+	
+		// final vector
+		fling_this_way = ( x, y, z );
 	}
 		
 	// create poi
@@ -286,10 +311,17 @@ function jump_pad_start( ent_player, endon_condition )
 	// some pads should probably send the player even if they are jumping
 	if( isdefined( self.script_start ) && self.script_start == 1 )
 	{
-		if( !IS_TRUE( ent_player._padded ) )
+		if( !IS_TRUE( ent_player._padded ) && ent_player IsOnGround() )
 		{
 			self playsound( "evt_jump_pad_launch" );
-			playfx(level._effect["jump_pad_jump"],self.origin);
+			if( isdefined( level.func_jump_pad_pulse_override ) )
+			{
+				self [[ level.func_jump_pad_pulse_override ]]();
+			}
+			else
+			{
+				playfx(level._effect["jump_pad_jump"],self.origin);
+			}
 			ent_player thread jump_pad_move( fling_this_way, jump_time, poi_spot, self ); // move the player in the proper direction
 			
 			if( isdefined( self.script_label ) )
@@ -305,7 +337,14 @@ function jump_pad_start( ent_player, endon_condition )
 		if( ent_player IsOnGround() && !IS_TRUE( ent_player._padded ) )
 		{
 			self playsound( "evt_jump_pad_launch" );
-			playfx(level._effect["jump_pad_jump"],self.origin);
+			if( isdefined( level.func_jump_pad_pulse_override ) )
+			{
+				self [[ level.func_jump_pad_pulse_override ]]();
+			}
+			else
+			{			
+				playfx(level._effect["jump_pad_jump"],self.origin);
+			}
 			ent_player thread jump_pad_move( fling_this_way, jump_time, poi_spot, self ); // move the player in the proper direction
 			
 			if( isdefined( self.script_label ) )
@@ -318,10 +357,13 @@ function jump_pad_start( ent_player, endon_condition )
 	}
 
 	// failsafe against timing where the player spams jump button as they land and being able to stay on the pad
-	wait( 0.5 );
 	if ( ent_player IsTouching( self ) )
 	{
-		self jump_pad_start( ent_player, endon_condition );
+		wait( 0.5 );
+		if ( ent_player IsTouching( self ) )
+		{
+			self jump_pad_start( ent_player, endon_condition );
+		}
 	}
 }
 
@@ -568,7 +610,7 @@ function jump_pad_enemy_follow_or_ignore( ent_poi )
 		}
 		else
 		{
-			zombies[i].ignore_distance_tracking = true;
+			zombies[i].ignore_cleanup_mgr = true;
 			zombies[i]._pad_follow = 1;
 			zombies[i] thread stop_chasing_the_sky( ent_poi );
 		}
@@ -588,7 +630,7 @@ function jump_pad_ignore_poi_cleanup( ent_poi )
 			{
 				zombies[i]._pad_follow = 0;
 				zombies[i] notify( "stop_chasing_the_sky" );
-				zombies[i].ignore_distance_tracking = false;
+				zombies[i].ignore_cleanup_mgr = false;
 			}
 			
 			if( isdefined( ent_poi ) )
@@ -632,7 +674,7 @@ function stop_chasing_the_sky( ent_poi )
 	//wait( 0.5 ); // allow the zombies time to get close while the next pad warms up
 	
 	self._pad_follow = 0;
-	self.ignore_distance_tracking = false;
+	self.ignore_cleanup_mgr = false;
 	self notify( "stop_chasing_the_sky" );
 	
 }

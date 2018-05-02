@@ -28,6 +28,7 @@ function SetPlayerBurning( duration, interval, damagePerInterval, attacker, weap
 	self thread WatchBurnDamage( interval, damagePerInterval, attacker, weapon );
 	self thread WatchForWater();
 	self thread WatchBurnFinished();
+	self playloopsound ("chr_burn_loop_overlay");
 }
 
 function TakingBurnDamage( eAttacker, weapon, sMeansOfDeath )
@@ -56,6 +57,7 @@ function WatchBurnFinished()
 	self util::waittill_any( "death", "burn_finished" );
 	
 	self clientfield::set("burn", 0 );
+	self stoploopsound(1);
 
 }
 

@@ -68,6 +68,7 @@
 #define VERSION_TU14				14000
 
 #define VERSION_TU15				15000
+#define VERSION_TU15_FFOTD_090816_0	15001
 
 #define VERSION_TU16				16000
 
@@ -76,6 +77,11 @@
 #define VERSION_TU18				18000
 
 #define VERSION_TU19				19000
+	
+#define VERSION_TU20				20000
+	
+#define VERSION_TU21				21000
+
 
 // .... expand as needed.
 
@@ -88,9 +94,9 @@
 
 #define VERSION_DLC3				VERSION_TU12
 
-#define VERSION_DLC4				VERSION_TU14
+#define VERSION_DLC4				VERSION_TU15
 
-#define VERSION_DLC5 				VERSION_TU16
+#define VERSION_DLC5 				VERSION_TU21
 
 	
 #define CF_HOST_ONLY						true

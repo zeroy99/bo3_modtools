@@ -128,7 +128,9 @@ function get_hacked_timeout_duration_ms()
 		
 	if ( !isdefined( timeout ) || timeout <= 0 )
 	{
+/# 
 		assertmsg( "get_hacked_timeout_duration_ms(): Set \"" + killstreak.killstreakType + "\" to a greater than zero value, in the killstreaks GDT" );
+#/
 		return;
 	}
 	
@@ -162,5 +164,73 @@ function _update_health( hacker )
 	}
 	else
 	{
+		/#hacker iprintlnbold( "Hacked but no update of health occured" );#/
 	}
 }
+
+/#
+function killstreak_switch_team_end()
+{
+	killstreakEntity = self;
+	killstreakEntity notify( "killstreak_switch_team_end" );	
+}
+	
+function killstreak_switch_team( owner )
+{
+	killstreakEntity = self;
+	killstreakEntity notify( "killstreak_switch_team_singleton" );
+	killstreakEntity endon( "killstreak_switch_team_singleton" );
+	killstreakEntity endon( "death" );
+
+	//Init my dvar
+	SetDvar("scr_killstreak_switch_team", "");
+
+	while( true )
+	{
+		wait(0.5);
+
+		//Grab my dvar every .5 seconds in the form of an int
+		devgui_int = GetDvarint( "scr_killstreak_switch_team");
+
+		//"" returns as zero with GetDvarInt
+		if(devgui_int != 0)
+		{
+			// spawn a larry to be the opposing team
+			team = "autoassign";
+			
+			if( isdefined( level.getEnemyTeam ) && isdefined( owner ) && isdefined( owner.team ) )
+			{
+				team = [[level.getEnemyTeam]]( owner.team );
+			}
+
+			if ( isdefined( level.devOnGetOrMakeBot ) )
+			{
+				player = [[level.devOnGetOrMakeBot]]( team );
+			}
+			
+			if( !isdefined( player ) ) 
+			{
+				println("Could not add test client");
+				wait 1;
+				continue;
+			}
+
+			if ( !isdefined( killstreakEntity.killstreak_hackedCallback ) )
+			{
+/#
+				iprintlnbold( "missing hacked callback" );
+#/
+				return;
+			}
+			killstreakEntity notify( "killstreak_hacked", player );
+			killstreakEntity.previouslyHacked = true;
+			killstreakEntity [[ killstreakEntity.killstreak_hackedCallback ]]( player );
+			
+			wait( 0.5 );
+			SetDvar("scr_killstreak_switch_team", "0");
+			return;
+		}
+	}
+}
+#/
+

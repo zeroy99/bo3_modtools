@@ -4,3 +4,6 @@
 #insert scripts\shared\ai\systems\animation_state_machine.gsh;
 
 #namespace AnimationStateNetworkUtility;
+
+function RequestState( entity, stateName ) {}
+function SearchAnimationMap( entity, aliasName ) {}

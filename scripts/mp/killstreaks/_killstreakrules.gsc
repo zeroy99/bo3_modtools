@@ -1,13 +1,15 @@
 #using scripts\codescripts\struct;
+
 #using scripts\shared\popups_shared;
 #using scripts\shared\util_shared;
+
+#insert scripts\shared\shared.gsh;
+#insert scripts\mp\killstreaks\_killstreaks.gsh;
+
 #using scripts\mp\_util;
 #using scripts\mp\killstreaks\_killstreaks;
 #using scripts\mp\killstreaks\_emp;
 #using scripts\mp\gametypes\_globallogic_audio;
-
-#insert scripts\shared\shared.gsh;
-#insert scripts\mp\killstreaks\_killstreaks.gsh;
 
 #namespace killstreakrules;
 
@@ -181,7 +183,9 @@ function addKillstreakToRule( killstreak, rule, countTowards, checkAgainst, inve
 // returns killstreakid or  if killstreak is not allowed
 function killstreakStart( hardpointType, team, hacked, displayTeamMessage )
 {	
+	/#
 	assert( isdefined( team ), "team needs to be defined" );
+	#/
 
 	if ( self isKillstreakAllowed( hardpointType, team ) == false )
 		return INVALID_KILLSTREAK_ID;
@@ -288,7 +292,10 @@ function RecordKillstreakEnd(recordStreakIndex, totalKills)
 
 function killstreakStop( hardpointType, team, id )
 {
+	/#
 	assert( isdefined( team ), "team needs to be defined" );
+	#/
+
 	assert ( isdefined ( hardpointType ) );
 	//assert( isdefined( id ), "Must provide the associated killstreak_id for " + hardpointType );
 
@@ -344,8 +351,15 @@ function killstreakStop( hardpointType, team, id )
 
 function isKillstreakAllowed( hardpointType, team )
 {
+	/#
 	assert( isdefined( team ), "team needs to be defined" );
+	#/
+
 	assert ( isdefined ( hardpointType ) );
+	
+	// general failsafe for all scorestreaks
+	if ( self killstreaks::is_killstreak_start_blocked() )
+		return false;
 	
 	isAllowed = true;
 	

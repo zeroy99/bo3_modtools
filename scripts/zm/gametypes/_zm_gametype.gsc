@@ -10,6 +10,7 @@
 #using scripts\shared\math_shared;
 #using scripts\shared\spawner_shared;
 #using scripts\shared\util_shared;
+#using scripts\shared\music_shared;
 
 #insert scripts\shared\shared.gsh;
 
@@ -500,6 +501,8 @@ function onSpawnPlayer(predictedSpawn)
 	self.usingObj = undefined;
 	
 	self.is_zombie = false; 
+
+	zm::updatePlayerNum( self );
 
 	//For spectator respawn
 	if( IsDefined( level.custom_spawnPlayer ) && IS_TRUE(self.player_initialized))
@@ -1023,6 +1026,7 @@ function player_hotjoin()
 		//self SetDStat( "characterContext", "characterIndex", self GetCharacterBodyType() );
 	}
 	self zm::spawnSpectator();
+	music::setmusicstate("none");//stops loadscreen music from looping indefinitely
 	
 	self.is_hotjoining = false;
 	self.is_hotjoin = true;

@@ -39,7 +39,15 @@
 #define MINIGUN_PROP_3	"wpn_t7_loot_hero_reaper3_minigun_prop"
 #define GI_UNIT_BODY	"c_zsf_robot_grunt_body"
 #define GI_UNIT_HEAD	"c_zsf_robot_grunt_head"
+#define RAP_FRIENDLY	"veh_t7_drone_raps_mp_lite"
+#define RAP_ENEMY		"veh_t7_drone_raps_mp_dark"
+#define TALON_FRIENDLY	"veh_t7_drone_attack_gun_litecolor"
+#define TALON_ENEMY		"veh_t7_drone_attack_gun_darkcolor"
+
 #precache( "client_fx", "player/fx_loot_taunt_e_reaper_main_03" );
+
+#define TALON_LIGHT_FX "player/fx_loot_taunt_outrider_talon_lights"
+#precache( "client_fx", TALON_LIGHT_FX );
 
 #namespace end_game_taunts;
 
@@ -49,11 +57,22 @@ function __init__()
 {
 	animation::add_notetrack_func( "taunts::hide", &hideModel );
 	animation::add_notetrack_func( "taunts::show", &showModel );
+
+	animation::add_notetrack_func( "taunts::cloneshaderon", &cloneShaderOn );
+	animation::add_notetrack_func( "taunts::cloneshaderoff", &cloneShaderOff );
+
+	animation::add_notetrack_func( "taunts::camoshaderon", &camoShaderOn );
+	animation::add_notetrack_func( "taunts::camoshaderoff", &camoShaderOff );
+
 	animation::add_notetrack_func( "taunts::spawncameraglass", &spawnCameraGlass );
 	animation::add_notetrack_func( "taunts::deletecameraglass", &deleteCameraGlass );
 	
 	animation::add_notetrack_func( "taunts::reaperbulletglass", &reaperBulletGlass );
 	animation::add_notetrack_func( "taunts::centerbulletglass", &centerBulletGlass );
+
+	animation::add_notetrack_func( "taunts::talonbulletglassleft", &talonBulletGlassLeft );
+	animation::add_notetrack_func( "taunts::talonbulletglassright", &talonBulletGlassRight );
+
 	animation::add_notetrack_func( "taunts::fireweapon", &fireWeapon );
 	animation::add_notetrack_func( "taunts::stopfireweapon", &stopFireWeapon );
 	
@@ -70,7 +89,13 @@ function __init__()
 		 MINIGUN_PROP_3,
 		 GI_UNIT_BODY,
 		 GI_UNIT_HEAD,
+		 RAP_FRIENDLY,
+		 RAP_ENEMY,
+		 TALON_FRIENDLY,
+		 TALON_ENEMY,
+
 		// Notetrack and Scriptbundle models
+		"wpn_t7_arm_blade_prop",
 		"wpn_t7_hero_annihilator_prop",
 		"wpn_t7_hero_bow_prop",
 		"wpn_t7_hero_electro_prop_animate",
@@ -80,6 +105,7 @@ function __init__()
 		"wpn_t7_hero_spike_prop",
 		"wpn_t7_hero_seraph_machete_prop",
 		"wpn_t7_loot_crowbar_world",
+		"wpn_t7_spider_mine_world",
 		"wpn_t7_zmb_katana_prop"
 	);
 	
@@ -87,6 +113,119 @@ function __init__()
 	stop_stream_epic_models();
 }
 
+/#
+function check_force_taunt()
+{
+	while ( 1 )
+	{
+		SetDvar( "forceTaunt", "" );
+		
+		WAIT_SERVER_FRAME;
+		
+		taunt = GetDvarString( "forceTaunt" );
+	
+		if ( taunt == "" )
+			continue;
+	
+		model = level.topPlayerCharacters[ 0 ];
+		
+		if ( !isdefined( model ) ||
+		     isdefined( model.playingTaunt ) ||
+		     IS_TRUE( model.playingGesture ) )
+			continue;
+		
+		bodyType = GetDvarInt( "forceTauntBodyType", -1 );
+		SetDvar( "forceTauntBodyType", -1 );
+		
+		if ( bodyType >= 0 )
+		{
+			tauntModel = spawn_temp_specialist_model( model.localClientNum, bodyType, model.origin, model.angles, model.showcaseWeapon );
+			model Hide();
+		}
+		else
+		{
+			tauntModel = model;
+		}
+		
+		idleAnimName = getIdleAnimName( model.localClientNum, model, 0 );
+		playTaunt( model.localClientNum, tauntModel, 0, idleAnimName, taunt );	
+		
+		if ( tauntModel != model )
+		{
+			tauntModel Delete();
+			model Show();
+		}
+	}
+}
+
+function check_force_gesture()
+{
+	while ( 1 )
+	{
+		SetDvar( "forceGesture", "" );
+		
+		WAIT_SERVER_FRAME;
+		
+		gesture = GetDvarString( "forceGesture" );
+	
+		if ( gesture == "" )
+			continue;
+	
+		model = level.topPlayerCharacters[ 0 ];
+		
+		if ( !isdefined( model ) ||
+		     isdefined( model.playingTaunt ) ||
+		     IS_TRUE( model.playingGesture ) )
+			continue;
+		
+		idleAnimName = getIdleAnimName( model.localClientNum, model, 0 );
+		playGesture( model.localClientNum, model, 0, idleAnimName, gesture, true );
+	}
+}
+
+function draw_runner_up_bounds()
+{
+	while( 1 )
+	{
+		WAIT_CLIENT_FRAME;
+		
+		if ( !GetDvarInt( "runnerupboxes", 0 ) )
+			continue;
+		
+		for ( i = 1; i < 3; i++ )
+		{
+			model = level.topPlayerCharacters[i];
+			Box( model.origin, ( -15, -15, 0 ), ( 15, 15, 72 ), model.angles[1], ( 0, 0, 1 ), false, 1 );
+		}	
+	}
+}
+
+function spawn_temp_specialist_model( localClientNum, characterIndex, origin, angles, showcaseWeapon )
+{
+	tempModel = Spawn( localClientNum, origin, "script_model" );
+	tempModel.angles = angles;
+	tempModel.showcaseWeapon = showcaseWeapon;
+	
+	tempModel.bodyModel = GetCharacterBodyModel( characterIndex, 0, CurrentSessionMode() );
+	tempModel.helmetModel = GetCharacterHelmetModel( characterIndex, 0, CurrentSessionMode() );
+	
+	tempModel SetModel( tempModel.bodyModel );
+	tempModel Attach( tempModel.helmetModel, "" );
+	
+	tempModel.modeRenderOptions =  GetCharacterModeRenderOptions( CurrentSessionMode() );
+	
+	tempModel.bodyRenderOptions = GetCharacterBodyRenderOptions( characterIndex, 0, 0, 0, 0 );
+	tempModel.helmetRenderOptions = GetCharacterHelmetRenderOptions( characterIndex, 0, 0, 0, 0 );
+	
+	tempModel SetBodyRenderOptions( tempModel.modeRenderOptions,
+	                                tempModel.bodyRenderOptions,
+	                                tempModel.helmetRenderOptions,
+	                                tempModel.helmetRenderOptions );
+	
+	return tempModel;
+}
+
+#/
 
 function playCurrentTaunt( localClientNum, characterModel, topPlayerIndex )
 {
@@ -156,13 +295,14 @@ function playTaunt( localClientNum, characterModel, topPlayerIndex, idleAnimName
 	
 	characterModel.playingTaunt = undefined;
 	characterModel notify( "tauntFinished" );
-	characterModel.epicTauntModels = undefined;	// these get cleaned up by the animation
+	characterModel shutdownEpicTauntModels();
 }
 
 function cancelTaunt( localClientNum, characterModel )
 {	
 	if ( isdefined( characterModel.playingTaunt ) )
 	{
+		characterModel cloneShaderOff();
 		characterModel shutdownEpicTauntModels();
 		characterModel stopEpicTauntScene( localClientNum, characterModel.playingTaunt );
 		characterModel StopSounds();
@@ -347,14 +487,33 @@ function getIdleAnimName( localClientNum, characterModel, topPlayerIndex )
 			{
 				weapon_group = "weapon_launcher_alt";
 			}
+			else if ( characterModel.weapon.rootWeapon.name == "launcher_ex41" )
+			{
+				weapon_group = "weapon_smg_ppsh";
+			}
 		}
 		else if ( weapon_group == "weapon_pistol" && characterModel.weapon.isdualwield )
 		{
 			weapon_group = "weapon_pistol_dw";
 		}
+		else if ( weapon_group == "weapon_smg")
+		{
+			if ( characterModel.weapon.rootWeapon.name == "smg_ppsh" )
+			{
+				weapon_group = "weapon_smg_ppsh";
+			}
+		}
+		else if ( weapon_group == "weapon_cqb")
+		{
+			if ( characterModel.weapon.rootWeapon.name == "shotgun_olympia" )
+			{
+				weapon_group = "weapon_smg_ppsh";
+			}
+		}
 		else if ( weapon_group == "weapon_special" )
 		{
-			if ( characterModel.weapon.rootWeapon.name == "special_crossbow" )
+			if ( characterModel.weapon.rootWeapon.name == "special_crossbow" ||
+					characterModel.weapon.rootWeapon.name == "special_discgun" )
 			{
 				weapon_group = "weapon_smg";
 			}
@@ -362,13 +521,18 @@ function getIdleAnimName( localClientNum, characterModel, topPlayerIndex )
 			{
 				weapon_group = "weapon_pistol_dw";
 			}
+			else if( characterModel.weapon.rootWeapon.name == "knife_ballistic" )
+			{
+				weapon_group = "weapon_knife_ballistic";
+			}
 		}
 		else if ( weapon_group == "weapon_knife" )
 		{
 			if ( characterModel.weapon.rootWeapon.name == "melee_wrench" ||
 			     characterModel.weapon.rootWeapon.name == "melee_crowbar" ||
 			     characterModel.weapon.rootWeapon.name == "melee_improvise" ||
-			     characterModel.weapon.rootWeapon.name == "melee_shockbaton" )
+			     characterModel.weapon.rootWeapon.name == "melee_shockbaton" ||
+			     characterModel.weapon.rootWeapon.name == "melee_shovel" )
 			{
 				return WRENCH_ENDGAME_ARRAY[ topPlayerIndex ];
 			}
@@ -376,7 +540,18 @@ function getIdleAnimName( localClientNum, characterModel, topPlayerIndex )
 			{
 				return KNUCKLES_ENDGAME_ARRAY[ topPlayerIndex ];
 			}
-			else if ( characterModel.weapon.rootWeapon.name == "melee_sword" )
+			else if ( characterModel.weapon.rootWeapon.name == "melee_chainsaw" ||
+					 	characterModel.weapon.rootWeapon.name == "melee_boneglass" ||
+					 	characterModel.weapon.rootWeapon.name == "melee_crescent" )
+			{
+				return CHAINSAW_ENDGAME_ARRAY[ topPlayerIndex ];
+			}
+			else if ( characterModel.weapon.rootWeapon.name == "melee_boxing" )
+			{
+				return BOXING_ENDGAME_ARRAY[ topPlayerIndex ];
+			}
+			else if ( characterModel.weapon.rootWeapon.name == "melee_sword" ||
+						characterModel.weapon.rootWeapon.name == "melee_katana")
 			{
 				return SWORD_ENDGAME_ARRAY[ topPlayerIndex ];
 			}
@@ -389,6 +564,10 @@ function getIdleAnimName( localClientNum, characterModel, topPlayerIndex )
 		          	  characterModel.weapon.rootWeapon.name == "melee_mace" )
 			{
 				return MACE_ENDGAME_ARRAY[ topPlayerIndex ];
+			}
+			else if ( characterModel.weapon.rootWeapon.name == "melee_prosthetic" )
+			{
+				return PROSTHETIC_ENDGAME_ARRAY[ topPlayerIndex ];
 			}
 		}
 		else if ( weapon_group == "miscweapon" )
@@ -445,6 +624,8 @@ function getIdleOutAnimName( characterModel, topPlayerIndex )
 			return array( "pb_knife_endgame_1stplace_out", "pb_knife_endgame_2ndplace_out", "pb_knife_endgame_3rdplace_out" )[ topPlayerIndex ];
 		case"weapon_knuckles":
 			return array( "pb_brass_knuckles_endgame_1stplace_out", "pb_brass_knuckles_endgame_2ndplace_out", "pb_brass_knuckles_endgame_3rdplace_out" )[ topPlayerIndex ];
+		case"weapon_boxing":
+			return array( "pb_boxing_gloves_endgame_1stplace_out", "pb_boxing_gloves_endgame_2ndplace_out", "pb_boxing_gloves_endgame_3rdplace_out" )[ topPlayerIndex ];
 		case"weapon_wrench":
 			return array( "pb_wrench_endgame_1stplace_out", "pb_wrench_endgame_2ndplace_out", "pb_wrench_endgame_3rdplace_out" )[ topPlayerIndex ];
 		case"weapon_sword":
@@ -453,6 +634,14 @@ function getIdleOutAnimName( characterModel, topPlayerIndex )
 			return array( "pb_nunchucks_endgame_1stplace_out", "pb_nunchucks_endgame_2ndplace_out", "pb_nunchucks_endgame_3rdplace_out" )[ topPlayerIndex ];			
 		case"weapon_mace":
 			return array( "pb_mace_endgame_1stplace_out", "pb_mace_endgame_2ndplace_out", "pb_mace_endgame_3rdplace_out" )[ topPlayerIndex ];	
+		case"weapon_prosthetic":
+			return array( "pb_prosthetic_arm_endgame_1stplace_out", "pb_prosthetic_arm_endgame_2ndplace_out", "pb_prosthetic_arm_endgame_3rdplace_out" )[ topPlayerIndex ];			
+		case"weapon_chainsaw":
+			return array( "pb_chainsaw_endgame_1stplace_idle_out", "pb_chainsaw_endgame_1stplace_idle_out", "pb_chainsaw_endgame_1stplace_idle_out" )[ topPlayerIndex ];			
+		case"weapon_smg_ppsh":
+			return array( "pb_smg_ppsh_endgame_1stplace_out", "pb_smg_ppsh_endgame_1stplace_out", "pb_smg_ppsh_endgame_1stplace_out" )[ topPlayerIndex ];			
+		case"weapon_knife_ballistic":
+			return array( "pb_b_knife_endgame_1stplace_out", "pb_b_knife_endgame_1stplace_out", "pb_b_knife_endgame_1stplace_out" )[ topPlayerIndex ];			
 	}
 	
 	return "";
@@ -486,6 +675,8 @@ function getIdleInAnimName( characterModel, topPlayerIndex )
 			return array( "pb_knife_endgame_1stplace_in", "pb_knife_endgame_2ndplace_in", "pb_knife_endgame_3rdplace_in" )[ topPlayerIndex ];
 		case"weapon_knuckles":
 			return array( "pb_brass_knuckles_endgame_1stplace_in", "pb_brass_knuckles_endgame_2ndplace_in", "pb_brass_knuckles_endgame_3rdplace_in" )[ topPlayerIndex ];
+		case"weapon_boxing":
+			return array( "pb_boxing_gloves_endgame_1stplace_in", "pb_boxing_gloves_endgame_2ndplace_in", "pb_boxing_gloves_endgame_3rdplace_in" )[ topPlayerIndex ];
 		case"weapon_wrench":
 			return array( "pb_wrench_endgame_1stplace_in", "pb_wrench_endgame_2ndplace_in", "pb_wrench_endgame_3rdplace_in" )[ topPlayerIndex ];
 		case"weapon_sword":
@@ -494,6 +685,14 @@ function getIdleInAnimName( characterModel, topPlayerIndex )
 			return array( "pb_nunchucks_endgame_1stplace_in", "pb_nunchucks_endgame_2ndplace_in", "pb_nunchucks_endgame_3rdplace_in" )[ topPlayerIndex ];
 		case"weapon_mace":
 			return array( "pb_mace_endgame_1stplace_in", "pb_mace_endgame_2ndplace_in", "pb_mace_endgame_3rdplace_in" )[ topPlayerIndex ];	
+		case"weapon_prosthetic":
+			return array( "pb_prosthetic_arm_endgame_1stplace_in", "pb_prosthetic_arm_endgame_2ndplace_in", "pb_prosthetic_arm_endgame_3rdplace_in" )[ topPlayerIndex ];
+		case"weapon_chainsaw":
+			return array( "pb_chainsaw_endgame_1stplace_idle_in", "pb_chainsaw_endgame_1stplace_idle_in", "pb_chainsaw_endgame_1stplace_idle_in" )[ topPlayerIndex ];
+		case"weapon_smg_ppsh":
+			return array( "pb_smg_ppsh_endgame_1stplace_in", "pb_smg_ppsh_endgame_1stplace_in", "pb_smg_ppsh_endgame_1stplace_in" )[ topPlayerIndex ];
+		case"weapon_knife_ballistic":
+			return array( "pb_b_knife_endgame_1stplace_in", "pb_b_knife_endgame_1stplace_in", "pb_b_knife_endgame_1stplace_in" )[ topPlayerIndex ];
 	}
 	
 	return "";
@@ -521,14 +720,33 @@ function getWeaponGroup( characterModel )
 		{
 			weapon_group = "weapon_launcher_alt";
 		}
+		else if ( characterModel.weapon.rootWeapon.name == "launcher_ex41" )
+		{
+			weapon_group = "weapon_smg_ppsh";
+		}
 	}
 	else if ( weapon_group == "weapon_pistol" && weapon.isdualwield )
 	{
 		weapon_group = "weapon_pistol_dw";
 	}
+	else if ( weapon_group == "weapon_smg")
+	{
+		if ( characterModel.weapon.rootWeapon.name == "smg_ppsh" )
+		{
+			weapon_group = "weapon_smg_ppsh";
+		}
+	}
+	else if ( weapon_group == "weapon_cqb")
+	{
+		if ( characterModel.weapon.rootWeapon.name == "shotgun_olympia" )
+		{
+			weapon_group = "weapon_smg_ppsh";
+		}
+	}
 	else if ( weapon_group == "weapon_special" )
 	{
-		if ( characterModel.weapon.rootWeapon.name == "special_crossbow" )
+		if ( characterModel.weapon.rootWeapon.name == "special_crossbow" ||
+				characterModel.weapon.rootWeapon.name == "special_discgun" )
 		{
 			weapon_group = "weapon_smg";
 		}
@@ -536,13 +754,18 @@ function getWeaponGroup( characterModel )
 		{
 			weapon_group = "weapon_pistol_dw";
 		}
+		else if( characterModel.weapon.rootWeapon.name == "knife_ballistic" )
+		{
+			weapon_group = "weapon_knife_ballistic";
+		}
 	}
 	else if ( weapon_group == "weapon_knife" )
 	{
 		if ( characterModel.weapon.rootWeapon.name == "melee_wrench" ||
 			 characterModel.weapon.rootWeapon.name == "melee_crowbar" ||
 			 characterModel.weapon.rootWeapon.name == "melee_improvise" ||
-			 characterModel.weapon.rootWeapon.name == "melee_shockbaton" )
+			 characterModel.weapon.rootWeapon.name == "melee_shockbaton" ||
+			 characterModel.weapon.rootWeapon.name == "melee_shovel" )
 		{
 			weapon_group = "weapon_wrench";
 		}
@@ -550,7 +773,18 @@ function getWeaponGroup( characterModel )
 		{
 			weapon_group = "weapon_knuckles";
 		}
-		else if ( characterModel.weapon.rootWeapon.name == "melee_sword" )
+		else if ( characterModel.weapon.rootWeapon.name == "melee_chainsaw" ||
+					 characterModel.weapon.rootWeapon.name == "melee_boneglass" ||
+					 characterModel.weapon.rootWeapon.name == "melee_crescent" )
+		{
+			weapon_group = "weapon_chainsaw";
+		}
+		else if ( characterModel.weapon.rootWeapon.name == "melee_boxing" )
+		{
+			weapon_group = "weapon_boxing";
+		}
+		else if ( characterModel.weapon.rootWeapon.name == "melee_sword" ||
+					 characterModel.weapon.rootWeapon.name == "melee_katana" )
 		{
 			weapon_group = "weapon_sword";
 		}
@@ -563,6 +797,10 @@ function getWeaponGroup( characterModel )
 		          characterModel.weapon.rootWeapon.name == "melee_mace" )
 		{
 			weapon_group = "weapon_mace";
+		}
+		else if ( characterModel.weapon.rootWeapon.name == "melee_prosthetic" )
+		{
+			weapon_group = "weapon_prosthetic";
 		}
 	}
 	
@@ -604,7 +842,10 @@ function playEpicTauntScene( localClientNum, tauntAnimName )
 		case "t7_loot_taunt_e_nomad_03":
 			self thread spawnGiUnit( localClientNum, "gi_unit_victim" );
 			break;			
-/* Not in Loot 7
+		case "t7_loot_taunt_e_seraph_04":
+			self thread spawnRap(localClientNum, "rap_1");
+			self thread spawnRap(localClientNum, "rap_2");
+			break;
 		case "t7_loot_taunt_e_reaper_main_03":
 			self thread spawnHiddenClone( localClientNum, "reaper_l" );
 			self thread spawnHiddenClone( localClientNum, "reaper_r" );
@@ -626,7 +867,6 @@ function playEpicTauntScene( localClientNum, tauntAnimName )
 			self thread spawnTalon( localClientNum, "talon_bro_1", 0.65 );
 			self thread spawnTalon( localClientNum, "talon_bro_2", 0.65 );
 			break;
-*/
 	}
 	
 	self thread scene::play( tauntAnimName );
@@ -705,13 +945,25 @@ function spawnCameraGlass( param )
 	level.cameraGlass SetModel( CAMERA_GLASS );
 	level.cameraGlass SetScale( 2.0 );
 	
-	camAngles = GetCamAnglesByLocalClientNum( self.localClientNum );
-	camPos =  GetCamPosByLocalClientNum( self.localClientNum );
+	level.cameraGlass thread updateGlassPosition();
+}
+
+function updateGlassPosition()
+{
+	self endon( "entityshutdown" );
 	
-	fwd = AnglesToForward( camAngles );
-	
-	level.cameraGlass.origin = camPos +( fwd * 60 );
-	level.cameraGlass.angles = camAngles + (0, 180, 0);
+	while ( 1 )
+	{
+		camAngles = GetCamAnglesByLocalClientNum( self.localClientNum );
+		camPos =  GetCamPosByLocalClientNum( self.localClientNum );
+		
+		fwd = AnglesToForward( camAngles );
+		
+		self.origin = camPos +( fwd * 60 );
+		self.angles = camAngles + (0, 180, 0);
+		
+		WAIT_CLIENT_FRAME;
+	}
 }
 
 function deleteCameraGlass( param )
@@ -756,6 +1008,112 @@ function centerBulletGlass( weaponName )
 	self magicGlassBullet( self.localClientNum, weapon, 4, -2 );
 	self playsound (0, "pfx_magic_bullet_glass");
 }	
+
+function talonBulletGlassLeft( param )
+{
+	self talonBulletGlass( -28, -10 );
+}
+
+function talonBulletGlassRight( param )
+{
+	self talonBulletGlass( 10, 28 );
+}
+
+function talonBulletGlass( yawMin, yawMax )
+{
+	waittillframeend;
+	
+	minigun = GetWeapon( "hero_minigun" );
+	
+	for( i = 0; i < 15; i++ )
+	{
+		if ( !isdefined( self ) )
+		{
+			return;
+		}
+		self magicGlassBullet( self.localClientNum, minigun, RandomFloatRange(4, 16), RandomFloatRange( yawMin, yawMax ) );
+		self playsound (0, "pfx_magic_bullet_glass");
+		wait minigun.fireTime;	
+	}
+	
+}
+
+function cloneShaderOn( param )
+{
+	if ( GetDvarString( "mapname" ) == "core_frontend" )
+	{
+		self SetHighDetail( true, false );
+	}
+	
+	localPlayerTeam = GetLocalPlayerTeam( self.localClientNum );
+	topPlayerTeam = GetTopPlayersTeam( self.localClientNum, 0 );
+	
+	friendly = localPlayerTeam === topPlayerTeam;
+	
+	if( friendly )
+	{
+		self duplicate_render::update_dr_flag( self.localClientNum, "clone_ally_on", true );
+	}
+	else
+	{
+		self duplicate_render::update_dr_flag( self.localClientNum, "clone_enemy_on", true );
+	}
+
+	self thread gadget_clone_render::transition_shader( self.localClientNum );
+}
+
+function cloneShaderOff( param )
+{
+	self duplicate_render::update_dr_flag( self.localClientNum, "clone_ally_on", false );
+	self duplicate_render::update_dr_flag( self.localClientNum, "clone_enemy_on", false );
+}
+
+function handleCamoChange( localClientNum, camo_on )
+{
+	flags_changed = self duplicate_render::set_dr_flag( "gadget_camo_friend", false );
+	flags_changed = flags_changed && self duplicate_render::set_dr_flag( "gadget_camo_flicker", false );
+	flags_changed = flags_changed && self duplicate_render::set_dr_flag( "gadget_camo_break", false );
+	flags_changed = flags_changed && self duplicate_render::set_dr_flag( "gadget_camo_reveal", false );
+	flags_changed = flags_changed && self duplicate_render::set_dr_flag( "gadget_camo_on", false );
+	
+	if ( flags_changed )
+	{
+		self duplicate_render::update_dr_filters();
+	}
+	
+	if ( camo_on )
+	{
+		self thread gadget_camo_render::forceOn( localClientNum );
+	}
+	else
+	{
+		self thread gadget_camo_render::doReveal( self.localClientNum, 0 );
+	}
+}
+
+function camoShaderOn( param )
+{
+	if ( GetDvarString( "mapname" ) == "core_frontend" )
+	{
+		self handleCamoChange( self.localClientNum, true );
+	}
+	else
+	{
+		self thread gadget_camo_render::doReveal( self.localClientNum, 1 );
+	}
+}
+
+function camoShaderOff( param )
+{
+	if ( GetDvarString( "mapname" ) == "core_frontend" )
+	{
+		self handleCamoChange( self.localClientNum, false );
+	}
+	else
+	{
+		self thread gadget_camo_render::doReveal( self.localClientNum, 0 );
+	}
+}
 
 function fireWeapon( weaponName )
 {
@@ -938,6 +1296,64 @@ function spawnGiUnit( localClientNum, targetName )
 	
 	model SetModel( GI_UNIT_BODY );
 	model Attach( GI_UNIT_HEAD, "" );
+	
+	ARRAY_ADD( self.epicTauntModels, model );
+}
+
+function spawnRap( localClientNum, targetName)
+{
+	model = Spawn( localClientNum, self.origin, "script_model" );
+	model.angles = self.angles;
+	model.targetName = targetName;
+
+	localPlayerTeam = GetLocalPlayerTeam( self.localClientNum );
+	topPlayerTeam = GetTopPlayersTeam( localClientNum, 0 );	
+	
+	if ( !isdefined( topPlayerTeam) || localPlayerTeam == topPlayerTeam )
+	{
+		model SetModel( RAP_FRIENDLY );
+		fxTeam = localPlayerTeam;
+	}
+	else
+	{
+		model SetModel( RAP_ENEMY );
+		fxTeam = topPlayerTeam;
+	}
+	
+	model util::waittill_dobj( localClientNum );
+	/*
+	fxHandle = PlayFxOnTag( localClientNum, TALON_LIGHT_FX, model, "tag_body" );
+	SetFxTeam( localClientNum, fxHandle, fxTeam );
+	*/
+	ARRAY_ADD( self.epicTauntModels, model );
+}	
+
+function spawnTalon( localClientNum, targetName, scale = 1.0 )
+{
+	model = Spawn( localClientNum, self.origin, "script_model" );
+	model.angles = self.angles;
+	model.targetName = targetName;
+
+	localPlayerTeam = GetLocalPlayerTeam( self.localClientNum );
+	topPlayerTeam = GetTopPlayersTeam( localClientNum, 0 );	
+	
+	if ( !isdefined( topPlayerTeam) || localPlayerTeam == topPlayerTeam )
+	{
+		model SetModel( TALON_FRIENDLY );
+		fxTeam = localPlayerTeam;
+	}
+	else
+	{
+		model SetModel( TALON_ENEMY );
+		fxTeam = topPlayerTeam;
+	}
+	
+	model SetScale( scale );
+	
+	model util::waittill_dobj( localClientNum );
+	
+	fxHandle = PlayFxOnTag( localClientNum, TALON_LIGHT_FX, model, "tag_body" );
+	SetFxTeam( localClientNum, fxHandle, fxTeam );
 	
 	ARRAY_ADD( self.epicTauntModels, model );
 }

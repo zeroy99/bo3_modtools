@@ -21,12 +21,7 @@ REGISTER_SYSTEM_EX( "grapple", &__init__, &__main__, undefined )
 
 #define WEAPON_CHANGE_NOTIFY "grapple_weapon_change" 	
 	
-#define GRAPPLE_TYPE_UNGRAPPLABLE 	0
-#define GRAPPLE_TYPE_REELPLAYER   	1
-#define GRAPPLE_TYPE_PULLENTIN 		2
-#define GRAPPLE_TYPE_TARGETONLY		3
 
-	
 function __init__()
 {
 	callback::on_spawned( &watch_for_grapple );
@@ -388,9 +383,22 @@ function can_see( target, target_origin, player_origin, player_forward, distance
 	
 	if ( Distance2DSquared(end,collided) > 3 * 3 )
 	{
+		/#
+			if ( GetDvarInt( "scr_grapple_target_debug" ) )
+			{
+				Line(start,collided,(0,0,1),1,0,50);
+				Line(collided,end,(1,0,0),1,0,50);
+			}
+		#/
 		return false;
 	}
 
+	/# 
+		if ( GetDvarInt( "scr_grapple_target_debug" ) )
+		{
+			Line(start,end,(0,1,0),1,0,30); 
+		}
+	#/
 	return true;
 }
 

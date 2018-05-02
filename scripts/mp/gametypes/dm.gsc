@@ -1,15 +1,17 @@
 #using scripts\shared\gameobjects_shared;
 #using scripts\shared\math_shared;
 #using scripts\shared\util_shared;
+
+#insert scripts\shared\shared.gsh;
+
 #using scripts\mp\gametypes\_globallogic;
 #using scripts\mp\gametypes\_globallogic_audio;
 #using scripts\mp\gametypes\_globallogic_score;
 #using scripts\mp\gametypes\_spawning;
 #using scripts\mp\gametypes\_spawnlogic;
 #using scripts\mp\killstreaks\_killstreaks;
-#using scripts\mp\_util;
 
-#insert scripts\shared\shared.gsh;
+#using scripts\mp\_util;
 
 /*
 	Deathmatch

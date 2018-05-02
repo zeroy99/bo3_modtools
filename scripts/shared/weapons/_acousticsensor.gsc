@@ -118,7 +118,7 @@ function watchAcousticSensorDamage( watcher ) // self == acoustic sensor
 		// check to see if the equipment has been flashed/concussed and disable it (checking damage < 5 is a bad idea, so check the weapon name)
 		// we're currently allowing the owner/teammate to flash their own
 		// do damage feedback
-		if ( watcher.stunTime > 0 && weapon.doStn )
+		if ( watcher.stunTime > 0 && weapon.doStun )
 		{
 			self thread weaponobjects::stunStart( watcher, watcher.stunTime ); 
 		}

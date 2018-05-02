@@ -8,6 +8,10 @@
 #using scripts\shared\scoreevents_shared;
 #using scripts\shared\sound_shared;
 #using scripts\shared\util_shared;
+
+#insert scripts\shared\shared.gsh;
+#insert scripts\shared\version.gsh;
+
 #using scripts\mp\gametypes\_globallogic;
 #using scripts\mp\gametypes\_globallogic_audio;
 #using scripts\mp\gametypes\_globallogic_score;
@@ -15,12 +19,10 @@
 #using scripts\mp\gametypes\_hostmigration;
 #using scripts\mp\gametypes\_spawning;
 #using scripts\mp\gametypes\_spawnlogic;
+
 #using scripts\mp\_challenges;
 #using scripts\mp\_util;
 #using scripts\mp\teams\_teams;
-
-#insert scripts\shared\shared.gsh;
-#insert scripts\shared\version.gsh;
 
 /*
 	Domination

@@ -132,6 +132,11 @@ function destroyNonAirScoreStreak_PostStatsLock( weapon )
 
 function canProcessChallenges()
 {
+/#	
+	if ( GetDvarInt( "scr_debug_challenges", 0 ) ) 
+		return true;
+#/
+
 	if ( level.rankedMatch || level.arenaMatch || level.wagerMatch || SessionModeIsCampaignGame() )
 	{
 		return true;
@@ -1720,6 +1725,16 @@ function playerKilled( eInflictor, attacker, iDamage, sMeansOfDeath, weapon, sHi
 		data.attacker_sprint_end				= data.attacker.challenge_sprint_end;
 		
 		data.attacker_wallRanTwoOppositeWallsNoGround	= data.attacker.wallRanTwoOppositeWallsNoGround;
+		
+		if ( ( level.allow_vehicle_challenge_check === true ) && attacker IsInVehicle() )
+		{
+			vehicle = attacker GetVehicleOccupied();
+		
+			if ( isdefined( vehicle ) )
+			{
+				data.attackerInVehicleArchetype = vehicle.archetype;
+			}
+		}
 	}
 	else
 	{

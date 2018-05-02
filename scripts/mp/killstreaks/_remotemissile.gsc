@@ -1,10 +1,12 @@
 #using scripts\codescripts\struct;
+
 #using scripts\shared\challenges_shared;
 #using scripts\shared\clientfield_shared;
 #using scripts\shared\hud_shared;
 #using scripts\shared\math_shared;
 #using scripts\shared\scoreevents_shared;
 #using scripts\shared\util_shared;
+
 #using scripts\mp\_util;
 #using scripts\mp\gametypes\_battlechatter;
 #using scripts\mp\gametypes\_globallogic_audio;
@@ -12,12 +14,12 @@
 #using scripts\mp\killstreaks\_killstreakrules;
 #using scripts\mp\killstreaks\_killstreaks;
 #using scripts\shared\visionset_mgr_shared;
-#using scripts\mp\killstreaks\_killstreak_bundles;
-#using scripts\mp\killstreaks\_killstreak_detect;
-#using scripts\mp\killstreaks\_killstreak_hacking;
 
 #insert scripts\mp\_hacker_tool.gsh;
 #insert scripts\mp\killstreaks\_killstreaks.gsh;
+#using scripts\mp\killstreaks\_killstreak_bundles;
+#using scripts\mp\killstreaks\_killstreak_detect;
+#using scripts\mp\killstreaks\_killstreak_hacking;
 #insert scripts\shared\shared.gsh;
 #insert scripts\shared\version.gsh;
 #insert scripts\shared\clientfields.gsh;
@@ -31,6 +33,7 @@
 #define REMOTE_MISSILE_BRAKE_TIMEOUT 1.5
 #define REMOTE_MISSILE_ICON_SIZE 175
 	
+//#precache( "material","tow_filter_overlay_no_signal");
 #precache( "material", "hud_remote_missile_target" );
 #precache( "string", "KILLSTREAK_EARNED_REMOTE_MISSILE" );
 #precache( "string", "KILLSTREAK_REMOTE_MISSILE_NOT_AVAILABLE" );
@@ -83,7 +86,7 @@ function tryUsePredatorMissile( lifeId )
 {
 	waterDepth = self depthofplayerinwater();
 	
-	if( !self IsOnGround() || self util::isUsingRemote() || ( waterDepth > 2 ) )
+	if( !self IsOnGround() || self util::isUsingRemote() || ( waterDepth > 2 ) || self killstreaks::is_killstreak_start_blocked() )
 	{
 		self iPrintLnBold( &"KILLSTREAK_REMOTE_MISSILE_NOT_USABLE" );
 		return false;
@@ -172,6 +175,14 @@ function getBestSpawnPoint( remoteMissileSpawnPoints )
 
 function drawLine( start, end, timeSlice, color )
 {
+	/#
+	drawTime = int(timeSlice * 20);
+	for( time = 0; time < drawTime; time++ )
+	{
+		line( start, end, color,false, 1 );
+		WAIT_SERVER_FRAME;
+	}
+	#/
 }
 
 function _fire( lifeId, player, team, killstreak_id )
@@ -567,6 +578,8 @@ function missile_sound_deploy_bomblets()
 
 function getValidTargets( rocket, trace, max_targets )
 {
+	pixbeginevent("remotemissile_getVTs_header");
+
 	targets = [];
 
 	forward = AnglesToForward ( rocket.angles );
@@ -580,6 +593,14 @@ function getValidTargets( rocket, trace, max_targets )
 	aimTarget = rocket.origin + forward * ratio;
 	rocket.aimTarget = aimTarget;
 	
+//	/#
+//	circle( rocket.aimTarget, REMOTE_MISSILE_TARGETING_RADIUS, (0,1,0), true, true, 2000 );
+//	#/
+	
+	pixendevent();
+
+	pixbeginevent("remotemissile_getVTs_enemies");
+
 	enemies = self GetEnemies();
 	
 	foreach( player in enemies )
@@ -677,6 +698,8 @@ function getValidTargets( rocket, trace, max_targets )
 		}
 	}	
 	
+	pixendevent();
+
 	return targets;
 }
 

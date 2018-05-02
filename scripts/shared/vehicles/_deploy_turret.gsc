@@ -192,6 +192,7 @@ function has_visible_target()
 	return false;
 }
 
+//#define TURRET_BOOT_TIME 0.2
 #define TURRET_BOOT_TIME 				GetDvarFloat("scr_turret_boot_timer")
 #define TURRET_LOCK_TIME 				GetDvarFloat("scr_turret_lock_timer")
 #define TURRET_BURST_MIN_DURATION		GetDvarFloat("scr_turret_burst_min_duration")

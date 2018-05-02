@@ -119,5 +119,9 @@ function powerup_fx_callback( localClientNum, oldVal, newVal, bNewEnt, bInitialS
 	self util::waittill_dobj( localClientNum );
 	if ( !isdefined(self) )
 		return;
-	PlayFXOnTag( localClientNum, fx, self, "tag_origin" );
+	if( isdefined( self.fx ) )
+	{
+		StopFX( localClientNum, self.fx );
+	}
+	self.fx = PlayFXOnTag( localClientNum, fx, self, "tag_origin" );
 }

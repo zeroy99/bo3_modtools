@@ -1,17 +1,19 @@
 #using scripts\codescripts\struct;
+
 #using scripts\shared\callbacks_shared;
 #using scripts\shared\hud_shared;
 #using scripts\shared\util_shared;
 #using scripts\shared\clientfield_shared;
+#insert scripts\shared\shared.gsh;
 #using scripts\shared\lui_shared;
 #using scripts\mp\killstreaks\_qrdrone;
+
 #using scripts\mp\_util;
 #using scripts\mp\killstreaks\_ai_tank;
 #using scripts\mp\killstreaks\_killstreaks;
 #using scripts\mp\killstreaks\_killstreakrules;
 #using scripts\mp\killstreaks\_turret;
 
-#insert scripts\shared\shared.gsh;
 #insert scripts\mp\killstreaks\_remote_weapons.gsh;
 
 // Manager for all weapons that can be remotely controlled with the tablet

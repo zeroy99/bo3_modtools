@@ -36,6 +36,9 @@ function localplayer_spawned( localClientNum )
 	if( self != GetLocalPlayer( localClientNum ) )
 		return;
 
+/#
+	level.use_digital_blood_enabled = GetDvarFloat( "scr_use_digital_blood_enabled", level.use_digital_blood_enabled );
+#/
 	self.use_digital_blood = false;
 	bodyType = self GetCharacterBodyType();
 	if ( ( level.use_digital_blood_enabled ) && ( bodyType >= 0 ) )

@@ -1,12 +1,14 @@
 #using scripts\codescripts\struct;
+
 #using scripts\shared\clientfield_shared;
 #using scripts\shared\fx_shared;
 #using scripts\shared\system_shared;
 #using scripts\shared\util_shared;
-#using scripts\mp\_util;
 
 #insert scripts\shared\shared.gsh;
 #insert scripts\shared\version.gsh;
+
+#using scripts\mp\_util;
 
 #precache( "client_fx", "killstreaks/fx_hrpy_single_light_red" );
 
@@ -39,10 +41,12 @@ function missile_drone_projectile_active_cb( localClientNum, oldVal, newVal, bNe
 {
 	if ( newVal == 1 ) 
 	{
+	//	iprintlnbold( "ON" );
 		self thread fx::blinky_light( localClientNum, "tag_target", level._effect["missile_drone_friendly_light"], level._effect["missile_drone_enemy_light"] );
 	}
 	else
 	{
+	//	iprintlnbold( "OFF" );
 		self thread fx::stop_blinky_light( localClientNum );
 	}
 }
@@ -51,14 +55,17 @@ function missile_drone_active_cb( localClientNum, oldVal, newVal, bNewEnt, bInit
 {
 	if( newVal == 2 )
 	{
+		//iprintlnbold( "ENABLED" );
 		self targetAcquired( localClientNum );
 	}
 	else if( newVal == 1 )
 	{
+		//iprintlnbold( "ON" );
 		self targetScan( localClientNum );
 	}
 	else
 	{
+		//iprintlnbold( "OFF" );
 		self targetLost( localClientNum );
 	}
 }
@@ -67,12 +74,15 @@ function targetLost( localClientNum )
 {
 	self notify( "targetLost" );
 	
+	//iprintlnbold( "target Lost" );
+	
 	if ( isdefined ( self.missile_drone_fx ) ) 
 	{
 		stopFX( localClientNum, self.missile_drone_fx );
 	}
+	// stop viewModelFX
+	
 }
-
 function targetAcquired( localClientNum )
 {
 	self endon( "disconnect" );
@@ -134,6 +144,10 @@ function targetScan( localClientNum )
 			continue;
 		}
 
+//		if ( !soundPlayed )
+//		{
+//			playsound( localClientNum, "mpl_hk_scan", self.origin );
+//		}
 		soundPlayed = true;
 		
 		waitrealtime( 1 );

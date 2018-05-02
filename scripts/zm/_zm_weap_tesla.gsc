@@ -149,7 +149,7 @@ function tesla_sound_thread()
 			
 	for( ;; )
 	{
-		result = self util::waittill_any_return( "grenade_fire", "death", "player_downed", "weapon_change", "grenade_pullback" );		
+		result = self util::waittill_any_return( "grenade_fire", "death", "player_downed", "weapon_change", "grenade_pullback", "disconnect" );
 
 		if ( !IsDefined( result ) )
 		{

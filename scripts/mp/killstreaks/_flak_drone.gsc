@@ -1,4 +1,5 @@
 #using scripts\codescripts\struct;
+
 #using scripts\shared\array_shared;
 #using scripts\shared\callbacks_shared;
 #using scripts\shared\clientfield_shared;
@@ -11,6 +12,7 @@
 #using scripts\shared\vehicle_ai_shared;
 #using scripts\shared\vehicle_death_shared;
 #using scripts\shared\vehicle_shared;
+
 #using scripts\mp\_util;
 #using scripts\mp\gametypes\_shellshock;
 #using scripts\mp\killstreaks\_killstreakrules;
@@ -130,6 +132,8 @@ function state_off_update( params )
 				}
 			}
 		
+			self vehicle_ai::PositionQuery_DebugScores( queryResult );
+		
 			if( isdefined( best_point ) )
 			{
 				self.current_pathto_pos = best_point.origin;	
@@ -229,6 +233,11 @@ function SpawnFlakRocket( missile, spawnPos, parent )
 
 	tooCloseToPredictedParent = false;
 
+/#
+	debug_draw = GetDvarInt( "scr_flak_drone_debug_trails", 0 );
+	debug_duration = GetDvarInt( "scr_flak_drone_debug_trails_duration", 20 * 20 ); // duration in number of server frames
+#/
+
 	while( true )
 	{
 		WAIT_SERVER_FRAME;
@@ -244,6 +253,14 @@ function SpawnFlakRocket( missile, spawnPos, parent )
 			predictedDist = curDist - distDelta;
 		}
 		
+/#
+		if ( debug_draw && isdefined( missile ) )
+			util::debug_sphere( missile.origin, 6, ( 0.9, 0, 0 ), 0.9, debug_duration ); // small red sphere for missile trail
+		
+		if ( debug_draw && isdefined( rocket ) )
+			util::debug_sphere( rocket.origin, 6, ( 0, 0, 0.9 ), 0.9, debug_duration ); // small blue spheres for flak drone trail (as rocket)
+#/
+
 		if ( isdefined( parent ) )
 		{
 			parentVelocity = parent GetVelocity();
@@ -259,6 +276,20 @@ function SpawnFlakRocket( missile, spawnPos, parent )
 
 		if( ( predictedDist < 0 ) || ( curDist > prevDist ) || tooCloseToPredictedParent || !isdefined( rocket ) )
 		{
+/#
+			if ( debug_draw && isdefined( parent ) )
+			{
+				if ( tooCloseToPredictedParent && ! ( ( predictedDist < 0 ) || ( curDist > prevDist ) ) )
+				{
+					util::debug_sphere( parent.origin, 18, ( 0.9, 0, 0.9 ), 0.9, debug_duration ); // large purple sphere means too close to parent
+				}
+				else
+				{
+					util::debug_sphere( parent.origin, 18, ( 0, 0.9, 0 ), 0.9, debug_duration ); // large green sphere means intercepted
+				}
+			}
+#/
+			
 			if ( isdefined( rocket ) )
 			{
 				rocket detonate();

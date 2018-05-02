@@ -14,18 +14,26 @@ function open( localClientNum, a_menu_items )
 	
 	PopulateScriptDebugMenu( localClientNum, a_menu_items );
 	LuiLoad( "uieditor.menus.ScriptDebugMenu" );
+#if XFILE_VERSION >= 293
 	level.scriptDebugMenu = CreateLUIMenu( localClientNum, "ScriptDebugMenu" );
 	OpenLUIMenu( localClientNum, level.scriptDebugMenu );
+#else // #if XFILE_VERSION >= 293
+	OpenLUIMenu( localClientNum, "ScriptDebugMenu" );
+#endif // #if XFILE_VERSION >= 293
 }
 
 function close( localClientNum )
 {
 	level flagsys::clear( "menu_open" );
+#if XFILE_VERSION >= 293
 	if ( isdefined( level.scriptDebugMenu ) )
 	{
 		CloseLUIMenu( localClientNum, level.scriptDebugMenu );
 		level.scriptDebugMenu = undefined;
 	}
+#else // #if XFILE_VERSION >= 293
+	CloseLUIMenu( localClientNum, "ScriptDebugMenu" );
+#endif // #if XFILE_VERSION >= 293
 }
 
 /@

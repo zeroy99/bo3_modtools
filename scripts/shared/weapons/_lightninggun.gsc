@@ -43,13 +43,34 @@ function init_shared()
 
 	callback::add_weapon_damage( level.weaponLightningGun, &on_damage_lightninggun );
 
+/#
+	level thread update_dvars();
+#/
 }
 
+/#
+function update_dvars()
+{
+	while(1)
+	{
+		wait(1);
+		level.weaponLightningGunKillcamTime = GetDvarFloat( "scr_lightningGunKillcamTime", 0.35 );
+		level.weaponLightningGunKillcamDecelPercent = GetDvarFloat( "scr_lightningGunKillcamDecelPercent", 0.25 );
+		level.weaponLightningGunKillcamOffset = GetDvarFloat( "scr_lightningGunKillcamOffset", 150.0 );
+	}
+}
+#/
 	
 function lightninggun_start_damage_effects( eAttacker )
 {
 	self endon( "disconnect" );
 
+/#
+	If ( IsGodMode( self ) )
+	{
+		return;
+	}
+#/
 
 	self SetElectrifiedState( true );
 	self.electrifiedBy = eAttacker;
@@ -139,6 +160,16 @@ function lightninggun_arc( delay, eAttacker, arc_source, arc_source_origin, arc_
 		{
 			return;
 		}
+	}
+	
+	if ( !isdefined( arc_source ) )
+	{
+		return;
+	}
+	
+	if ( !isdefined( arc_source.killcamKilledByEnt ) )
+	{
+		return;
 	}
 
 	level thread lightninggun_arc_fx( arc_source_pos, arc_target, arc_target_pos, distanceSq, arc_source.killcamKilledByEnt );

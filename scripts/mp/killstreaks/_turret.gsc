@@ -1,4 +1,5 @@
 #using scripts\codescripts\struct;
+
 #using scripts\mp\_util;
 #using scripts\mp\gametypes\_globallogic_audio;
 #using scripts\mp\gametypes\_hostmigration;
@@ -12,6 +13,7 @@
 #using scripts\mp\killstreaks\_remote_weapons;
 #using scripts\mp\killstreaks\_killstreak_hacking;
 #using scripts\mp\teams\_teams;
+
 #using scripts\shared\callbacks_shared;
 #using scripts\shared\challenges_shared;
 #using scripts\shared\clientfield_shared;
@@ -78,6 +80,7 @@ function init()
 function InitTurret()
 {
 	turretVehicle = self;
+	//turretVehicle.delete_on_death = undefined; // don't delete on death as we may need to support futz on death
 	turretVehicle.dontfreeme = true; // don't allow the shared shutdown sequence until we are ready
 	turretVehicle.damage_on_death = false; // never cause damage when auto turret dies
 	turretVehicle.delete_on_death = undefined; // disallow the vehicle death's delete
@@ -103,6 +106,7 @@ function InitTurret()
 	turretVehicle turret::set_on_target_angle( TURRET_TARGET_ANGLE, 0 );
 	turretVehicle clientfield::set( "enemyvehicle", ENEMY_VEHICLE_ACTIVE );
 	turretVehicle.soundmod = "drone_land";
+	//turretVehicle NotSolid();
 	
 	turretVehicle.overrideVehicleDamage = &OnTurretDamage;
 	turretVehicle.overrideVehicleDeath = &OnTurretDeath;
@@ -175,6 +179,8 @@ function OnPlaceTurret( turret )
 		turret.vehicle turret::set_target_leading( 0 );
 		turret.vehicle.use_non_teambased_enemy_selection = true;
 		turret.vehicle.waittill_turret_on_target_delay = 0.25;
+		//turret.vehicle turret::set_see_from_tag_flash( true, 0 );
+		//turret.vehicle turret::
 		turret.vehicle.ignore_vehicle_underneath_splash_scalar = true;
 		
 		turret.vehicle killstreaks::configure_team( TURRET_NAME, turret.killstreakId, player, "small_vehicle" );

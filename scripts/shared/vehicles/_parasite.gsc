@@ -79,7 +79,7 @@ function parasite_damage()
 	{
 		self waittill( "damage", n_ammount, e_attacker );
 		
-		if ( IS_TRUE( e_attacker.is_parasite ) && !IS_TRUE(e_attacker.squelch_damage_overlay) )
+		if ( IsDefined( e_attacker ) && IS_TRUE( e_attacker.is_parasite ) && !IS_TRUE(e_attacker.squelch_damage_overlay) )
 		{
 			self clientfield::increment_to_player( "parasite_damage" );
 		}
@@ -116,6 +116,11 @@ function private is_target_valid( target )
 	if( target IsNoTarget() )
 	{
 		return false;
+	}
+
+	if( IsDefined( self.is_target_valid_cb ) )
+	{
+		return self [[ self.is_target_valid_cb ]]( target );
 	}
 	
 	return true; 
@@ -571,6 +576,13 @@ function GetNextMovePosition_tactical() // has self.parasiteEnemy
 	}
 	self vehicle_ai::PositionQuery_DebugScores( queryResult );
 
+	/#
+	if ( IS_TRUE( GetDvarInt("hkai_debugPositionQuery") ) )
+	{
+		recordLine( self.origin, best_point.origin, (0.3,1,0) );
+		recordLine( self.origin, self.parasiteEnemy.origin, (1,0,0.4) );
+	}
+#/
 	returnData = [];
 	returnData[ "origin" ] = ( ( IsDefined( best_point ) ) ? best_point.origin : undefined );
 	returnData[ "centerOnNav" ] = queryResult.centerOnNav;
@@ -661,6 +673,14 @@ function GetNextMovePosition_forwardjuke() // has self.parasiteEnemy
 	}
 	self vehicle_ai::PositionQuery_DebugScores( queryResult );
 
+	/#
+	if ( IS_TRUE( GetDvarInt("hkai_debugPositionQuery") ) )
+	{
+		recordLine( self.origin, best_point.origin, (0.3,1,0) );
+		recordLine( self.origin, self.parasiteEnemy.origin, (1,0,0.4) );
+	}
+#/
+	
 	returnData = [];
 	returnData[ "origin" ] = ( ( IsDefined( best_point ) ) ? best_point.origin : undefined );
 	returnData[ "centerOnNav" ] = queryResult.centerOnNav;

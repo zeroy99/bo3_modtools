@@ -94,9 +94,10 @@ function __init__()
 	
 	if ( init_vehicle_entities() )
 	{
-		level.vehicle_explosion_effect= "_t6/vehicle/vexplosion/fx_vexplode_helicopter_exp_mp"; // kaboom!	
+		level.vehicle_explosion_effect = "_t6/vehicle/vexplosion/fx_vexplode_helicopter_exp_mp"; // kaboom!	
 
 		level.veh_husk_models = [];
+		level.veh_husk_effects = [];
 		
 		if ( isdefined( level.use_new_veh_husks ) )
 		{
@@ -297,7 +298,7 @@ function get_vehicle_name_key_for_damage_states(
 {
 	vehicle_name= get_vehicle_name(vehicle);
 	
-	if (!isdefined(level.vehicles_damage_states[vehicle_name]))
+	if ( !isdefined(level.vehicles_damage_states) || !isdefined(level.vehicles_damage_states[vehicle_name]))
 	{
 		vehicle_name= get_default_vehicle_name();
 	}
@@ -309,6 +310,9 @@ function get_vehicle_name_key_for_damage_states(
 function get_vehicle_damage_state_index_from_health_percentage(
 	vehicle)
 {
+	if ( !isdefined( level.vehicles_damage_states ) )
+		return -1;
+
 	damage_state_index= -1;
 	vehicle_name= get_vehicle_name_key_for_damage_states();
 	
@@ -357,8 +361,6 @@ function update_damage_effects(
 			}
 		}
 	}
-	
-	return;
 }
 
 
@@ -585,6 +587,24 @@ function init_original_vehicle()
 	self init_vehicle();
 }
 
+// debug code below is for a simple vehicle health bar
+function vehicle_wait_player_enter_t()
+{
+	self endon( "transmute" );
+	self endon( "death" );
+	self endon( "delete" );
+	
+	while( 1 )
+	{
+		self waittill( "enter_vehicle", player );
+
+		player thread player_wait_exit_vehicle_t();
+
+		player player_update_vehicle_hud( true, self );
+	}
+}
+
+
 function player_wait_exit_vehicle_t()
 {
 	// Don't endon "death".  Player will receive
@@ -595,6 +615,27 @@ function player_wait_exit_vehicle_t()
 	self player_update_vehicle_hud( false, vehicle );
 }
 
+
+function vehicle_wait_damage_t()
+{
+	self endon( "transmute" );
+	self endon( "death" );
+	self endon( "delete" );
+	
+	while( 1 )
+	{
+		self waittill ( "damage" );
+
+		occupants = self GetVehOccupants();
+		if( isdefined( occupants ) )
+		{
+			for( i = 0; i < occupants.size; i++ )
+			{
+				occupants[i] player_update_vehicle_hud( true, self );
+			}
+		}
+	}
+}
 
 
 function player_update_vehicle_hud( show, vehicle )
@@ -657,6 +698,13 @@ function init_vehicle_threads()
 	
 	self thread vehicle_recycle_spawner_t();
 	self thread vehicle_disconnect_paths();
+	
+	// enable debug vehicle health bar
+	if( isdefined( level.enableVehicleHealthbar ) && level.enableVehicleHealthbar )
+	{
+		self thread vehicle_wait_player_enter_t();
+		self thread vehicle_wait_damage_t();
+	}
 	
 	self thread vehicle_wait_tread_damage();
 
@@ -797,7 +845,7 @@ function wait_until_severely_damaged()
 		
 		health_percentage = self.health / self.initial_state.health;
 		
-		if ( health_percentage < level.k_severe_damage_health_percentage )
+		if ( isdefined( level.k_severe_damage_health_percentage ) && health_percentage < level.k_severe_damage_health_percentage )
 			break;
 	}
 }
@@ -1007,7 +1055,12 @@ function vehicle_ghost_entering_occupants_t()
 	self endon( "transmute" );
 	self endon( "death" );
 	self endon( "delete" );
-	
+
+	if ( IsDefined( self.vehicleClass ) && "artillery" == self.vehicleClass )
+	{
+		return;
+	}
+
 	//if ( self vehicle_is_tank() )
 	{
 		while ( 1 )
@@ -1063,6 +1116,11 @@ function player_is_driver()
 	
 	if ( isdefined( vehicle ) )
 	{
+		if ( IsDefined( vehicle.vehicleClass ) && "artillery" == vehicle.vehicleClass )
+		{
+			return false;
+		}
+
 		seat = vehicle GetOccupantSeat( self );
 		
 		if ( isdefined(seat) && seat == 0 )
@@ -1109,8 +1167,10 @@ function player_leave_vehicle_cleanup_t( vehicle )
 	self waittill( "exit_vehicle" );
 	currentWeapon = self getCurrentWeapon();
 	
-	if( self.lastWeapon != currentWeapon && self.lastWeapon != level.weaponNone )
+	if ( IsDefined( self.lastWeapon ) && self.lastWeapon != currentWeapon && self.lastWeapon != level.weaponNone )
+	{
 		self switchToWeapon( self.lastWeapon );
+	}
 
 	self Show();
 }
@@ -1670,9 +1730,11 @@ function _init_husk( vehicle_name, respawn_parameters )
 {
 	self swap_to_husk_model();
 
-	effects = level.vehicles_husk_effects[ vehicle_name ];
-	self play_vehicle_effects( effects );
-	
+	if ( isdefined( level.vehicles_husk_effects ) )
+	{
+		effects = level.vehicles_husk_effects[ vehicle_name ];
+		self play_vehicle_effects( effects );
+	}
 	
 	self.respawn_parameters = respawn_parameters;
 	
@@ -1884,19 +1946,22 @@ function follow_path( node )
 function InitVehicleMap()
 {
 	thread VehicleMainThread();
-	
-	level.vehicle_map = 1;
 }
 
 function VehicleMainThread()
 {
+	if ( level.disableVehicleSpawners === true )
+		return;
+	
 	//"siegebot";
 	//"siegebot_boss";
 	//"quadtank";
+	//"mechtank";
 	
 	//spawn_nodes = getentarray( "veh_spawn_point", "targetname" );
 	spawn_nodes = struct::get_array( "veh_spawn_point", "targetname" );
 
+	veh_spawner_id = 0; // a unique identifier for gameplay driven fx
 	for( i = 0; i < spawn_nodes.size; i++ )
 	{
 		spawn_node = spawn_nodes[i];
@@ -1907,16 +1972,25 @@ function VehicleMainThread()
 		if( !isdefined( veh_name ) )
 			continue;
 		
-		thread VehicleSpawnThread( veh_name, spawn_node.origin, spawn_node.angles, time_interval );
+		veh_spawner_id++;
+		thread VehicleSpawnThread( veh_spawner_id, veh_name, spawn_node.origin, spawn_node.angles, time_interval );
+		
+		if ( isdefined( level.vehicle_spawner_init ) )
+			level [[ level.vehicle_spawner_init ]] ( veh_spawner_id, veh_name, spawn_node.origin, spawn_node.angles );
+
 		WAIT_SERVER_FRAME;
 	}
+	
+	if ( isdefined( level.vehicle_spawners_init_finished ) )
+		level thread [[ level.vehicle_spawners_init_finished ]]();
 }
 
-function VehicleSpawnThread( veh_name, origin, angles, time_interval )
+function VehicleSpawnThread( veh_spawner_id, veh_name, origin, angles, time_interval )
 {
 	level endon( "game_ended" );
 	
 	veh_spawner = GetEnt( veh_name + "_spawner", "targetname" );
+	kill_trigger = spawn( "trigger_radius", origin, 0, 60, 180 );
 	
 	while( 1 )
 	{
@@ -1926,42 +2000,150 @@ function VehicleSpawnThread( veh_name, origin, angles, time_interval )
 	   		wait RandomFloatRange( 1.0, 2.0 );
 	   		continue;
 		}
-			
-		vehicle ASMRequestSubstate( "locomotion@movement" );
+		
+		if( isdefined( vehicle.archetype ) )
+			vehicle ASMRequestSubstate( "locomotion@movement" );
 		
 		WAIT_SERVER_FRAME;
 		
-		vehicle MakeVehicleUsable();
-		if( Target_isTarget( vehicle ) )
-			Target_Remove( vehicle );
 		vehicle.origin = origin;
 		vehicle.angles = angles;
-		vehicle.noJumping = true;
-		vehicle.forceDamageFeedback = true;
-		vehicle.vehkilloccupantsondeath = true;
-		vehicle DisableAimAssist();
+		vehicle.veh_spawner_id = veh_spawner_id;
+
 		
 		vehicle thread VehicleTeamThread();
 		
 		vehicle waittill( "death" );
 		vehicle vehicle_death::DeleteWhenSafe( 0.25 );
 		
+		if ( isdefined( level.vehicle_destroyed ) )
+			level thread [[ level.vehicle_destroyed ]]( veh_spawner_id );
+		
+		
 		if( isdefined( time_interval ) )
+		{
+			level thread PerformVehiclePreSpawn( veh_spawner_id, veh_name, origin, angles, time_interval, kill_trigger );
 			wait time_interval;
+		}
 	}
 }
+
+function PerformVehiclePreSpawn( veh_spawner_id, veh_name, origin, angles, spawn_delay, kill_trigger )
+{
+	fx_prespawn_time = 5.0;
+	fx_spawn_delay = spawn_delay - fx_prespawn_time;
+	
+	wait fx_spawn_delay;
+	
+	if ( isdefined( level.vehicle_about_to_spawn ) )
+	{
+		level thread [[ level.vehicle_about_to_spawn ]]( veh_spawner_id, veh_name, origin, angles, fx_prespawn_time );
+	}
+
+	kill_overlap_time = 0.1;
+	
+	wait_before_kill = fx_prespawn_time - kill_overlap_time;
+	wait wait_before_kill;
+
+	kill_duration_ms = kill_overlap_time * 2 * 1000;
+	level thread kill_any_touching( kill_trigger, kill_duration_ms );
+	
+	wait kill_overlap_time;
+}
+
+function kill_any_touching( kill_trigger, kill_duration_ms )
+{
+	kill_expire_time_ms = GetTime() + kill_duration_ms;
+	
+	kill_weapon = GetWeapon( "hero_minigun" ); // we like this for the gib settings
+
+	while ( GetTime() <= kill_expire_time_ms )
+	{
+		foreach( player in level.players )
+		{
+			if ( !isdefined( player ) )
+				continue;
+			
+			if ( player IsTouching( kill_trigger ) )
+			{			
+				if ( player IsInVehicle() )
+				{
+					vehicle = player GetVehicleOccupied();
+					if ( isdefined( vehicle ) && ( vehicle.is_oob_kill_target === true ) ) // intentionally piggy-backed on is_oob_kill_target
+					{
+						destroy_vehicle( vehicle );
+						continue;
+					}
+				}
+				player DoDamage( player.health + 1, player.origin, kill_trigger, kill_trigger, "none", "MOD_SUICIDE", 0, kill_weapon );
+			}
+		}
+		
+		potential_victims = GetAIArray();
+
+		if ( isdefined( potential_victims ) )
+		{
+			foreach( entity in potential_victims )
+			{
+				if ( !isdefined( entity ) )
+					continue;
+				
+				if ( !entity IsTouching( kill_trigger ) )
+					continue;
+				
+				if ( isdefined( entity.health ) && entity.health <= 0 )
+					continue;
+				
+				if ( IsVehicle( entity ) )
+					destroy_vehicle( entity );
+			}
+		}
+
+		WAIT_SERVER_FRAME;
+	}
+}
+
+function destroy_vehicle( vehicle )
+{
+	// need to do this to destroy vehicles
+	
+	vehicle DoDamage( vehicle.health + 10000, vehicle.origin, undefined, undefined, "none", "MOD_TRIGGER_HURT" ); // must be MOD_TRIGGER_HURT
+}
+
+
 
 function VehicleTeamThread()
 {
 	vehicle = self;
 	vehicle endon( "death" );
 	
+	vehicle MakeVehicleUsable();
+	if( Target_isTarget( vehicle ) )
+		Target_Remove( vehicle );
+
+	vehicle.noJumping = true;
+	vehicle.forceDamageFeedback = true;
+	vehicle.vehkilloccupantsondeath = true;
+	vehicle DisableAimAssist();	
+	
 	while( 1 )
 	{
-		vehicle waittill( "enter_vehicle", player );
-		vehicle setteam( player.team );
-		//vehicle SetHighDetail( true );
+		vehicle setteam( "neutral" );	
+		vehicle.ignoreme = true;
+		//vehicle SetHighDetail( false );
 		vehicle clientfield::set( "toggle_lights", CF_TOGGLE_LIGHTS_OFF );
+		if( Target_isTarget( vehicle ) )
+			Target_Remove( vehicle );
+		
+		
+		vehicle waittill( "enter_vehicle", player );
+		player ClearAndCachePerks();
+		vehicle setteam( player.team );
+		vehicle.ignoreme = false;
+		//vehicle SetHighDetail( true );
+		vehicle clientfield::set( "toggle_lights", CF_TOGGLE_LIGHTS_ON );
+		vehicle spawning::create_entity_enemy_influencer( "small_vehicle", player.team );
+		player spawning::enable_influencers( false );
 		if( !Target_isTarget( vehicle ) )
 		{
 			if( isdefined( vehicle.targetOffset ) )
@@ -1973,11 +2155,14 @@ function VehicleTeamThread()
 		vehicle thread WatchPlayerExitRequestThread( player );
 		
 		vehicle waittill( "exit_vehicle", player );
-		vehicle setteam( "neutral" );	
-		//vehicle SetHighDetail( false );
-		vehicle clientfield::set( "toggle_lights", CF_TOGGLE_LIGHTS_ON );
-		if( Target_isTarget( vehicle ) )
-			Target_Remove( vehicle );
+		
+		if( isdefined( player ) )
+		{
+			player SetCachedPerks();
+			player spawning::enable_influencers( true );
+		}
+
+		vehicle spawning::remove_influencers();
 	}
 }
 
@@ -2008,6 +2193,22 @@ function WatchPlayerExitRequestThread( player )
 		}
 		WAIT_SERVER_FRAME;
 	}	
+}
+
+// We will cache of the perks on the player.  If the player dies, cache is lost but respawned
+function ClearAndCachePerks()
+{
+	self.perks_before_vehicle = self GetPerks();
+	self ClearPerks();
+}
+
+function SetCachedPerks()
+{
+	assert( IsDefined( self.perks_before_vehicle ) );
+	foreach( perk in self.perks_before_vehicle )
+	{
+		self SetPerk( perk );
+	}
 }
 
 		

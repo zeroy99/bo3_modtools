@@ -33,10 +33,16 @@ function killstreakTargetSet( killstreakEntity, offset )
 		offset = ( 0, 0, 0 );
 	}
 	Target_Set( killstreakEntity, offset );
+/#
+	killstreakEntity thread killstreak_hacking::killstreak_switch_team( killstreakEntity.owner );
+#/
 }
 
 
 function killstreakTargetClear( killstreakEntity )
 {
 	Target_Remove( killstreakEntity );
+/#
+	killstreakEntity thread killstreak_hacking::killstreak_switch_team_end();
+#/
 }

@@ -52,7 +52,8 @@ function watch_for_thunderguns( localclientnum )
 function thundergun_fx_power_cell( localclientnum, w_weapon )
 {
 	self endon( "disconnect" );
-	self endon( "weapon_change" ); 
+	self endon( "weapon_change" );
+	self endon( "entityshutdown" );
 
 	n_old_ammo = -1;
 	n_shader_val = 0;	// 0 == 4 lights, 1 == 3 lights, 2 == 2 lights, 3 == 1 light
@@ -62,6 +63,11 @@ function thundergun_fx_power_cell( localclientnum, w_weapon )
 	{
 		wait 0.1;
 
+		if (!isdefined(self))
+		{
+			return; 
+		}
+		
 		n_ammo = GetWeaponAmmoClip( localclientnum, w_weapon );
 		if ( n_old_ammo > 0 && n_old_ammo != n_ammo )
 		{

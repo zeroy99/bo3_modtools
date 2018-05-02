@@ -134,7 +134,10 @@ function trackUsedStatOnDeath()
 	self endon( "do_not_track_used" );
 	self waittill( "death" );
 	waittillframeend; // to compensate for timiing issues with notifies and death
-	self.owner trackBouncingBettyAsUsed(); // since betties can be picked up or hacked, we track them as used on death
+	if ( isdefined( self.owner ) )
+	{
+		self.owner trackBouncingBettyAsUsed(); // since betties can be picked up or hacked, we track them as used on death
+	}
 	self notify( "end_doNoTrackUsedOnPickup" );
 	self notify( "end_doNoTrackUsedOnHacked" );
 }

@@ -533,6 +533,12 @@ function state_jump_enter( params )
 	goal = params.jumpgoal;
 
 	trace = PhysicsTrace( goal + ( 0, 0, 500 ), goal - ( 0, 0, 10000 ), ( -10, -10, -10 ), ( 10, 10, 10 ), self, PHYSICS_TRACE_MASK_VEHICLE );
+	if ( DEBUG_ON )
+	{
+	/#debugstar( goal, 60000, (0,1,0) ); #/
+	/#debugstar( trace[ "position" ], 60000, (0,1,0) ); #/
+	/#line(goal, trace[ "position" ], (0,1,0), 1, false, 60000 ); #/
+	}
 	if ( trace[ "fraction" ] < 1 )
 	{
 		goal = trace[ "position" ];
@@ -568,6 +574,13 @@ function state_jump_update( params )
 
 	self.jump.in_air = true;
 
+	if ( DEBUG_ON ) 
+	{
+	/#debugstar( goal, 60000, (0,1,0) ); #/
+	/#debugstar( goal + (0,0,100), 60000, (0,1,0) ); #/
+	/#line(goal, goal + (0,0,100), (0,1,0), 1, false, 60000 ); #/
+	}
+
 	// calculate distance and forces
 	totalDistance = Distance2D(goal, self.jump.linkEnt.origin);
 	forward = FLAT_ORIGIN( ((goal - self.jump.linkEnt.origin) / totalDistance) );
@@ -597,9 +610,11 @@ function state_jump_update( params )
 		antiGravityScaleUp = 1.0;//MapFloat( 0, 0.5, 0.6, 0, abs( 0.5 - distanceToGoal / totalDistance ) );
 		antiGravityScale = 1.0;//MapFloat( (self.radius * 1.0), (self.radius * 3), 0, 1, distanceToGoal );
 		antiGravity = (0,0,0);//antiGravityScale * antiGravityScaleUp * (-params.gravityForce) + (0,0,antiGravityByDistance);
+		if ( DEBUG_ON ) /#line(self.jump.linkEnt.origin, self.jump.linkEnt.origin + antiGravity, (0,1,0), 1, false, 60000 ); #/
 
 		velocityForwardScale = MapFloat( (self.radius * 1), (self.radius * 4), 0.2, 1, distanceToGoal );
 		velocityForward = initVelocityForward * velocityForwardScale;
+		if ( DEBUG_ON ) /#line(self.jump.linkEnt.origin, self.jump.linkEnt.origin + velocityForward, (0,1,0), 1, false, 60000 ); #/
 
 		oldVerticleSpeed = velocity[2];
 		velocity = (0,0, velocity[2]);
@@ -625,6 +640,7 @@ function state_jump_update( params )
 			self ASMRequestSubstate( params.landingState );
 		}
 
+		if ( DEBUG_ON ) /#debugstar( self.jump.linkEnt.origin, 60000, (1,0,0) ); #/
 		WAIT_SERVER_FRAME;
 	}
 

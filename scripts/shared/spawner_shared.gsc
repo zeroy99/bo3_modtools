@@ -452,6 +452,15 @@ function spawn_prethink()
 
 	level.ai_classname_in_level[ self.classname ] = true;
 	
+	/#
+	if (GetDvarString ("noai") != "off")
+	{
+		// NO AI in the level plz
+		self.count = 0;
+		return;
+	}
+	#/
+
 	// Populate the list of Axis and Ally drone spawners
 // 	self _drones::drone_add_spawner(); _drones.gsc has been removed
 			
@@ -590,6 +599,11 @@ function run_spawn_functions()
 			util::single_thread( self, func[ "function" ], func[ "param1" ], func[ "param2" ], func[ "param3" ], func[ "param4" ], func[ "param5" ] );
 		}
 
+		/#
+			// keep spawn funcs around in debug
+			return;
+		#/
+
 		self.spawn_funcs = undefined;
 	}
 }
@@ -660,6 +674,10 @@ function spawn_think_action( spawner )
 	
 	// handle default ai flags for ent_flag * functions
 //	self thread util::ent_flag_init_ai_standards();
+	
+	/#
+	thread show_bad_path();
+	#/
 	
 	if ( isdefined( self.script_forceColor ) )
 	{
@@ -1609,6 +1627,12 @@ function fallback_spawner_think( num, node_array, ignoreWhileFallingBack )
 		self waittill( "spawned", spawn );
 		if( firstspawn )
 		{
+			/#
+			if( GetDvarString( "fallback" ) == "1" )
+			{
+				println( "^a First spawned: ", num );
+			}
+			#/
 			level notify( ( "fallback_firstspawn" + num ) );
 			firstspawn = false;
 		}
@@ -1755,11 +1779,31 @@ function fallback_ai( num, node_array, ignoreWhileFallingBack )
 	self endon( "death" );
 	level thread fallback_death( self, num );
 	self thread fallback_goal( ignoreWhileFallingBack );  // SRS 5/3/2008: updated to allow AIs to ignoreall while falling back
-
+/#
+	if( GetDvarString( "fallback" ) == "1" )
+	{
+		self thread coverprint( node.origin );
+	}
+	#/	
 	self waittill( "fallback_notify" );
 	level notify( ( "fallback_reached_goal" + num ) );
 }
 
+/#
+function coverprint( org )
+{
+	self endon( "fallback_notify" );
+	self endon( "stop_coverprint" );
+	self endon ("death");
+	while( 1 )
+	{
+		line( self.origin +( 0, 0, 35 ), org, ( 0.2, 0.5, 0.8 ), 0.5 );
+		print3d( ( self.origin +( 0, 0, 70 ) ), "Falling Back", ( 0.98, 0.4, 0.26 ), 0.85 );
+		WAIT_SERVER_FRAME;
+	}
+}
+#/
+	
 // This gets set up on each fallback trigger
 // SRS 5/3/2008: updated to allow AIs to ignoreall while falling back
 function fallback_overmind( num, group, ignoreWhileFallingBack, percent )
@@ -1828,6 +1872,13 @@ function fallback_overmind_internal( num, group, fallback_nodes, ignoreWhileFall
 	
 	fallback_add_previous_group(num, fallback_nodes);
 
+	/#
+	if( GetDvarString( "fallback" ) == "1" )
+	{
+		println( "^a fallback trigger hit: ", num );
+	}
+	#/
+		
 	level.fallback_initiated[num] = true;
 
 	fallback_ai = undefined;
@@ -1925,10 +1976,28 @@ function fallback_text( fallbackers, start, end )
 function fallback_wait( num, group, ignoreWhileFallingBack, percent )
 {
 	level endon( ( "fallbacker_trigger" + num ) );
+	/#
+	if( GetDvarString( "fallback" ) == "1" )
+	{
+		println( "^a Fallback wait: ", num );
+	}
+	#/
 	for( i = 0; i < level.spawner_fallbackers[num]; i++ )
 	{
+		/#
+		if( GetDvarString( "fallback" ) == "1" )
+		{
+			println( "^a Waiting for spawners to be hit: ", num, " i: ", i );
+		}
+		#/
 		level waittill( ( "fallback_firstspawn" + num ) );
 	}
+	/#
+	if( GetDvarString( "fallback" ) == "1" )
+	{
+		println( "^a Waiting for AI to die, fall backers for group ", num, " is ", level.current_fallbackers[num] );
+	}
+	#/
 		
 	ai = GetAIArray();
 	for( i = 0; i < ai.size; i++ )
@@ -1944,6 +2013,12 @@ function fallback_wait( num, group, ignoreWhileFallingBack, percent )
 
 	while( deadfallbackers < level.max_fallbackers[num] * percent )
 	{
+		/#
+		if( GetDvarString( "fallback" ) == "1" )
+		{
+			println( "^cwaiting for " + deadfallbackers + " to be more than " +( level.max_fallbackers[num] * 0.5 ) );
+		}
+		#/
 		level waittill( ( "fallbacker_died" + num ) );
 		deadfallbackers++;
 	}
@@ -2555,6 +2630,45 @@ function player_saw_kill( guy, attacker )
 
 function show_bad_path()
 {
+	 /#
+	/*if ( GetDvarString( "debug_badpath" ) == "" )
+		SetDvar( "debug_badpath", "" );*/
+
+	self endon( "death" );
+	last_bad_path_time = -5000;
+	bad_path_count = 0;
+	for ( ;; )
+	{
+		self waittill( "bad_path", badPathPos );
+		
+		if ( !isdefined(level.debug_badpath) || !level.debug_badpath )
+		{
+			continue;
+		}
+
+		if ( gettime() - last_bad_path_time > 5000 )
+		{
+			bad_path_count = 0;
+		}
+		else
+		{
+			bad_path_count++;
+		}
+
+		last_bad_path_time = gettime();
+
+		if ( bad_path_count < 10 )
+		{
+			continue;
+		}
+		
+		for ( p = 0; p < 10 * 20; p++ )
+		{
+			line( self.origin, badPathPos, ( 1, 0.4, 0.1 ), 0, 10 * 20 );
+			WAIT_SERVER_FRAME;
+		}
+	}
+	#/
 }
 
 
@@ -2586,6 +2700,13 @@ function spawn( b_force = false, str_targetname, v_origin, v_angles, bIgnoreSpaw
 	makeroom = false;
 	infinitespawn = false;
 	deleteonzerocount = false;
+	
+	/#
+	if ( GetDvarString( "noai" ) != "off" )
+	{
+		return;
+	}
+	#/
 	
 	if ( !check_player_requirements() )
 	{
@@ -2674,17 +2795,12 @@ function spawn( b_force = false, str_targetname, v_origin, v_angles, bIgnoreSpaw
 		
 	}
 	
-	archetype_spawner = undefined;
-
 	// Store the last spawned time on the spawner
 	if ( IsDefined( e_spawned ) )
 	{
 		if( isdefined( level.run_custom_function_on_ai ) )
 		{
-			if( IsDefined( archetype_spawner ) )
-				e_spawned thread [[level.run_custom_function_on_ai]]( archetype_spawner, str_targetname, force_spawn );
-			else
-				e_spawned thread [[level.run_custom_function_on_ai]]( self, str_targetname, force_spawn );
+			e_spawned thread [[level.run_custom_function_on_ai]]( self, str_targetname, force_spawn );
 		}
 
 		if ( isdefined( v_origin ) || isdefined( v_angles ) )

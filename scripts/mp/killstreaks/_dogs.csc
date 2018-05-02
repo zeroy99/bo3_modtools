@@ -1,4 +1,5 @@
 #using scripts\codescripts\struct;
+
 #using scripts\shared\system_shared;
 
 #insert scripts\shared\shared.gsh;

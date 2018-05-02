@@ -261,7 +261,7 @@ function hide_owner( owner )
 
 	self thread show_owner_on_attack( owner );
 	
-	evt = self util::waittill_any_return( "explode", "death", "grenade_dud");
+	evt = self util::waittill_any_ex( "explode", "death", "grenade_dud", owner, "hide_owner" );
 
 
 	owner notify("show_owner");
@@ -326,6 +326,20 @@ function proximity_detonate( owner )
 		damagearea delete();
 }
 
+// hack because grenades can't linkto 
+function FakeLinkto(linkee)
+{
+	self notify("fakelinkto");
+	self endon("fakelinkto");
+	self.backlinked = 1;
+	while (isdefined(self) && isdefined(linkee))
+	{
+		self.origin = linkee.origin;
+		self.angles = linkee.angles;
+		wait 0.05;
+	}
+}
+
 
 function player_throw_cymbal_monkey(grenade,num_attractors,max_attract_dist,attract_dist_diff)
 {
@@ -382,9 +396,17 @@ function player_throw_cymbal_monkey(grenade,num_attractors,max_attract_dist,attr
 		
 		if( isDefined( grenade ) )
 		{
+			grenade.ground_ent = grenade GetGroundEnt();
+			
 			if (isdefined(model))
 			{
-				if (!IS_TRUE(grenade.backlinked))
+				if ( isdefined(grenade.ground_ent) && !( grenade.ground_ent.classname === "worldspawn" ) )
+				{
+					model SetMovingPlatformEnabled( true );
+					model LinkTo( grenade.ground_ent );
+					grenade thread FakeLinkto(model);
+				}
+				else if (!IS_TRUE(grenade.backlinked))
 				{
 					model unlink();
 					model.origin = grenade.origin;

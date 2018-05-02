@@ -7,6 +7,9 @@
 #using scripts\shared\scoreevents_shared;
 #using scripts\shared\util_shared;
 
+#insert scripts\shared\shared.gsh;
+#insert scripts\shared\version.gsh;
+
 #using scripts\mp\_challenges;
 #using scripts\mp\_util;
 #using scripts\mp\killstreaks\_airsupport;
@@ -16,8 +19,6 @@
 #using scripts\mp\killstreaks\_missile_swarm;
 
 #insert scripts\mp\killstreaks\_killstreaks.gsh;
-#insert scripts\shared\shared.gsh;
-#insert scripts\shared\version.gsh;
 
 #precache( "string", "KILLSTREAK_EARNED_MISSILE_DRONE" );
 #precache( "string", "KILLSTREAK_MISSILE_DRONE_NOT_AVAILABLE" );
@@ -37,6 +38,13 @@ function init()
 	
 	level.missile_drone_flyheight	= 2400;
 	level.missile_drone_anim = %o_drone_hunter_launch;
+	
+	//killstreaks::register( "missile_drone", "missile_drone", "killstreak_missile_drone", "missile_drone_used",&missile_drone_killstreak, true );
+	//killstreaks::register_alt_weapon( "missile_drone", "missile_drone_projectile" );
+	//killstreaks::register_alt_weapon( "inventory_missile_drone", "missile_drone_projectile" );
+	//killstreaks::register_strings( "missile_drone", &"KILLSTREAK_EARNED_MISSILE_DRONE", &"KILLSTREAK_MISSILE_DRONE_NOT_AVAILABLE", &"KILLSTREAK_MISSILE_DRONE_INBOUND", undefined, &"KILLSTREAK_MISSILE_DRONE_HACKED" );
+	//killstreaks::register_dialog( "missile_drone", "mpl_killstreak_missile_drone", "kls_hkdrone_used", "", "kls_hkdrone_enemy", "", "kls_hkdrone_ready" );
+	//killstreaks::set_team_kill_penalty_scale( "missile_drone", 0.0 );
 }
 
 function missile_drone_killstreak( killstreakType )
@@ -144,6 +152,8 @@ function doMissileDrone( origin, weapon, killstreak_id, hardpointType, team  )
 	forward = AnglesToForward( direction );
 	target = origin + VectorScale( forward, 10000 );
 
+	airsupport::debug_line( origin, target, (0.9,0.1,0.1) );
+		
 	projectile = missile_swarm::projectile_spawn_utility( self, target, origin, getweapon( "missile_drone_projectile" ), "drone_missile", false );
 	projectile Missile_DroneSetVisible( true );
 
@@ -234,6 +244,9 @@ function drone_target_search( hardpointType )
 				
 				direction = vecscale( direction, 1024 );
 				self.goal.origin = ( self.origin[0] + direction[0], self.origin[1] + direction[1], level.missile_drone_origin[2] );
+/#
+				airsupport::debug_line( self.origin, self.goal.origin, ( 1,1,0 ), 5000 );
+#/
 			}
 			else // move to center of map
 			{
@@ -243,6 +256,10 @@ function drone_target_search( hardpointType )
 				
 				direction = vecscale( direction, 1024 );
 				self.goal.origin = ( level.missile_drone_origin[0] + direction[0], level.missile_drone_origin[1] + direction[1], level.missile_drone_origin[2] );					
+				
+/#
+				airsupport::debug_line( self.origin, self.goal.origin, ( 0,1,1 ), 5000 );
+#/
 			}
 			
 		}
@@ -269,6 +286,7 @@ function set_drone_target( hardpointType, target )
 	self thread check_target_lost( target );
 	self.swarm_target = target[ "entity" ];
 	target[ "entity" ].swarm = self;
+	airsupport::debug_line( self.origin, target[ "entity" ].origin, ( 0,0,0 ), 5000 );
 	self Missile_SetTarget( target[ "entity" ], target[ "offset" ] );
 
 	self PlaySound( "veh_harpy_drone_swarm_incomming" );
@@ -296,8 +314,15 @@ function check_target_lost( target )
 	failureCount = 0;
 	for ( ;; )
 	{
+/#
+		airsupport::debug_star( target["entity"].origin, ( 0,1,0 ), 1000 );
+		airsupport::debug_star(self.origin,( 0,1,0 ), 1000 );
+#/
 		if ( BulletTracePassed( self.origin, target["entity"].origin + target[ "offset" ], false, target["entity"] ) )
 		{
+/#
+			airsupport::debug_line(self.origin, target["entity"].origin, ( 0,1,0 ), 1000 );
+#/
 			failureCount = 0;		
 		}
 		else
@@ -419,6 +444,9 @@ function projectile_find_target_player( owner, minCos )
 		startOffset = self GetPlayerViewHeight();
 		startOrigin = ( self.origin[0], self.origin[1], self.origin[2] + startOffset );
 		startAngles = self GetPlayerAngles();
+/#
+		airsupport::debug_star( startOrigin, ( 0,0,1 ), 1000 );	
+#/
 	}
 	else
 	{
@@ -439,9 +467,15 @@ function projectile_find_target_player( owner, minCos )
 		currentPlayerOffset = undefined;
 		currentPlayerDotProd = undefined;
 		currentPlayerRating = 0;
+/#
+		airsupport::debug_star( player.origin, ( 1,1,1 ), 1000 );
+#/
 		// can see the player's origin
 		if ( BulletTracePassed( startOrigin, player.origin, false, player ) )
 		{
+/#
+			airsupport::debug_line( startOrigin, player.origin, ( 1,1,1 ), 1000 );
+#/
 			if ( !isdefined ( currentPlayerOffset ) )
 			{
 				currentPlayerOffset = ( 0, 0, 0 );
@@ -452,9 +486,16 @@ function projectile_find_target_player( owner, minCos )
 		
 		verticalOffset = player GetPlayerViewHeight();
 		playerHeadOffset = ( 0, 0, verticalOffset );
+/#
+		airsupport::debug_star( player.origin + playerHeadOffset, ( 1,0,0 ), 1000 );
+#/
 		// can see the player's head
 		if ( BulletTracePassed(startOrigin, player.origin + playerHeadOffset, false, player ) )
 		{
+/#
+			airsupport::debug_line( startOrigin, player.origin + playerHeadOffset, ( 1,0,0 ), 1000 );
+#/
+
 			if ( !isdefined ( currentPlayerOffset ) )
 			{
 				currentPlayerOffset = playerHeadOffset;
@@ -465,8 +506,14 @@ function projectile_find_target_player( owner, minCos )
 
 		// player in building
 		end = player.origin + playerHeadOffset + ( 0, 0, 96 );
+/#
+		airsupport::debug_star( end, ( 1,1,0 ), 1000 );
+#/
 		if ( BulletTracePassed(player.origin + playerHeadOffset, end, false, player ) )
 		{
+/#
+			airsupport::debug_line(player.origin + playerHeadOffset, end, ( 1,1,0 ), 1000 );
+#/
 			if ( !isdefined ( currentPlayerOffset ) )
 			{
 				currentPlayerOffset = ( 0, 0, 30 );

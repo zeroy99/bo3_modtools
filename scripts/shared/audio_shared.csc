@@ -157,8 +157,16 @@ function snd_snapshot_init()
 		
 		if( SessionModeIsZombiesGame() )
 		{
-			level._sndActiveSnapshot = "zmb_game_start_nofade";
-			level._sndNextSnapshot = "zmb_game_start_nofade";
+			if( mapname !== "zm_cosmodrome" && mapname !== "zm_prototype" && mapname !== "zm_moon" && mapname !== "zm_sumpf" && mapname !== "zm_asylum" && mapname !== "zm_temple" && mapname !== "zm_theater" && mapname !== "zm_tomb" )
+			{
+				level._sndActiveSnapshot = "zmb_game_start_nofade";
+				level._sndNextSnapshot = "zmb_game_start_nofade";
+			}
+			else
+			{
+				level._sndActiveSnapshot = "zmb_hd_game_start_nofade";
+				level._sndNextSnapshot = "zmb_hd_game_start_nofade";
+			}
 		}
 	}
 	
@@ -169,7 +177,7 @@ function snd_snapshot_init()
 function sndOnWait()
 {
 	level endon( "sndOnOverride" );
-	level util::waittill_any_timeout( 20, "sndOn" );
+	level util::waittill_any_timeout( 20, "sndOn", "sndOnOverride" );
 //	audio::snd_set_snapshot( "default" );
 }
 
@@ -242,6 +250,13 @@ function soundRandom_Thread(localClientNum, randSound )
 		{
 			playsound( localClientNum, randSound.script_sound, randSound.origin );
 		}
+
+		/#
+		if( GetDvarint( "debug_audio" ) > 0 )
+		{
+			print3d( randSound.origin, randSound.script_sound, (0.0, 0.8, 0.0), 1, 3, 45 );
+		}
+		#/
 	}
 }
 function soundRandom_NotifyWait(notify_name,randSound)
@@ -416,6 +431,12 @@ function startSoundLoops()
 	if( isdefined( loopers ) && loopers.size > 0 )
 	{
 		delay = 0;
+/#
+		if( GetDvarint( "debug_audio" ) > 0 )
+		{
+			println( "*** Client : Initialising looper sounds - " + loopers.size + " emitters." );
+		}	
+#/			
 		for( i = 0; i < loopers.size; i++ )
 		{
 			loopers[i] thread soundLoopThink();
@@ -429,6 +450,12 @@ function startSoundLoops()
 	}
 	else
 	{
+/#
+		if( GetDvarint( "debug_audio" ) > 0 )
+		{
+			println( "*** Client : No looper sounds." );
+		}	
+#/			
 	}
 }
 
@@ -439,6 +466,12 @@ function startLineEmitters()
 	if( isdefined( lineEmitters ) && lineEmitters.size > 0 )
 	{
 		delay = 0;
+/#
+		if( GetDvarint( "debug_audio" ) > 0 )
+		{
+			println( "*** Client : Initialising line emitter sounds - " + lineEmitters.size + " emitters." );
+		}	
+#/			
 		for( i = 0; i < lineEmitters.size; i++ )
 		{
 			lineEmitters[i] thread soundLineThink();
@@ -452,6 +485,12 @@ function startLineEmitters()
 	}
 	else
 	{
+/#
+		if( GetDvarint( "debug_audio" ) > 0 )
+		{
+			println( "*** Client : No line emitter sounds." );
+		}	
+#/			
 	}
 }
 
@@ -489,6 +528,14 @@ function init_audio_triggers(localClientNum)
 	
 	stepTrigs = GetEntArray( localClientNum, "audio_step_trigger","targetname" );
 	materialTrigs = GetEntArray( localClientNum, "audio_material_trigger","targetname" );
+/#
+	if( GetDvarint( "debug_audio" ) > 0 )
+	{
+		println( "Client : " + stepTrigs.size + " audio_step_triggers." );
+		println( "Client : " + materialTrigs.size + " audio_material_triggers." );
+	}	
+
+#/			
 	array::thread_all( stepTrigs,&audio_step_trigger, localClientNum );
 	array::thread_all( materialTrigs,&audio_material_trigger, localClientNum );
 }
@@ -728,11 +775,13 @@ function get_vol_from_speed( player )
 	speed = player getspeed();
 	
 	// hack for ai until getspeed returns correct speed	
+	/*
 	if( speed == 0 )
 	{
 		speed = 175;
 	}	
-
+	*/
+	
 	// make sure we are not getting negative vaules. may be unneeded
 	abs_speed = absolute_value( int( speed ) );
 	volume = scale_speed( min_speed, max_speed, min_vol, max_vol, abs_speed );
@@ -796,11 +845,39 @@ function snd_play_auto_fx( fxid, alias, offsetx, offsety, offsetz, onground, are
 
 function snd_print_fx_id( fxid, type, ent )
 {
+/#
+	if( GetDvarint( "debug_audio" ) > 0 )
+	{
+		printLn( "^5 ******* fxid; " + fxid + "^5 type; " + type );
+	}	
+#/			
+}
+
+function debug_line_emitter()
+{
+	while( 1 )
+	{
+		/# 
+		if( GetDvarint( "debug_audio" ) > 0 )
+		{
+			line( self.start, self.end, (0, 1, 0) );
+			
+			print3d( self.start, "START", (0.0, 0.8, 0.0), 1, 3, 1 );
+			print3d( self.end, "END", (0.0, 0.8, 0.0), 1, 3, 1 );
+			print3d( self.origin, self.script_sound, (0.0, 0.8, 0.0), 1, 3, 1 );
+		}
+		WAIT_CLIENT_FRAME;
+		#/
+	}
 }
 
 function move_sound_along_line()
 {
 	closest_dist = undefined;
+	
+	/#
+	self thread debug_line_emitter();
+	#/
 	
 	while( 1 )
 	{
@@ -895,7 +972,7 @@ function snd_underwater( localClientNum )
 	
 	while(1)
 	{
-		underwaterNotify = self util::waittill_any_return( "underwater_begin", "underwater_end", "swimming_begin", "swimming_end", "death" );
+		underwaterNotify = self util::waittill_any_ex( "underwater_begin", "underwater_end", "swimming_begin", "swimming_end", "death", "entityshutdown", "sndEndUWWatcher", level, "demo_jump", "killcam_begin" + localClientNum, "killcam_end" + localClientNum );
 
 		if ( underwaterNotify == "death" )
 		{
@@ -977,8 +1054,10 @@ function soundplayuidecodeloop(decodeString, playTimeMs)
 
 function setCurrentAmbientState(ambientRoom, ambientPackage, roomColliderCent, packageColliderCent, defaultRoom)
 {
-	// sound designers, add any script based logic you want here. This gets called when ambient rooms change 
-	// for any local player	
+	if ( isdefined( level._sndAmbientStateCallback ) )
+	{
+		level thread [[level._sndAmbientStateCallback]]( ambientRoom, ambientPackage, roomColliderCent );
+	}
 }
 
 function isPlayerInfected ()

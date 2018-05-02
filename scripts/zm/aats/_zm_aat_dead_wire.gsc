@@ -16,6 +16,8 @@
 #using scripts\zm\_zm_lightning_chain;
 #using scripts\zm\_zm_utility;
 
+#using scripts\shared\ai\zombie_utility;
+
 #insert scripts\zm\aats\_zm_aat_dead_wire.gsh;
 
 #insert scripts\zm\_zm_utility.gsh;
@@ -47,10 +49,16 @@ function __init__()
 
 function result( death, attacker, mod, weapon )
 {
+	if( !isdefined( level.zombie_vars[ "tesla_head_gib_chance" ] ) )
+	{
+		zombie_utility::set_zombie_var( "tesla_head_gib_chance", 50 );
+	}		
+	
 	attacker.tesla_enemies = undefined;
 	attacker.tesla_enemies_hit = 1;
 	attacker.tesla_powerup_dropped = false;
 	attacker.tesla_arc_count = 0;
+	level.zm_aat_dead_wire_lightning_chain_params.weapon = weapon;
 	
 	self lightning_chain::arc_damage( self, attacker, 1, level.zm_aat_dead_wire_lightning_chain_params );
 }

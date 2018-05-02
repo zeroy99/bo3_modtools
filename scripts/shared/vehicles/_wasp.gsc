@@ -302,7 +302,7 @@ function state_emped_update( params )
 		if ( isdefined( goalpoint ) && SightTracePassed( self.origin + originoffset, goalpoint, false, self ) )
 		{	
 			self SetVehGoalPos( goalpoint, false, false );
-			self util::waittill_any_timeout( 0.3, "near_goal", "goal" );
+			self util::waittill_any_timeout( 0.3, "near_goal", "goal", "change_state", "death" );
 
 			if ( isdefined( self.enemy ) )
 			{
@@ -320,7 +320,7 @@ function state_emped_update( params )
 
 			if ( foundGoal )
 			{
-				self util::waittill_any_timeout( 1, "near_goal", "goal" );
+				self util::waittill_any_timeout( 1, "near_goal", "goal", "change_state", "death" );
 			}
 			else
 			{
@@ -434,10 +434,40 @@ function init_guard_points()
 	ARRAY_ADD( self._guard_points, (180, 0, 140) );
 }
 
+/#
+function guard_points_debug()
+{
+	self endon ( "death" );
+	
+	if ( self.isdebugdrawing === true )
+	{
+		return;
+	}
+	
+	self.isdebugdrawing = true;
+	while( true )
+	{
+		foreach( point in self.debugpointsarray )
+		{
+			color = RED;
+			if ( IsPointInNavVolume( point, "navvolume_small" ) )
+			{
+				color = GREEN;
+			}
+			
+			debugstar( point, 5, color );
+		}
+		WAIT_SERVER_FRAME;
+	}
+}
+#/
+
 function get_guard_points( owner )
 {
 	assert( self._guard_points.size > 0, "wasp has no guard points" );
 
+	//self.debugpointsarray = [];
+	// /# self thread guard_points_debug(); #/
 	
 	points_array = [];
 
@@ -639,6 +669,13 @@ function state_guard_update( params )
 					{
 					/# 
 						assert( false, "Wasp fall outside of NavVolume at " + self.origin );
+						v_box_min = ( -self.radius, -self.radius, -self.radius );
+						v_box_max = ( self.radius, self.radius, self.radius );
+						Box( self.origin, v_box_min, v_box_max, self.angles[1], (1,0,0), 1, false, 1000000 ); 
+						if ( isdefined( stuckLocation ) )
+						{
+							Line( stuckLocation, self.origin, (1,0,0), 1, true, 1000000 );
+						}
 					#/
 						self Kill();
 					}
@@ -1188,7 +1225,16 @@ function state_combat_update( params )
 					}
 					else if ( stuckCount > 10 )
 					{
+					/# 
 						assert( false, "Wasp fall outside of NavVolume at " + self.origin );
+						v_box_min = ( -self.radius, -self.radius, -self.radius );
+						v_box_max = ( self.radius, self.radius, self.radius );
+						Box( self.origin, v_box_min, v_box_max, self.angles[1], (1,0,0), 1, false, 1000000 ); 
+						if ( isdefined( stuckLocation ) )
+						{
+							Line( stuckLocation, self.origin, (1,0,0), 1, true, 1000000 );
+						}
+					#/
 						self Kill();
 					}
 				}
@@ -1446,6 +1492,13 @@ function GetNextMovePosition_tactical() // has self.enemy
 		return undefined;
 	}
 
+	/#
+	if ( IS_TRUE( GetDvarInt("hkai_debugPositionQuery") ) )
+	{
+		recordLine( self.origin, best_point.origin, (0.3,1,0) );
+		recordLine( self.origin, self.enemy.origin, (1,0,0.4) );
+	}
+#/
 	
 	return best_point.origin;
 }

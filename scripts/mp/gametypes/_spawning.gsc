@@ -127,6 +127,12 @@ function init_spawn_system()
 }
 
 
+/*
+=============
+onPlayerConnect
+
+=============
+*/
 function onPlayerConnect()
 {
 	level endon ( "game_ended" );
@@ -137,6 +143,12 @@ function onPlayerConnect()
 }
 
 
+/*
+=============
+onPlayerSpawned
+
+=============
+*/
 function onPlayerSpawned()
 {
 	self endon( "disconnect" );
@@ -162,6 +174,13 @@ function onPlayerSpawned()
 	}
 }
 
+/*
+=============
+onDeath
+
+Drops any carried object when the player dies
+=============
+*/
 function onDeath()
 {
 	self endon( "disconnect" );
@@ -175,6 +194,13 @@ function onDeath()
 	level create_friendly_influencer( "friend_dead", self.origin, self.team );
 }
 
+/*
+=============
+onTeamChange
+
+Changes influencer teams when player changes teams
+=============
+*/
 function onTeamChange()
 {
 	self endon( "disconnect" );
@@ -189,6 +215,14 @@ function onTeamChange()
 	}
 }
 
+
+/*
+=============
+onGrenadeThrow
+
+Creates an influencer on grenade 
+=============
+*/
 function onGrenadeThrow()
 {
 	self endon( "disconnect" );

@@ -1120,16 +1120,26 @@ function set_dropped()
 				{
 					if ( trace["walkable"] == false )
 					{
+						if ( self should_be_reset( trace["position"][2], startOrigin[2], true ) )
+						{
+							self thread return_home();
+							self.isResetting = false;
+							return;
+						}
+						
 						end_reflect = (forward * 1000) + trace["position"];
 						reflect_trace = PhysicsTrace( trace["position"], end_reflect, ( -trace_size, -trace_size, -trace_size ), ( trace_size, trace_size, trace_size ), self, PHYSICS_TRACE_MASK_PLAYER );
 						
-						if ( isdefined( reflect_trace ) )
+						if ( isdefined( reflect_trace ) && (reflect_trace["normal"][2] < 0.0) )
 						{
-							dropOrigin = reflect_trace["position"] + ( 0, 0, self.dropOffset );
-							if ( reflect_trace["fraction"] < 1 /*&& distance( trace["position"], trace ) < 10.0*/ )
+							dropOrigin_reflect = reflect_trace["position"] + ( 0, 0, self.dropOffset );
+
+
+							if ( self should_be_reset( dropOrigin_reflect[2], trace["position"][2], true ) )
 							{
-								forward = (cos( tempAngle ), sin( tempAngle ), 0);
-								forward = vectornormalize( forward - VectorScale( reflect_trace["normal"], vectordot( forward, reflect_trace["normal"] ) ) );
+								self thread return_home();
+								self.isResetting = false;
+								return;
 							}
 						}
 					}
@@ -2130,12 +2140,10 @@ function prox_trigger_think()
 			continue;	//might be an AI in zombies
 		}
 		
-		if( IS_TRUE( level.vehicle_map ) )
+		if ( player.using_map_vehicle === true )
 		{
-			if( !IS_TRUE( player.usingvehicle ) )
-			{
+			if ( !isdefined( self.allow_map_vehicles ) || self.allow_map_vehicles == false )
 				continue;
-			}
 		}
 		
 		// TODO: Notify the player if they are attempting to capture a locked flag
@@ -2293,12 +2301,28 @@ function continue_trigger_touch_think(team,object) // self == player
 		return false;
 	}
 	
-	if( IS_TRUE( level.vehicle_map ) )
+	if ( self.using_map_vehicle === true )
 	{
-		if( !IS_TRUE( self.usingvehicle ) )
+		if ( !isdefined( object.allow_map_vehicles ) || object.allow_map_vehicles == false )
+			return false;
+	}
+	else
+	{
+		if ( !isdefined( object ) || !isdefined( object.trigger ) || !isdefined( object.trigger.remote_control_player_can_trigger ) || object.trigger.remote_control_player_can_trigger == false )
+		{
+			if ( self isinvehicle() )
+			{
+				return false;
+			}				
+			else if ( self isRemoteControlling() || self util::isUsingRemote() )
+			{
+				return false;
+			}
+		}
+		else if ( self isinvehicle() && !(self isRemoteControlling() || self util::isUsingRemote()))
 		{
 			return false;
-		}
+		}	
 	}
 		
 	if ( self use_object_locked_for_team( team ) )
@@ -3976,12 +4000,10 @@ function is_friendly_team( team )
 
 function can_interact_with( player )
 {
-	if( IS_TRUE( level.vehicle_map ) )
+	if ( player.using_map_vehicle === true )
 	{
-		if( !IS_TRUE( player.usingvehicle ) )
-		{
+		if ( !isdefined( self.allow_map_vehicles ) || self.allow_map_vehicles == false )
 			return false;
-		}
 	}
 	
 	team = player.pers["team"];

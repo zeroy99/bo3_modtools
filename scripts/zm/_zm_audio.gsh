@@ -20,6 +20,11 @@
 #define TAKEO_CHAR_INDEX 2
 #define RICHTOFEN_CHAR_INDEX 3
 	
+#define DEMPSEY_CHAR_INDEX_R 0
+#define NIKOLAI_CHAR_INDEX_R 1
+#define TAKEO_CHAR_INDEX_R 3
+#define RICHTOFEN_CHAR_INDEX_R 2
+	
 //Max Distance Away a Player will Play a Response Line
 #define RESPONSE_LINE_MAX_DIST 500*500
 
@@ -27,8 +32,8 @@
 #define RESPONSE_PERCENTAGE 50
 	
 //Perksacola Definitions
-#define PERKSACOLA_WAIT_TIME			randomfloatrange(22,45)
-#define PERKSACOLA_PROBABILITY 			(randomintrange(0,100) <= 15) //15%
+#define PERKSACOLA_WAIT_TIME			randomfloatrange(30,60)
+#define PERKSACOLA_PROBABILITY 			(randomintrange(0,100) <= 10) //15%
 #define PERKSACOLA_JINGLE				0
 #define PERKSACOLA_STINGER				1
 

@@ -389,7 +389,7 @@ function earnedSpecialistWeapon( victim, slot, wasFullyCharged, stolenHeroWeapon
 	
 	if ( wasFullyCharged )
 	{
-		if ( isdefined( heroWeapon ) && heroWeapon != self.pers[#"thiefWeapon"] && ( !isdefined( self.pers[#"thiefWeaponOption"] ) || heroWeapon != self.pers[#"thiefWeaponOption"] ) && self.pers[#"thiefAllowFlip"] )
+		if ( isdefined( heroWeapon ) && isdefined( self.pers[#"thiefWeapon"] ) && heroWeapon != self.pers[#"thiefWeapon"] && ( !isdefined( self.pers[#"thiefWeaponOption"] ) || heroWeapon != self.pers[#"thiefWeaponOption"] ) && self.pers[#"thiefAllowFlip"] )
 		{
 			self thread giveFlipWeapon( slot, victim, heroWeapon );
 		}

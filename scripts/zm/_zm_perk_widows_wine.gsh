@@ -10,6 +10,7 @@
 #define WIDOWS_WINE_GRENADE							"sticky_grenade_widows_wine"
 #define WIDOWS_WINE_KNIFE							"knife_widows_wine"
 #define WIDOWS_WINE_BOWIE_KNIFE						"bowie_knife_widows_wine"
+#define WIDOWS_WINE_SICKLE_KNIFE					"sickle_knife_widows_wine"
 #define WIDOWS_WINE_CONTACT_EXPLOSION_COUNT			0		// Num grenades that do not trigger contact explosion
 	
 #define WIDOWS_WINE_COCOON_RADIUS					100		// Radius up to which enemies will be immobilized

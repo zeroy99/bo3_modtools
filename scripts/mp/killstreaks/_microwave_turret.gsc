@@ -110,6 +110,7 @@ function init()
 function InitTurretVehicle()
 {
 	turretVehicle = self;
+	//turretVehicle.delete_on_death = true;
 
 	turretVehicle killstreaks::setup_health( MICROWAVE_TURRET_NAME );
 	turretVehicle.damageTaken = 0;
@@ -172,7 +173,7 @@ function ActivateMicrowaveTurret()
 	turret clientfield::set( "turret_microwave_init", 1 );
 	turret.otherModel clientfield::set( "turret_microwave_init", 1 );
 	
-	event = turret util::waittill_any_return( "placed", "cancelled", "death" );
+	event = turret util::waittill_any_return( "placed", "cancelled", "death", "disconnect" );
 	if( event != "placed" )
 	{
 		return false;
@@ -191,6 +192,7 @@ function OnPlaceTurret( turret )
 		turret.vehicle.origin = turret.origin;
 		turret.vehicle.angles = turret.angles;
 		turret.vehicle thread util::ghost_wait_show( 0.05 );
+		//turret.vehicle playsound ("wpn_micro_turret_start");
 	}
 	else
 	{
@@ -387,6 +389,10 @@ function StartMicrowave()
 
 	turret turret::CreateTurretInfluencer( "turret" );
 	turret turret::CreateTurretInfluencer( "turret_close" );
+	
+	/#
+		turret thread TurretDebugWatch();
+	#/
 }
 
 function StopMicrowave()
@@ -409,6 +415,8 @@ function StopMicrowave()
 		if( isdefined( turret.microwaveFXEnt ) )
 		{
 			turret.microwaveFXEnt delete();
+			
+			// /# IPrintLnBold( "Deleted Microwave Fx Ent: " + GetTime() ); #/
 		}
 		
 		if( isdefined( turret.trigger ) )
@@ -416,8 +424,49 @@ function StopMicrowave()
 			turret.trigger notify( "microwave_end_fx" );
 			turret.trigger Delete();
 		}
+		
+		/#
+			turret notify( "stop_turret_debug" );
+		#/
 	}
 }
+
+function TurretDebugWatch()
+{
+	turret = self;
+	turret endon( "stop_turret_debug" );
+
+	for(;;)
+	{
+		if ( GetDvarInt( "scr_microwave_turret_debug" ) != 0 )
+		{
+			turret TurretDebug();
+			
+			WAIT_SERVER_FRAME;
+		}
+		else
+		{
+			wait 1.0;
+		}
+	}
+}
+
+function TurretDebug()
+{
+	turret = self;
+
+	debug_line_frames = 3;
+	
+	angles = turret.vehicle GetTagAngles( "tag_flash" );
+	origin = turret.vehicle GetTagOrigin( "tag_flash" );
+		
+	cone_apex =	origin;
+	forward = AnglesToForward( angles ) ;
+	dome_apex = cone_apex + VectorScale( forward, MICROWAVE_TURRET_RADIUS );
+
+	util::debug_spherical_cone( cone_apex, dome_apex, MICROWAVE_TURRET_CONE_ANGLE, 16, ( 0.95, 0.1, 0.1 ), 0.3, true, debug_line_frames );
+}
+
 
 function TurretThink()
 {

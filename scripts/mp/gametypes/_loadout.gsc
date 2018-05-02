@@ -38,6 +38,7 @@ function __init__()
 {
 	callback::on_start_gametype( &init );
 	callback::on_connect( &on_connect );
+	
 }
 
 function on_connect()
@@ -91,6 +92,16 @@ function init()
 	level.weaponPistolEnergy = GetWeapon( "pistol_energy" );
 	level.weaponMeleeShockBaton = GetWeapon( "melee_shockbaton" );
 	level.weaponMeleeNunchuks = GetWeapon( "melee_nunchuks" );
+	level.weaponMeleeBoxing = GetWeapon( "melee_boxing" );
+	level.weaponMeleeKatana = GetWeapon( "melee_katana" );
+	level.weaponMeleeShovel = GetWeapon( "melee_shovel" );
+	level.weaponMeleeProsthetic = GetWeapon( "melee_prosthetic" );
+	level.weaponMeleeChainsaw = GetWeapon( "melee_chainsaw" );
+	level.weaponSpecialDiscGun = GetWeapon( "special_discgun" );
+	level.weaponSmgNailGun = GetWeapon( "smg_nailgun" );
+	level.weaponLauncherMulti = GetWeapon( "launcher_multi" );
+	level.weaponMeleeCrescent = GetWeapon( "melee_crescent" );
+	level.weaponLauncherEx41 = GetWeapon( "launcher_ex41" );
 
 	level.meleeWeapons = []; // intended for use with medals and challenges, namely "kill_enemy_with_their_weapon"
 	ARRAY_ADD( level.meleeWeapons, level.weaponKnifeLoadout );
@@ -108,7 +119,13 @@ function init()
 	ARRAY_ADD( level.meleeWeapons, level.weaponMeleeImprovise );
 	ARRAY_ADD( level.meleeWeapons, level.weaponMeleeShockBaton );
 	ARRAY_ADD( level.meleeWeapons, level.weaponMeleeNunchuks );
-	
+	ARRAY_ADD( level.meleeWeapons, level.weaponMeleeBoxing );
+	ARRAY_ADD( level.meleeWeapons, level.weaponMeleeKatana );
+	ARRAY_ADD( level.meleeWeapons, level.weaponMeleeShovel );
+	ARRAY_ADD( level.meleeWeapons, level.weaponMeleeProsthetic );
+	ARRAY_ADD( level.meleeWeapons, level.weaponMeleeChainsaw );
+	ARRAY_ADD( level.meleeWeapons, level.weaponMeleeCrescent );
+
 	// placed here for easier integration
 	level.weaponBouncingBetty = GetWeapon( "bouncingbetty" );
 	
@@ -225,7 +242,16 @@ function init()
 	}
 	
 	callback::on_connecting( &on_player_connecting );
+	callback::add_weapon_damage( level.weaponSpecialDiscGun, &on_damage_special_discgun );
 	
+}
+function on_damage_special_discgun( eAttacker, eInflictor, weapon, meansOfDeath, damage )
+{
+	if ( weapon != level.weaponSpecialDiscGun )
+	{
+	                return;
+	}
+	playsoundatposition ("wpn_disc_bounce_fatal", self.origin);
 }
 
 function create_class_exclusion_list()
@@ -809,6 +835,9 @@ function giveWeapons()
 
 	if( sidearm.isCarriedKillstreak )
 		sidearm = level.weaponNull;
+	
+	if( sidearm.name == "bowie_knife" )
+		sidearm = level.weaponNull;
 
 	if ( sidearm != level.weaponNull )
 	{
@@ -1094,6 +1123,12 @@ function giveLoadout( team, weaponclass )
 		}
 	
 		giveSecondaryOffhand();
+		
+		if ( GetDvarint( "tu11_enableClassicMode") == 0 )
+		{
+			giveSpecialOffhand();
+			giveHeroWeapon();
+		}
 		
 		giveKillStreaks();
 	}

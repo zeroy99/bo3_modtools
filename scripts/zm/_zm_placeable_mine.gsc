@@ -68,6 +68,18 @@ function add_mine_type( mine_name, str_retrieval_prompt )
 	level.placeable_mine_planted_callbacks[mine_name] = [];
 }
 
+function add_weapon_to_mine_slot( mine_name )
+{
+	// Automatically initialize the placeable mine system when registering your first placeable mine.
+	init_internal();
+	
+	//weaponobjects::createRetrievableHint( mine_name, str_retrieval_prompt );
+	level.placeable_mines[ mine_name ] = GetWeapon( mine_name );
+	level.placeable_mine_planted_callbacks[mine_name] = [];
+	DEFAULT(level.placeable_mines_in_name_only,[]);
+	level.placeable_mines_in_name_only[ mine_name ] = GetWeapon( mine_name );
+}
+
 function set_max_per_player( n_max_per_player )
 {
 	level.placeable_mines_max_per_player = n_max_per_player;
@@ -136,6 +148,16 @@ function private mine_watch( wpn_type )
 	}
 }
 
+function is_true_placeable_mine( mine_name )
+{
+	if ( !isdefined(level.placeable_mines_in_name_only ) )
+		return true; 
+	if ( !isdefined(level.placeable_mines_in_name_only[ mine_name ] ) )
+		return true; 
+	return false;
+}
+
+
 function setup_for_player( wpn_type, ui_model = "hudItems.showDpadRight" )
 {
 	if ( !isdefined( self.placeable_mines ) )
@@ -148,12 +170,19 @@ function setup_for_player( wpn_type, ui_model = "hudItems.showDpadRight" )
 		self clientfield::set_player_uimodel( self.last_placeable_mine_uimodel, 0 );
 	}
 
-	self thread mine_watch( wpn_type );
+	if ( is_true_placeable_mine( wpn_type.name ) )
+	{
+		self thread mine_watch( wpn_type );
+	}
 
 	self giveweapon( wpn_type );
 	self zm_utility::set_player_placeable_mine( wpn_type );
 	self setactionslot( 4, "weapon", wpn_type );
-	self setweaponammostock( wpn_type, 2 );
+	startammo = wpn_type.startammo;
+	if ( startammo )
+	{
+		self setweaponammostock( wpn_type, startammo );
+	}
 	
 	if ( isdefined( ui_model ) )
 	{
@@ -344,7 +373,8 @@ function private replenish_after_rounds()
 			{
 				foreach( mine in level.placeable_mines )
 				{
-					if ( players[ i ] zm_utility::is_player_placeable_mine( mine ) )
+					if ( players[ i ] zm_utility::is_player_placeable_mine( mine ) &&
+					     is_true_placeable_mine( mine.name ) )
 					{
 						players[ i ]  giveweapon( mine );
 						players[ i ]  zm_utility::set_player_placeable_mine( mine );

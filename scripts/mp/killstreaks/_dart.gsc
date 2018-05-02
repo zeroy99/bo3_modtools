@@ -25,13 +25,13 @@
 #using scripts\mp\killstreaks\_killstreakrules;
 #using scripts\mp\killstreaks\_killstreaks;
 #using scripts\mp\killstreaks\_remote_weapons;
-#using scripts\shared\visionset_mgr_shared;
 
 #insert scripts\mp\_hacker_tool.gsh;
 #insert scripts\mp\killstreaks\_killstreaks.gsh;
 #insert scripts\shared\clientfields.gsh;
 #insert scripts\shared\shared.gsh;
 #insert scripts\shared\version.gsh;
+#using scripts\shared\visionset_mgr_shared;
 
 #namespace dart;
 #define DART_NAME 				"dart"
@@ -181,6 +181,8 @@ function WatchThrow( missileWeapon )
 		self notify("dart_throw_failed");
 		return;
 	}
+	
+	player.dart_thrown_time = GetTime();
 	
 	player TakeWeapon( missileWeapon );
 	
@@ -335,6 +337,8 @@ function StartDartRemoteControl( dart )
 
 	if( !dart.is_shutting_down )
 	{
+		player.dart_thrown_time = undefined;
+	
 		dart UseVehicle( player, 0 );/// 
 		player.resurrect_not_allowed_by = undefined;
 		dart clientfield::set( "vehicletransition", 1 );

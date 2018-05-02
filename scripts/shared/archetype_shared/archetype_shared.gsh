@@ -22,6 +22,8 @@
 #define ARCHETYPE_KEEPER_COMPANION		"keeper_companion"
 #define ARCHETYPE_APOTHICON_FURY		"apothicon_fury"
 #define ARCHETYPE_KEEPER				"keeper"	
+#define ARCHETYPE_MONKEY				"monkey"
+#define ARCHETYPE_ASTRONAUT				"astronaut"					
 	
 	
 	
@@ -57,4 +59,11 @@
 // debug helper macro for position query
 // ----------------------------------------------
 #define ADD_POINT_SCORE(pointStruct,name,point_score) \
+	/# \
+	if ( !isdefined( pointStruct._scoreDebug ) ) \
+	{ \
+		pointStruct._scoreDebug = []; \
+	} \
+	pointStruct._scoreDebug[ name ] = point_score; \
+	#/ \
 	pointStruct.score += point_score;	

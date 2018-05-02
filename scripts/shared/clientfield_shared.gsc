@@ -70,6 +70,9 @@ function set_to_player( str_field_name, n_value )
 @/
 function set_player_uimodel( str_field_name, n_value )
 {
+	if ( !IsEntity( self ) )
+		return;
+
 	CodeSetUIModelClientField( self, str_field_name, n_value );
 }
 

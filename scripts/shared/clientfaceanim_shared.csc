@@ -127,6 +127,9 @@ function BuildAndValidateFacialAnimationList( localClientNum )
 
 function private FacialAnimationThink_getWaitTime( localClientNum )
 {
+	if ( !isdefined( localClientNum ) )
+		return 1.0;
+	
 	// make defines
 	min_wait = 0.1;
 	max_wait = 1.0;
@@ -134,6 +137,9 @@ function private FacialAnimationThink_getWaitTime( localClientNum )
 	max_wait_distance_sq = 800 * 800;
 
 	local_player = GetLocalPlayer( localClientNum );
+	
+	if ( !isdefined( local_player ) )
+		return max_wait;
 	
 	if ( local_player == self && !IsThirdPerson( localClientNum ) )
 		return max_wait;
@@ -166,18 +172,26 @@ function private FacialAnimationThink( localClientNum )
 	
 	self util::waittill_dobj( localClientNum );	
 	
-	while(1)
+	while( isdefined( self ) )
 	{	
 		UpdateFacialAnimForPlayer( localClientNum, self );
 		
 		wait_time = self FacialAnimationThink_getWaitTime(localClientNum);
+		
+		DEFAULT( wait_time, 1.0 );
 		
 		wait wait_time;
 	}
 }
 
 function private UpdateFacialAnimForPlayer( localClientNum, player )
-{	
+{
+	if ( !isdefined( player ) )
+		return;
+	
+	if ( !isdefined( localClientNum ) )
+		return;
+	
 	if( !IsDefined( player._currentFaceState ) )
 		player._currentFaceState 	= FACIAL_STATE_INACTIVE;
 	

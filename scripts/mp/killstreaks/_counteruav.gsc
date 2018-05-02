@@ -457,7 +457,12 @@ function DestroyCounterUAV( attacker, weapon )
 
 	self PlaySound( "evt_helicopter_midair_exp" );
 	self RemoveActiveCounterUAV();
-	Target_Remove( self );
+	
+	if ( Target_IsTarget( self ) )
+	{
+		Target_Remove( self );
+	}
+
 	self thread DeleteCounterUAV();
 }
 
@@ -466,16 +471,23 @@ function DeleteCounterUAV()
 	self notify( "crashing" );
 	
 	params = level.killstreakBundle[COUNTER_UAV_NAME];
-	if( isdefined( params.ksExplosionFX ) )	
+	if( isdefined( params.ksExplosionFX ) && isdefined( self ) )
 		self thread PlayFx( params.ksExplosionFX );
 	
 	wait( 0.1 );
 	
-	self setModel( "tag_origin" );
+	if ( isdefined( self ) )
+	{
+		self setModel( "tag_origin" );
+	}
+	
 	wait( 0.2 );
 	
-	self notify( "delete" );
-	self delete();
+	if ( isdefined( self ) )
+	{
+		self notify( "delete" );
+		self delete();
+	}
 }
 
 function EnemyCounterUAVActive()

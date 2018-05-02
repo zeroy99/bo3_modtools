@@ -678,6 +678,11 @@ function croc_find_new_position()
 				score += 2.0;
 			}
 			
+			/#
+				//DebugStar( point + (0,0,30), 100, ( 1, score, 1 ) );
+				//Print3d( point + (0,0,30), "Score: " + score, ( 1, 1, 1 ), 1, 100 );
+				//Record3dText( "Score: " + score, point + (0,0,30), WHITE, "Script" );
+			#/
 
 			if ( score > best_score )
 			{
@@ -707,6 +712,9 @@ function croc_find_new_position()
 	
 	if( isdefined( best_point ) )
 	{
+		/#
+			//line( best_point, best_point + (0,0,100), (.3,1,.3), 1.0, true, 100 );
+		#/
 		origin = best_point;
 	}
 	

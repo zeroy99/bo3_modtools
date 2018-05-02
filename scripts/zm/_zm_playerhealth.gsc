@@ -5,6 +5,7 @@
 #using scripts\shared\system_shared;
 #using scripts\shared\util_shared;
 #using scripts\shared\visionset_mgr_shared;
+#using scripts\shared\clientfield_shared;
 
 #using scripts\zm\_util;
 #using scripts\zm\_zm_perks;
@@ -21,6 +22,8 @@ REGISTER_SYSTEM( "zm_playerhealth", &__init__, undefined )
 
 function __init__()
 {
+	clientfield::register( "toplayer", "sndZombieHealth", VERSION_DLC5, 1, "int" );
+	
 	level.global_damage_func_ads =&empty_kill_func; 
 	level.global_damage_func =&empty_kill_func; 
 
@@ -164,6 +167,7 @@ function playerHealthRegen()
 		{
 			if( self flag::get( "player_has_red_flashing_overlay" ) )
 			{
+				self clientfield::set_to_player( "sndZombieHealth", 0 ); 
 				self flag::clear( "player_has_red_flashing_overlay" );
 			}
 
@@ -192,6 +196,7 @@ function playerHealthRegen()
 				self startfadingblur( 3.6, 2 );
 				//self thread player_health_visionset();
 
+				self clientfield::set_to_player( "sndZombieHealth", 1 ); 
 				self flag::set( "player_has_red_flashing_overlay" );
 				playerJustGotRedFlashing = true;
 			}
@@ -390,6 +395,7 @@ function watchHideRedFlashingOverlay( overlay )
 	{
 		self waittill("clear_red_flashing_overlay"); 
 	
+		self clientfield::set_to_player( "sndZombieHealth", 0 ); 
 		self flag::clear( "player_has_red_flashing_overlay" );
 		
 		overlay fadeOverTime( 0.05 );
@@ -439,6 +445,7 @@ function redFlashingOverlay( overlay )
 	// CODER_MOD
 	// Austin (5/29/07): restore this flag as a player flag, these changes were clobbered during the integrate
 	self flag::clear( "player_has_red_flashing_overlay" );
+	self clientfield::set_to_player( "sndZombieHealth", 0 ); 
 
 	//prof_end( "redFlashingOverlay" );
 

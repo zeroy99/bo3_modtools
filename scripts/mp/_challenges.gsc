@@ -135,6 +135,7 @@ function spawnWatcher()
 		self.attachmentKillsThisSpawn = [];
 		self.challenge_hatchetTossCount = 0;
 		self.challenge_hatchetkills = 0;
+		self.retreivedBlades = 0;
 		self.challenge_combatRobotAttackClientID = [];
 		
 		self thread watchDoubleJump();
@@ -172,7 +173,7 @@ function watchDoublejump()
 	self.challenge_doublejump_end = 0;
 	for(;;)
 	{
-		ret = util::waittill_any_return( "doublejump_begin", "doublejump_end" );
+		ret = util::waittill_any_return( "doublejump_begin", "doublejump_end", "disconnect" );
 		switch( ret )
 		{
 			case "doublejump_begin":
@@ -194,7 +195,7 @@ function watchJump()
 	self.challenge_jump_end = 0;
 	for(;;)
 	{
-		ret = util::waittill_any_return( "jump_begin", "jump_end" );
+		ret = util::waittill_any_return( "jump_begin", "jump_end", "disconnect" );
 		switch( ret )
 		{
 			case "jump_begin":
@@ -216,7 +217,7 @@ function watchSwimming()
 	self.challenge_swimming_end = 0;
 	for(;;)
 	{
-		ret = util::waittill_any_return( "swimming_begin", "swimming_end" );
+		ret = util::waittill_any_return( "swimming_begin", "swimming_end", "disconnect" );
 		switch( ret )
 		{
 			case "swimming_begin":
@@ -238,7 +239,7 @@ function watchWallrun()
 	self.challenge_wallrun_end = 0;
 	for(;;)
 	{
-		ret = util::waittill_any_return( "wallrun_begin", "wallrun_end" );
+		ret = util::waittill_any_return( "wallrun_begin", "wallrun_end", "disconnect" );
 		switch( ret )
 		{
 			case "wallrun_begin":
@@ -260,7 +261,7 @@ function watchSlide()
 	self.challenge_slide_end = 0;
 	for(;;)
 	{
-		ret = util::waittill_any_return( "slide_begin", "slide_end" );
+		ret = util::waittill_any_return( "slide_begin", "slide_end", "disconnect" );
 		switch( ret )
 		{
 			case "slide_begin":
@@ -283,7 +284,7 @@ function watchSprint()
 	self.challenge_sprint_end = 0;
 	for(;;)
 	{
-		ret = util::waittill_any_return( "sprint_begin", "sprint_end" );
+		ret = util::waittill_any_return( "sprint_begin", "sprint_end", "disconnect" );
 		switch( ret )
 		{
 			case "sprint_begin":
@@ -722,7 +723,7 @@ function challengeKills( data )
 			}
 		}
 		
-		if ( baseWeapon.forceDamageHitLocation || baseWeapon == level.weaponSpecialCrossbow || baseWeapon == level.weaponShotgunEnergy )
+		if ( baseWeapon.forceDamageHitLocation || baseWeapon == level.weaponSpecialCrossbow || baseWeapon == level.weaponShotgunEnergy || baseWeapon == level.weaponSpecialDiscGun || baseWeapon == level.weaponBallisticKnife || baseWeapon == level.weaponLauncherEx41 )
 		{
 			//Check for the killstreak 5 challenge completion
 			checkkillstreak5( baseWeapon, player );
@@ -1165,7 +1166,15 @@ function challengeKills( data )
 		gunfighterOverkillActive = false;
 		if ( player IsBonusCardActive( BONUSCARD_OVERKILL, player.class_num ) && player util::is_item_purchased( "bonuscard_overkill" ) )
 		{
-			if ( player.primaryLoadoutWeapon.attachments.size + player.secondaryLoadoutWeapon.attachments.size  >= 5 )
+			primaryAttachmentsTotal = 0;			
+			if ( isdefined( player.primaryLoadoutWeapon ) )
+				primaryAttachmentsTotal = player.primaryLoadoutWeapon.attachments.size;
+
+			secondaryAttachmentsTotal = 0;			
+			if ( isdefined( player.secondaryLoadoutWeapon ) )
+				secondaryAttachmentsTotal = player.secondaryLoadoutWeapon.attachments.size;
+
+			if ( primaryAttachmentsTotal + secondaryAttachmentsTotal >= 5 )
 			{
 				gunfighterOverkillActive = true;
 			}
@@ -1702,7 +1711,7 @@ function checkForHeroSurvival()
 	self endon ("death");
 	self endon ("disconnect");
 	
-	self util::waittill_any_timeout( 8.0, "challenge_survived_from_death" );
+	self util::waittill_any_timeout( 8.0, "challenge_survived_from_death", "disconnect" );
 	
 	self AddPlayerStat( "death_dodger", 1 );
 }
@@ -1878,7 +1887,7 @@ function watchWallRunTwoOppositeWallsNoGround()
 			player waittill( "wallrun_begin" );
 		}
 
-		ret = player util::waittill_any_return( "jump_begin", "wallrun_end" );
+		ret = player util::waittill_any_return( "jump_begin", "wallrun_end", "disconnect", "joined_team", "joined_spectators" );
 		if ( ret == "wallrun_end" )
 			continue;
 		
@@ -1900,7 +1909,7 @@ function watchWallRunTwoOppositeWallsNoGround()
 
 		while ( player IsWallRunning() )
 		{
-			ret = player util::waittill_any_return( "jump_end", "wallrun_end" );
+			ret = player util::waittill_any_return( "jump_end", "wallrun_end", "disconnect", "joined_team", "joined_spectators" );
 			
 			if ( ret == "wallrun_end" )
 				break;

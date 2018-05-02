@@ -179,7 +179,7 @@ function register_hero_weapon_power_callbacks( weapon_name, power_full_fn = &def
 function default_power_full( weapon )
 {
 	self set_hero_weapon_state( weapon, HERO_STATE_READY );
-	self zm_equipment::show_hint_text( &"ZOMBIE_HERO_WEAPON_HINT", 2 );
+	self thread zm_equipment::show_hint_text( &"ZOMBIE_HERO_WEAPON_HINT", 2 );
 }
 
 function default_power_empty( weapon )
@@ -249,6 +249,15 @@ function watch_hero_weapon_change()
 			if ( IsDefined(w_previous) && zm_utility::is_hero_weapon( w_previous ) )
 			{
 				self [[level._hero_weapons[w_previous].unwield_fn]]( w_previous ); 
+				
+				if( self GadgetPowerGet( 0 ) == 100 ) //player didn't use any of the gadget power
+				{
+					if( self HasWeapon( w_previous ) )
+					{
+						self SetWeaponAmmoClip( w_previous, w_previous.clipSize );	
+						self [[level._hero_weapons[w_previous].power_full_fn]]( w_previous );
+					}
+				}
 			}
 			if ( IsDefined(w_current) && zm_utility::is_hero_weapon( w_current ) )
 			{

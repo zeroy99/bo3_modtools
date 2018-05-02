@@ -351,6 +351,18 @@ function spawnPlayer()
 	{
 		self loadout::setClass( self.curClass );
 		self loadout::giveLoadout( self.team, self.curClass );
+
+		if ( GetDvarint( "tu11_enableClassicMode") == 1 )
+		{
+			if ( self.team == "allies" )
+			{
+				self SetCharacterBodyType( 0 );
+			}
+			else
+			{
+				self SetCharacterBodyType( 2 );
+			}
+		}
 	}
 	
 	if ( level.inPrematchPeriod )

@@ -96,6 +96,13 @@ function smokeBlockSight( radius )
 	{
 		FxBlockSight( self, radius );
 		
+ 		/#
+		if( GetDvarInt( "scr_smokegrenade_debug", 0 ) )
+		{
+			Sphere( self.origin, SMOKE_GRENADE_RADIUS, (1,0,0), 0.25, false, 10, 15 );
+		} 
+		#/
+			
 		wait( 0.75 );
 	}
 }

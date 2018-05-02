@@ -295,8 +295,17 @@ function UpdateVisualEffects( trigger, entity )
 
 function killEntity(entity)
 {
-		self ResetOOBTimer();
-		entity DoDamage( entity.health + 10000, entity.origin, undefined, undefined, "none", "MOD_TRIGGER_HURT" );
+	entity_to_kill = entity;
+	
+	if ( IsPlayer( entity ) && entity IsInVehicle() )
+	{
+		vehicle = entity GetVehicleOccupied();
+		if ( isdefined( vehicle ) && ( vehicle.is_oob_kill_target === true ) )
+			entity_to_kill = vehicle;
+	}
+
+	self ResetOOBTimer();
+	entity_to_kill DoDamage( entity_to_kill.health + 10000, entity_to_kill.origin, undefined, undefined, "none", "MOD_TRIGGER_HURT" );
 }
 
 function watchForLeave( trigger, entity )

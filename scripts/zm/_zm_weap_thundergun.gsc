@@ -251,10 +251,17 @@ function thundergun_fling_zombie( player, fling_vec, index )
 		return;
 	}
 	
+	self.deathpoints_already_given = true;
+	
 	self DoDamage( self.health + 666, player.origin, player );
 
 	if ( self.health <= 0 )
 	{
+		if( isdefined(player) && isdefined(level.hero_power_update))
+		{
+			level thread [[level.hero_power_update]](player, self);
+		}
+		
 		points = 10;
 		if ( !index )
 		{
@@ -408,7 +415,7 @@ function thundergun_sound_thread()
 
 	for( ;; )
 	{
-		result = self util::waittill_any_return( "grenade_fire", "death", "player_downed", "weapon_change", "grenade_pullback" );		
+		result = self util::waittill_any_return( "grenade_fire", "death", "player_downed", "weapon_change", "grenade_pullback", "disconnect" );
 
 		if ( !IsDefined( result ) )
 		{

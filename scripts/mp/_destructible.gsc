@@ -287,7 +287,7 @@ function complex_explosion( attacker, max_radius )
 
 function car_explosion( attacker, physics_explosion )
 {
-	if ( self.car_dead ) 
+	if ( isdefined( self.car_dead ) && self.car_dead )
 	{
 		// prevents recursive entry caused by DoDamage call below
 		return;

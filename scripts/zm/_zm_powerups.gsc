@@ -608,7 +608,11 @@ function powerup_drop(drop_point)
 	// some guys randomly drop, but most of the time they check for the drop flag
 	rand_drop = randomint(100);
 	
-	if (rand_drop > 2)
+	if( bgb::is_team_enabled( "zm_bgb_power_vacuum" ) && rand_drop < 20 )
+	{	
+		debug = "zm_bgb_power_vacuum";
+	}
+	else if (rand_drop > 2)
 	{
 		if (!level.zombie_vars["zombie_drop_item"])
 		{
@@ -752,7 +756,7 @@ function special_powerup_drop(drop_point)
 
 //
 //	Pick the next powerup in the list
-function powerup_setup( powerup_override,powerup_team, powerup_location, powerup_player )
+function powerup_setup( powerup_override,powerup_team, powerup_location, powerup_player, shouldplaysound = true )
 {
 	powerup = undefined;
 	
@@ -785,7 +789,10 @@ function powerup_setup( powerup_override,powerup_team, powerup_location, powerup
 	demo::bookmark( "zm_powerup_dropped", gettime(), undefined, undefined, 1 );
 
 	//TUEY Spawn Powerup
-	playsoundatposition("zmb_spawn_powerup", self.origin);
+	if( IS_TRUE( shouldplaysound ) )
+	{
+		playsoundatposition("zmb_spawn_powerup", self.origin);
+	}
 	
 	if(isDefined(powerup_team))
 	{
@@ -1159,7 +1166,11 @@ function powerup_grab(powerup_team)
 					}
 				}
 
-				level thread zm_audio::sndAnnouncerPlayVox(self.powerup_name);
+				if( IS_TRUE( self.only_affects_grabber ) )
+					level thread zm_audio::sndAnnouncerPlayVox(self.powerup_name, player);
+				else
+					level thread zm_audio::sndAnnouncerPlayVox(self.powerup_name );
+				
 				self thread powerup_delete_delayed();
 				self notify ("powerup_grabbed");
 			}

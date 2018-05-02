@@ -51,6 +51,15 @@ function grab_fire_sale( player )
 
 function start_fire_sale( item )
 {
+	// If chests use a special leaving wait till it is away
+	if( IS_TRUE( level.custom_firesale_box_leave ) )
+	{
+		while( firesale_chest_is_leaving() )
+		{
+			WAIT_SERVER_FRAME;
+		}
+	}
+	
 	if(level.zombie_vars["zombie_powerup_fire_sale_time"] > 0 && IS_TRUE(level.zombie_vars["zombie_powerup_fire_sale_on"] ) ) // firesale already going when a new one is picked up ..just add time
 	{
 		level.zombie_vars["zombie_powerup_fire_sale_time"] += N_POWERUP_DEFAULT_TIME;
@@ -63,6 +72,8 @@ function start_fire_sale( item )
 	level thread zm_audio::sndAnnouncerPlayVox("fire_sale");
     
 	level.zombie_vars["zombie_powerup_fire_sale_on"] = true;
+	level.disable_firesale_drop = true;
+	
 	level thread toggle_fire_sale_on();
 	level.zombie_vars["zombie_powerup_fire_sale_time"] = N_POWERUP_DEFAULT_TIME;
 	
@@ -77,9 +88,41 @@ function start_fire_sale( item )
 		level.zombie_vars["zombie_powerup_fire_sale_time"] = level.zombie_vars["zombie_powerup_fire_sale_time"] - 0.05;
 	}
 
+	level thread check_to_clear_fire_sale();
+
 	level.zombie_vars["zombie_powerup_fire_sale_on"] = false;
 	level notify ( "fire_sale_off" );	
 }
+
+function check_to_clear_fire_sale()
+{
+	while( firesale_chest_is_leaving() )
+	{
+		WAIT_SERVER_FRAME;		
+	}
+	
+	level.disable_firesale_drop = undefined;
+}
+
+/@
+"Summary: Check if a firesale chest is in the process of still leaving or active"
+@/
+function firesale_chest_is_leaving()
+{
+	// If chests use a special leaving wait till it is away
+	for( i = 0; i < level.chests.size; i++ )
+	{
+		if( i !== level.chest_index )
+		{	
+			if( level.chests[ i ].zbarrier.state === "leaving" || level.chests[ i ].zbarrier.state === "open" || level.chests[ i ].zbarrier.state === "close" || level.chests[ i ].zbarrier.state === "closing" )
+			{
+				return true;
+			}
+		}
+	}
+	
+	return false;
+}	
 
 function toggle_fire_sale_on()
 {
@@ -109,8 +152,6 @@ function toggle_fire_sale_on()
 				{
 					level.chests[i] thread apply_fire_sale_to_chest();
 				}
-
-				util::wait_network_frame();
 			}
 		}
 	}
@@ -220,7 +261,10 @@ function sndFiresaleMusic_Start()
 			struct.sndEnt = spawn( "script_origin", struct.origin+(0,0,100));
 		}
 		
-		struct.sndEnt playloopsound( "mus_fire_sale", 1 );
+		if( IS_TRUE( level.player_4_vox_override ) )
+			struct.sndEnt playloopsound( "mus_fire_sale_rich", 1 );
+		else
+			struct.sndEnt playloopsound( "mus_fire_sale", 1 );
 	}
 }
 function sndFiresaleMusic_Stop()

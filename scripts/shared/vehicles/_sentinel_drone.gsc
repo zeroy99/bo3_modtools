@@ -214,6 +214,12 @@ function sentinel_drone_initialize()
 	
 	self thread sentinel_InitBeamLaunchers();
 	
+	//@Debug
+/#	
+	self thread sentinel_DebugFX();	
+	self thread sentinel_DebugBehavior();
+#/
+
 	defaultRole();
 }
 
@@ -625,6 +631,17 @@ function sentinel_DodgeRoll()
 		self SetVehVelocity( VectorScale(roll_dir, roll_speed) );
 		self SetVehGoalPos( trace["position"], true, false );
 		
+		/*
+		/#
+			RecordSphere(trace["position"], 10, GREEN, "script");
+			RecordLine(self.origin, trace["position"], WHITE, "script");
+			
+			Sphere(self.origin, 10, WHITE, 1, false, 10, 120);
+			Sphere(trace["position"], 10, GREEN, 1, false, 10, 120);
+			Line(self.origin, trace["position"], GREEN, 1, false, 120);
+		#/
+		*/
+		
 		wait 1;
 		self ASMSetAnimationRate( 1 );
 		
@@ -659,6 +676,13 @@ function sentinel_NavigationStandStill()
 		self SetVehVelocity( ( 0, 0, 0 ) );
 		self.vehAirCraftCollisionEnabled = true;
 		
+		/#
+		if( GetDvarInt("debug_sentinel_drone_traces") > 0 )
+		{
+			RecordSphere(self.origin, 30, ORANGE);
+		}
+		#/
+			
 		return;	
 	}
 	
@@ -687,6 +711,12 @@ function sentinel_NavigationStandStill()
 	
 	self.vehAirCraftCollisionEnabled = true;
 	
+	/#
+		if( GetDvarInt("debug_sentinel_drone_traces") > 0 )
+		{
+			RecordSphere(self.origin, 30, ORANGE);
+		}
+	#/
 }
 
 function private sentinel_ShouldChangeSentinelPosition()
@@ -803,7 +833,14 @@ function sentinel_NavigateTheWorld()
 		
 		is_on_nav_volume = IsPointInNavVolume(self.origin, "navvolume_small");
 		
-		
+/#
+		if( GetDvarInt("sentinel_DebugFX_NoMove", 0) == 1 )
+		{
+			current_pathto_pos = undefined;
+			is_on_nav_volume = true;
+		}
+#/			
+			
 		if ( isdefined( current_pathto_pos ) )
 		{
 			if( isdefined( self.stuckTime ) && IS_TRUE( is_on_nav_volume ) )
@@ -811,6 +848,32 @@ function sentinel_NavigateTheWorld()
 				self.stuckTime = undefined;
 			}
 			
+			/#
+				if( GetDvarInt("debug_sentinel_drone_traces") > 0 )
+				{
+					RecordSphere(current_pathto_pos, 8, BLUE);
+				}
+			#/
+			
+			/#
+			if( GetDvarInt("debug_sentinel_drone_paths") > 0 )
+			{
+				if(!IsPointInNavVolume(current_pathto_pos, "navvolume_small") )
+				{
+					recordLine( current_pathto_pos, level.players[0].origin + (0, 0, 48), WHITE );
+					RecordSphere(current_pathto_pos, 10, WHITE);
+					PrintTopRightln("Target Fail ID: " + self GetEntityNumber(), WHITE);
+				}
+				
+				if(!IS_TRUE(is_on_nav_volume))
+				{
+					recordLine( self.origin, level.players[0].origin + (0, 0, 48), GREEN );
+					RecordSphere(self.origin, 10, GREEN);
+					PrintTopRightln("Me Fail ID: " + self GetEntityNumber(), GREEN);
+				}
+			}
+			#/
+
 			if ( self SetVehGoalPos( current_pathto_pos, true, b_use_path_finding ) )
 			{
 				b_use_path_finding = true;
@@ -823,6 +886,19 @@ function sentinel_NavigateTheWorld()
 			}
 			else if( IS_TRUE(is_on_nav_volume) )
 			{
+				/#
+				if( GetDvarInt("debug_sentinel_drone_paths") > 0 )
+				{
+					PrintTopRightln("FAILED TO FIND PATH ID: " + self GetEntityNumber(), RED);
+					
+					recordLine( current_pathto_pos, level.players[0].origin + (0, 0, 48), RED );
+					RecordSphere(current_pathto_pos, 10, RED);
+					
+					recordLine( self.origin, level.players[0].origin + (0, 0, 48), (1, 0.2, 0.2) );
+					RecordSphere(self.origin, 10, RED);
+				}
+				#/
+				
 				self sentinel_KillMyself();	
 				self.last_failsafe_time = undefined;
 			}
@@ -856,11 +932,25 @@ function sentinel_NavigateTheWorld()
 					if( Distance(self.origin, new_sentinel_pos) < dvar_sentinel_getback_to_volume_epsilon )
 					{
 						self.origin = new_sentinel_pos;
+						
+						/#
+						if( GetDvarInt("debug_sentinel_drone_traces") > 0 )
+						{
+							RecordSphere(new_sentinel_pos, 8, RED);
+						}
+						#/
 					}
 					else
 					{
 						self.vehAirCraftCollisionEnabled = false;
 						
+						/#
+						if( GetDvarInt("debug_sentinel_drone_traces") > 0 )
+						{
+							RecordSphere(new_sentinel_pos, 8, RED);
+						}
+						#/
+							
 						if( self SetVehGoalPos( new_sentinel_pos, true, false ) )
 						{
 							self thread sentinel_PathUpdateInterrupt();
@@ -1086,6 +1176,20 @@ function sentinel_GetNextMovePositionTactical( b_do_not_chase_enemy ) // has sel
 	
 	self vehicle_ai::PositionQuery_DebugScores( queryResult );
 
+	/#
+	if ( IS_TRUE( GetDvarInt("hkai_debugPositionQuery") ) )
+	{
+		if(isdefined(best_point) )
+		{
+			recordLine( self.origin, best_point.origin, (0.3,1,0) );
+		}
+		
+		if(isdefined(self.sentinel_droneEnemy))
+		{
+			recordLine( self.origin, self.sentinel_droneEnemy.origin, (1,0,0.4) );
+		}
+	}
+#/
 	returnData = [];
 	returnData[ "origin" ] = ( ( IsDefined( best_point ) ) ? best_point.origin : undefined );
 	returnData[ "centerOnNav" ] = queryResult.centerOnNav;
@@ -1183,6 +1287,13 @@ function sentinel_PathUpdateInterrupt()
 		{
 			if( distance2dSquared( self.origin, self.goalpos ) < SQR( self.goalradius ) )
 			{
+				/#
+					if( GetDvarInt("debug_sentinel_drone_traces") > 0 )
+					{
+						RecordSphere(self.origin, 30, RED);
+					}
+				#/
+							
 				wait 0.2;
 				self notify( "near_goal" );
 			}
@@ -1287,6 +1398,14 @@ function sentinel_CanSeeEnemy( sentinel_origin, prev_enemy_position )
 	
 	trace = sentinel_Trace(origin_point, target_point, self.sentinel_droneEnemy, false);
 
+	/#
+		if( GetDvarInt("debug_sentinel_drone_traces") > 0 )
+		{	
+			recordLine( origin_point, target_point, GREEN );
+			RecordSphere(target_point, 8);
+		}
+	#/
+	
 	result.hit_entity = trace["entity"];
 	result.hit_position = trace["position"];
 	
@@ -1295,21 +1414,7 @@ function sentinel_CanSeeEnemy( sentinel_origin, prev_enemy_position )
 		result.can_see_enemy = true;
 		return result;
 	}
-	
-	//Check to see if we hit an invisible corpse
-	if( isdefined(trace["entity"]) && isdefined(trace["entity"].archetype) && (trace["entity"].archetype == ARCHETYPE_ZOMBIE) && !IsAlive(trace["entity"]) )
-	{
-		trace = sentinel_Trace(origin_point, target_point, self.sentinel_droneEnemy, false, true);
-		
-		if( trace["fraction"] == 1 )
-		{
-			result.hit_entity = self.sentinel_droneEnemy;
-			result.hit_position = target_point;
-			
-			result.can_see_enemy = true;
-		}
-	}
-	
+
 	return result;
 }
 
@@ -1380,6 +1485,14 @@ function sentinel_FireLogic()
 		
 				self.beam_fire_target.origin = result.hit_position;
 				self.beam_fire_target.angles = VectorToAngles( -beam_dir );	
+				
+				/#
+					if( GetDvarInt("debug_sentinel_drone_traces") > 0 )
+					{	
+						recordLine( self.origin, result.hit_position, (0.9, 0.7, 0.6) );
+						RecordSphere(result.hit_position, 8, (0.9, 0.7, 0.6));
+					}
+				#/
 				
 				self clearlookatent();
 				self.angles = VectorToAngles(beam_dir);
@@ -1461,6 +1574,19 @@ function sentinel_FireBeam( target_position, b_succession )
 	self.angles = VectorToAngles(beam_dir);
 	//self SetLookAtEnt( self.beam_fire_target );
 	self setTurretTargetEnt( self.beam_fire_target );
+	/*
+	/#
+	forward_dir = AnglesToForward( self.angles );
+	recordLine( self.origin, self.origin + VectorScale(forward_dir, 300), GREEN );
+	recordLine( self.origin, self.origin + VectorScale(beam_dir, 500), RED );
+	#/
+	*/
+		
+	/*
+	/#
+		Sphere(target_position, 15, GREEN,0.5, false, 10, 360);
+	#/
+	*/
 	self.is_firing_beam = true;
 	
 	if(!IS_TRUE(b_succession))
@@ -1490,6 +1616,12 @@ function sentinel_FireBeamBurst( target_position )
 		}
 		
 		self clientfield::set("sentinel_drone_beam_fire" + i, 1);
+		
+		/*
+		/#
+			Sphere(self.beam_fire_start_models[i].origin, 10, WHITE,0.5, false, 10, 360);
+		#/
+		*/
 	}
 	
 	wait 0.1;
@@ -1560,18 +1692,7 @@ function sentinel_DamageBeamTouchingEntity( player_damage, target_position, b_su
 {
 	trace = sentinel_Trace(self.origin, target_position, self.sentinel_droneEnemy, false);
 	trace_entity = trace["entity"];
-	
-	//Check to see if we hit an invisible corpse
-	if( isdefined(trace["entity"]) && isdefined(trace["entity"].archetype) && (trace["entity"].archetype == ARCHETYPE_ZOMBIE) && !IsAlive(trace["entity"]) )
-	{
-		trace = sentinel_Trace(self.origin, target_position, self.sentinel_droneEnemy, false, true);
-		
-		if( trace["fraction"] == 1 )
-		{
-			trace_entity = self.sentinel_droneEnemy;
-		}
-	}
-	
+
 	if( IsPlayer(trace_entity) )
 	{
 		trace_entity thread sentinel_DamagePlayer( player_damage, self, b_succession);
@@ -1613,14 +1734,14 @@ function sentinel_ChargeAtPlayer( )
 	
 	//self sentinel_DeactivateAllEffects();
 	
+	charge_at_position = self.sentinel_droneEnemy.origin + (0, 0, 48);
+	
 	wait 0.3;
 	
 	self.is_charging_at_player = true;
 	self sentinel_NavigationStandStill();
 	
 	sentinel_play_taunt( level._sentinel_System_Critical_Taunts );
-	
-	charge_at_position = self.sentinel_droneEnemy.origin + (0, 0, 48);
 	
 	self ASMRequestSubstate( "suicide_intro@death" ); //Play charge intro anim
 	
@@ -2188,7 +2309,7 @@ function sentinel_GetEngagementDistMax()
 {
 	if( sentinel_IsEnemyInNarrowPlace() )
 	{
-		return self.settings.engagementDistMin * 0.3;
+		return self.settings.engagementDistMax * 0.3;
 	}
 	else if(IS_TRUE(self.in_compact_mode))
 	{
@@ -2262,7 +2383,7 @@ function sentinel_Trace(start, end, ignore_ent, b_physics_trace, ignore_characte
 		}
 	}
 
-	trace = BulletTrace( start, end, !IS_TRUE(ignore_characters), self );
+	trace = BulletTrace( start, end, !IS_TRUE(ignore_characters), self, false, false, self, true );
 	
 	return trace;
 }
@@ -2409,3 +2530,114 @@ function sentinel_play_taunt( taunt_Arr )
 	self PlaySound( taunt_Arr[taunt] );
 }
 
+// ----------------------------------------------
+// DEBUG
+// ----------------------------------------------
+
+/#
+function sentinel_DebugDrawSize()
+{
+	self endon("death");
+	
+	while(true)
+	{
+		radius = GetDvarInt("drone_radius2", 35);
+		Sphere(self.origin, radius, GREEN, 0.5);
+			
+		wait 0.01;
+	}
+}
+
+
+function sentinel_DebugFX()
+{
+	self endon("death");
+	
+	while(true)
+	{
+		if(GetDvarInt("sentinel_DebugFX_PlayAll", 0) == 1)
+		{
+			self.sentinel_DebugFX_PlayAll = true;
+			
+			forward_vector = AnglesToForward(self.angles);
+			forward_vector = self.origin + VectorScale(forward_vector, SENTINEL_DRONE_BEAM_MAX_LENGTH);
+			thread sentinel_FireBeam( forward_vector );
+			
+			self clientfield::set("sentinel_drone_beam_charge", 1);
+		}
+		else if(IS_TRUE(self.sentinel_DebugFX_PlayAll))
+		{
+			self.sentinel_DebugFX_PlayAll = false;
+			
+			self clientfield::set("sentinel_drone_beam_charge", 0);
+		}
+		
+		if(GetDvarInt("sentinel_DebugFX_BeamCharge", 0) == 1)
+		{
+			self.sentinel_DebugFX_BeamCharge = true;
+		}
+		else if(IS_TRUE(self.sentinel_DebugFX_BeamCharge))
+		{
+			self.sentinel_DebugFX_BeamCharge = false;
+			
+			self clientfield::set("sentinel_drone_beam_charge", 0);
+		}
+		
+		if(GetDvarInt("sentinel_DebugFX_NoArms", 0) == 1)
+		{
+			if( !IS_TRUE(self.sentinel_DebugFX_NoArms) )
+			{
+				self.sentinel_DebugFX_NoArms = true;
+				
+				thread sentinel_ArmDamage(1000, SENTINEL_DRONE_ARM_LEFT);
+				thread sentinel_ArmDamage(1000, SENTINEL_DRONE_ARM_RIGHT);
+				thread sentinel_ArmDamage(1000, SENTINEL_DRONE_ARM_TOP);
+			}
+		}
+		
+		if(GetDvarInt("sentinel_DebugFX_NoFace", 0) == 1)
+		{
+			if( !IS_TRUE(self.sentinel_DebugFX_NoFace) )
+			{
+				self.sentinel_DebugFX_NoFace = true;
+				thread sentinel_FaceDamage(1000, SENTINEL_DRONE_FACE_TAG);
+			}
+		}
+		
+		wait 3;
+	}
+}
+
+function sentinel_DebugBehavior()
+{
+	self endon( "death" );
+	
+	while(isdefined(self))
+	{
+		if(GetDvarInt("sentinel_debug_buff_zombies", 0) == 1)
+		{
+			self.debug_should_buff_zombies = true;
+			self.should_buff_zombies = true;
+		}
+		else if( isdefined(self.debug_should_buff_zombies) )
+		{
+			self.debug_should_buff_zombies = undefined;
+			self.should_buff_zombies = false;
+		}
+		
+		if(GetDvarInt("sentinel_debug_compact", 0) == 1)
+		{
+			self.debug_sentinel_debug_compact = true;
+			Blackboard::SetBlackBoardAttribute( self, STANCE, STANCE_CROUCH );
+		}
+		else if( isdefined(self.debug_sentinel_debug_compact) )
+		{
+			self.debug_sentinel_debug_compact = undefined;
+			Blackboard::SetBlackBoardAttribute( self, STANCE, STANCE_STAND );
+		}
+		
+		wait 1;
+	}
+}
+
+#/

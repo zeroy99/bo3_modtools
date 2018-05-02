@@ -37,5 +37,5 @@ function isKnife( weapon )
 
 function isNonBareHandsMelee( weapon )
 {
-	return weapon.type == "melee" && weapon.rootWeapon.name != "bare_hands";	
+	return (weapon.type == "melee" && weapon.rootWeapon.name != "bare_hands") || weapon.isBallisticKnife;
 }

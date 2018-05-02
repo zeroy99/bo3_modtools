@@ -15,6 +15,7 @@
 
 #insert scripts\shared\ai\utility.gsh;
 
+//#using scripts\sp\_util;
 #using scripts\shared\vehicle_shared;
 #using scripts\shared\vehicle_death_shared;
 
@@ -111,6 +112,7 @@ function main()
 	self thread update_damage_states();
 	self thread metalstorm_rocket_recoil();
 	self thread metalstorm_death();
+	/#self thread metalstorm_debug();#/
 	self.overrideVehicleDamage =&MetalStormCallback_VehicleDamage;
 }
 
@@ -544,6 +546,36 @@ function metalstorm_main()
 	self thread metalstorm_movementupdate();
 	self thread metalstorm_weapon_think();	
 }
+
+/#
+function metalstorm_debug()
+{
+	self endon( "death" );
+	
+	while ( 1 )
+	{
+		// no dvar, no debugging
+		if( GetDvarInt( "metalstorm_debug" ) == 0 )
+		{
+			wait( 0.5 );
+			continue;
+		}
+		
+		if ( isdefined( self.goalpos ) )
+		{
+			DebugStar( self.goalpos, 10, ( 1, 0, 0 ) );
+			Circle( self.goalpos, self.goalradius, ( 1, 0, 0 ), false, 10 );
+		}
+		
+		if ( isdefined( self.enemy ) )
+		{
+			Line( self.origin + ( 0, 0, 30 ), self.enemy.origin + ( 0, 0, 30 ), ( 1, 0, 0 ), true, 1 );
+		}
+		
+		WAIT_SERVER_FRAME;
+	}
+}
+#/
 
 function metalstorm_check_move( position )
 {

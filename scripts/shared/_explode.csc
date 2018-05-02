@@ -26,7 +26,25 @@ function __init__()
 	level.dirt_enable_fall_damage = GetDvarInt( "scr_dirt_enable_fall_damage", 1 );
 	
 	callback::on_localplayer_spawned( &localplayer_spawned );
+	
+	/#
+	level thread updateDvars();
+	#/
 }
+
+/#
+function updateDvars()
+{
+	while(1)
+	{
+		level.dirt_enable_explosion = GetDvarInt( "scr_dirt_enable_explosion", level.dirt_enable_explosion );
+		level.dirt_enable_slide = GetDvarInt( "scr_dirt_enable_slide", level.dirt_enable_slide );
+		level.dirt_enable_fall_damage = GetDvarInt( "scr_dirt_enable_fall_damage", level.dirt_enable_fall_damage );
+		
+		wait(1.0);
+	}
+}
+#/
 
 function localplayer_spawned( localClientNum )
 {

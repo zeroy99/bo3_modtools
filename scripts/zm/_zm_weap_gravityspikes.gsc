@@ -172,6 +172,7 @@ function private on_connect_func_for_gravityspikes()	// self == a player
 
 	self.gravity_trap_unitrigger_stub = undefined;
 	
+	self thread weapon_drop_watcher();
 	self thread weapon_change_watcher();
 
 }
@@ -321,6 +322,20 @@ function unwield_gravityspikes( wpn_gravityspikes )
 		self thread gravity_trap_loop( self.v_gravity_trap_pos, wpn_gravityspikes );
 	}
 }
+
+function weapon_drop_watcher() // self = player
+{
+	self endon( "disconnect" );
+
+	while ( true )
+	{
+		self waittill( "weapon_switch_started", w_current );	
+		if ( zm_utility::is_hero_weapon( w_current ) )
+		{
+			self SetWeaponAmmoClip( w_current, 0 );
+		}
+	}
+}	
 
 function weapon_change_watcher() // self = player
 {
@@ -804,28 +819,28 @@ function gravity_trap_check( player )	// self == a zombie
 	{
 		return;
 	}
-	
+
 	if( self check_for_range_and_los( v_gravity_trap_origin, N_GRAVITY_TRAP_HEIGHT, n_gravity_trap_radius_sq ) )
 	{	
+		if( self.in_gravity_trap === true )
+		{
+			return;				
+		}
+		self.in_gravity_trap = true;
+		
 		// this zombie is in trap, wait for thottle to allow the zombie lifting behavior
-		// level.ai_gravity_throttle will spread the gravity spike reaction over multiple frames for better network performace	
+		// level.ai_gravity_throttle will spread the gravity spike reaction over multiple frames for better network performace
 		[[level.ai_gravity_throttle]]->WaitInQueue(self);
 		
 		if( IsDefined(self) && IsAlive(self) )
 		{
-			if( self.in_gravity_trap === true )
-			{
-				return;				
-			}
-			self.in_gravity_trap = true;
-			
 			self zombie_lift( 	player, 
 							v_gravity_trap_origin, 
 							0, 
 							RandomIntRange( N_GRAVITY_TRAP_LIFT_HEIGHT_MIN, N_GRAVITY_TRAP_LIFT_HEIGHT_MAX ), 
 							V_GRAVITY_TRAP_LIFT_AMOUNT_OFFSET, 
 							RandomIntRange( N_GRAVITY_TRAP_MIN_LIFT_SPEED, N_GRAVITY_TRAP_MAX_LIFT_SPEED ) );
-		}		
+		}
 	}	
 }
 
@@ -1128,8 +1143,11 @@ function zombie_lift( player, v_attack_source, n_push_away, n_lift_height, v_lif
 
 				const N_FLING_FORCE = 150;
 
-				self StartRagdoll();
-				self LaunchRagdoll( N_FLING_FORCE * AnglesToUp( self.angles ) + ( v_away_from_source[ 0 ], v_away_from_source[ 1 ], 0 ) );
+				if ( !IS_TRUE( level.ignore_gravityspikes_ragdoll ) )
+				{
+					self StartRagdoll();
+					self LaunchRagdoll( N_FLING_FORCE * AnglesToUp( self.angles ) + ( v_away_from_source[ 0 ], v_away_from_source[ 1 ], 0 ) );
+				}
 
 				self clientfield::set( "ragdoll_impact_watch", 1 );
 
@@ -1228,7 +1246,7 @@ function gravity_trap_timeout_watcher() // self = ai zombie
 {
 	self endon( "gravity_trap_complete" );
 
-	self.mdl_trap_mover util::waittill_any_timeout( 4, "movedone" );
+	self.mdl_trap_mover util::waittill_any_timeout( 4, "movedone", "gravity_trap_complete" );
 
 	// float in the air a bit, slight pause when zombie reaches max lift height
 	if( IsAlive( self ) && !IS_TRUE( self.b_melee_kill ) )

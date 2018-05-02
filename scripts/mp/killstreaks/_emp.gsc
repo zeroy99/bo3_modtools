@@ -1,4 +1,5 @@
 #using scripts\codescripts\struct;
+
 #using scripts\mp\_util;
 #using scripts\mp\gametypes\_hostmigration;
 #using scripts\mp\killstreaks\_airsupport;
@@ -10,6 +11,7 @@
 #using scripts\mp\killstreaks\_placeables;
 #using scripts\mp\teams\_teams;
 #using scripts\mp\teams\_teams;
+
 #using scripts\shared\callbacks_shared;
 #using scripts\shared\challenges_shared;
 #using scripts\shared\clientfield_shared;
@@ -129,7 +131,7 @@ function ActivateEMP()
 	empBase clientfield::set( "emp_turret_init", 1 );
 	empBase.otherModel clientfield::set( "emp_turret_init", 1 );
 
-	event = empBase util::waittill_any_return( "placed", "cancelled", "death" );
+	event = empBase util::waittill_any_return( "placed", "cancelled", "death", "disconnect" );
 	if( event != "placed" )
 	{
 		return false;

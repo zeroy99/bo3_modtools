@@ -107,10 +107,11 @@ function scoreEventPlayerKill( data, time )
 	victimPowerArmorLastTookDamageTime = data.victimPowerArmorLastTookDamageTime;
 	victimHeroWeaponKillsThisActivation = data.victimHeroWeaponKillsThisActivation;
 	victimGadgetPower = data.victimGadgetPower;
-	victimGadgetWasActiveLastDamage = data.victimGadgetWasActiveLastDamage;
+	victimGadgetWasActiveLastDamage = ( data.victimGadgetWasActiveLastDamage === true );
 	victimIsThiefOrRoulette = data.victimIsThiefOrRoulette;
 	attackerIsRoulette = data.attackerIsRoulette;
 	victimHeroAbilityName = data.victimHeroAbilityName; // note that victim hero ability name cannot be reliably taken from victimHeroAbility, so this is done instead
+	attackerInVehicleArchetype = data.attackerInVehicleArchetype;
 	if ( isdefined( victimHeroAbilityName ) )
 		victimHeroAbilityEquipped = GetWeapon( victimHeroAbilityName );
 	
@@ -441,7 +442,7 @@ function scoreEventPlayerKill( data, time )
 			attacker notify( "hero_shutdown",  data.victimWeapon );
 			attacker notify( "hero_shutdown_gadget",  data.victimWeapon, victim );
 		}
-		else if ( isdefined( victim.heroWeapon ) && ( victimGadgetWasActiveLastDamage === true ) && victimGadgetPower < 100 )
+		else if ( isdefined( victim.heroWeapon ) && victimGadgetWasActiveLastDamage && victimGadgetPower < 100 )
 		{
 			// need to do this for some hero weapons like armblades
 			attacker notify( "hero_shutdown", victim.heroWeapon );
@@ -518,7 +519,7 @@ function scoreEventPlayerKill( data, time )
 			
 			// armblade is special case since the victimWeapon can be a primary or secondary weapon
 			is_hero_armblade_and_active = ( isdefined( victim.heroweapon ) && victim.heroweapon.name == "hero_armblade" && victimGadgetWasActiveLastDamage );
-				
+			
 			if ( ( data.victimWeapon.inventorytype == "hero" || is_hero_armblade_and_active ) && victimGadgetPower < 100 )
 			{
 				if ( victimHeroWeaponKillsThisActivation == 0 )
@@ -542,7 +543,7 @@ function scoreEventPlayerKill( data, time )
 		
 		if ( weapon.rootweapon.name == "frag_grenade" )
 		{
-			attacker updateSingleFragMultiKill( victim, weapon, weaponClass, killstreak );
+			attacker thread updateSingleFragMultiKill( victim, weapon, weaponClass, killstreak );
 		}
 		
 		attacker thread updateMultiKills( weapon, weaponClass, killstreak, victim );
@@ -757,7 +758,27 @@ function scoreEventPlayerKill( data, time )
 		
 		processScoreEvent( "mothership_assist_kill", level.vtol.owner, victim, weapon );
 	}
-		
+	
+	if ( isdefined( attackerInVehicleArchetype ) )
+	{
+		if ( attackerInVehicleArchetype == "siegebot" )
+		{
+			if ( meansOfDeath == "MOD_CRUSH" )
+			{
+				processScoreEvent( "kill_enemy_with_siegebot_crush", attacker, victim, weapon );
+			}
+			
+			DEFAULT( attacker.siegebot_kills, 0 );
+			
+			attacker.siegebot_kills++;
+			
+			if ( attacker.siegebot_kills % 5 == 0 )
+			{
+				processScoreEvent( "siegebot_killstreak_5", attacker, victim, weapon );
+			}
+		}
+	}
+	
 	switch ( weapon.rootweapon.name )
 	{
 		case "hatchet":
@@ -1082,7 +1103,9 @@ function is_weapon_valid( meansOfDeath, weapon, weaponClass, killstreak )
 		baseWeapon = challenges::getBaseWeapon( weapon );
 		if ( baseWeapon == level.weaponSpecialCrossbow && meansOfDeath == "MOD_IMPACT" )
 			valid_weapon = true;
-		else if ( ( baseWeapon.forceDamageHitLocation || baseWeapon == level.weaponShotgunEnergy  ) && meansofDeath == "MOD_PROJECTILE" )
+		else if ( baseWeapon == level.weaponBallisticKnife && meansOfDeath == "MOD_IMPACT" )
+			valid_weapon = true;
+		else if ( ( baseWeapon.forceDamageHitLocation || baseWeapon == level.weaponShotgunEnergy || baseWeapon == level.weaponSpecialDiscGun ) && meansofDeath == "MOD_PROJECTILE" )
 			valid_weapon = true;
 	}
 
@@ -1536,7 +1559,7 @@ function get_distance_for_weapon( weapon, weaponClass )
 		case "weapon_special":
 			{
 				baseWeapon = challenges::getBaseWeapon( weapon );
-				if ( weapon == level.weaponBallisticKnife || baseWeapon == level.weaponSpecialCrossbow )
+				if ( baseWeapon == level.weaponBallisticKnife || baseWeapon == level.weaponSpecialCrossbow || baseWeapon == level.weaponSpecialDiscGun )
 				{
 					distance = 1500 * 1500;	
 				}

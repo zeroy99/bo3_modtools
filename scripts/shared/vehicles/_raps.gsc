@@ -170,7 +170,7 @@ function state_emped_update( params )
 		self SetVehGoalPos( self.origin + side * 500 + forward * randomFloat(400), false, false );
 		wait 0.6;
 		self ClearVehGoalPos();
-		self util::waittill_any_timeout( 1.5, "veh_collision" );
+		self util::waittill_any_timeout( 1.5, "veh_collision", "change_state", "death" );
 		self Kill( self.origin, self.abnormal_status.attacker, self.abnormal_status.inflictor, GetWeapon( "emp" ) );
 	}
 	else
@@ -355,6 +355,10 @@ function state_combat_update( params )
 
 				if ( pathfailcount > 2 )
 				{
+					/#
+					// recordLine( self.origin, self.origin + (0,0,3000), (0.3,1,0) );
+					// RecordSphere( self.origin, 30, (1,1,0) );
+					#/
 						
 					// Try to change enemies
 					if( IsDefined( self.enemy ) )

@@ -278,7 +278,7 @@ function is_hero_score_event_restricted( event )
 
 function giveCrateCaptureMedal( crate, capturer )
 {
-	if ( isdefined( crate.owner ) && isplayer( crate.owner ) )
+	if ( isdefined( crate ) && isdefined( capturer ) && isdefined( crate.owner ) && isplayer( crate.owner ) )
 	{
 		if ( level.teambased ) 
 		{

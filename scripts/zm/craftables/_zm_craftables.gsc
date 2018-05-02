@@ -334,6 +334,23 @@ function add_zombie_craftable( craftable_name, str_to_craft, str_crafting, str_t
 	level.zombie_craftableStubs[ craftable_struct.name ] = craftable_struct;
 }
 
+function set_hide_model_if_unavailable( craftable_name, hide_when_unavailable )
+{
+	if ( isdefined( level.zombie_craftableStubs[ craftable_name ] ) )
+	{
+		level.zombie_craftableStubs[ craftable_name ].hide_when_unavailable = hide_when_unavailable;
+	}
+}
+
+function get_hide_model_if_unavailable( craftable_name )
+{
+	if ( isdefined( level.zombie_craftableStubs[ craftable_name ] ) )
+	{
+		return IS_TRUE( level.zombie_craftableStubs[ craftable_name ].hide_when_unavailable ); 
+	}
+	return false;
+}
+
 function set_build_time( craftable_name, build_time )
 {
 	if ( isdefined( level.zombie_craftableStubs[ craftable_name ] ) )
@@ -2150,7 +2167,7 @@ function craftable_all_crafted()
 		//	If all shared pieces are in the inventory, then we can build it.
 		foreach ( piece in self.a_pieceSpawns )
 		{
-			if ( !IS_TRUE( piece.in_shared_inventory ) )
+			if ( !IS_TRUE( piece.in_shared_inventory ) && !piece.crafted )//Make sure we also check to see if it's already been crafted and cleaned up
 			{
 				return false;
 			}
@@ -3298,7 +3315,14 @@ function craftable_place_think()
 	}
 	else if ( !isdefined( player_crafted ) || self craftabletrigger_update_prompt( player_crafted ) )
 	{
-		if ( isdefined( self.stub.model ) )
+		visible = true; 
+		hide = get_hide_model_if_unavailable( self.stub.equipname );
+		if ( hide && isdefined( level.custom_craftable_validation ) )
+		{
+			visible = self [[ level.custom_craftable_validation ]]( player );
+		}
+		
+		if ( visible && isdefined( self.stub.model ) )
 		{
 			self.stub.model NotSolid();
 			self.stub.model show();
@@ -4189,6 +4213,12 @@ function track_placed_craftables( craftable_name )
 }
 
 
+function zombie_craftable_set_record_stats( str_craftable, b_record )
+{
+	DEFAULT(level.craftables_stats_recorded,[]);
+	level.craftables_stats_recorded[str_craftable] = b_record;
+}
+
 function add_map_craftable_stat( piece_name, stat_name, value )
 {
 	if ( !isdefined( piece_name ) || ( piece_name == "sq_common" ) || ( piece_name == "keys_zm" ) )
@@ -4201,6 +4231,12 @@ function add_map_craftable_stat( piece_name, stat_name, value )
 		return;
 	}
 
+	DEFAULT(level.craftables_stats_recorded,[]);
+	if ( !IS_TRUE(level.craftables_stats_recorded[piece_name]) )
+	{
+		return;
+	}
+	
 	self AddDStat( "buildables", piece_name, stat_name, value );
 
 }

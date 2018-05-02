@@ -29,9 +29,13 @@ function __init__()
 	
 	clientfield::register( "toplayer", "out_of_bounds", VERSION_SHIP, 5, "int", &onOutOfBoundsChange,!CF_HOST_ONLY, CF_CALLBACK_ZERO_ON_NEW_ENT );
 	
-	callback::on_localclient_connect( &on_localplayer_connect );
-	callback::on_localplayer_spawned( &on_localplayer_spawned );
-	callback::on_localclient_shutdown( &on_localplayer_shutdown );
+
+ 	if( !SessionModeIsZombiesGame() )
+   	{
+		callback::on_localclient_connect( &on_localplayer_connect );
+		callback::on_localplayer_spawned( &on_localplayer_spawned );
+		callback::on_localclient_shutdown( &on_localplayer_shutdown );
+	}
 }
 
 function on_localplayer_connect( localClientNum )

@@ -705,10 +705,49 @@ function NotifyAfterTime(notifyString, killmestring, time)
 
 function drawStringTime(msg, org, color, timer)
 {	
+	/#
+	maxtime = timer*20;
+	for (i=0;i<maxtime;i++)
+	{
+		Print3d (org, msg, color, 1, 1);
+		wait .05;
+	}
+	#/
 }
 
 function showLastEnemySightPos(string)
 {
+	/#
+	self notify ("got known enemy2");
+	self endon ("got known enemy2");
+	self endon ("death");
+
+	if ( !isValidEnemy( self.enemy ) )
+	{
+		return;
+	}
+		
+	if (self.enemy.team == "allies")
+	{
+		color = (0.4, 0.7, 1);
+	}
+	else
+	{
+		color = (1, 0.7, 0.4);
+	}
+		
+	while (1)
+	{
+		WAIT_SERVER_FRAME;
+		
+		if (!IsDefined (self.lastEnemySightPos))
+		{
+			continue;
+		}
+			
+		Print3d (self.lastEnemySightPos, string, color, 1, 2.15);	// origin, text, RGB, alpha, scale
+	}
+	#/
 }
 
 function debugTimeout()
@@ -719,6 +758,30 @@ function debugTimeout()
 
 function debugPosInternal( org, string, size )
 {
+	/#
+	self endon ("death");
+	self notify ("stop debug " + org);
+	self endon ("stop debug " + org);
+	
+	ent = SpawnStruct();
+	ent thread debugTimeout();
+	ent endon ("timeout");
+	
+	if (self.enemy.team == "allies")
+	{
+		color = (0.4, 0.7, 1);
+	}
+	else
+	{
+		color = (1, 0.7, 0.4);
+	}
+		
+	while (1)
+	{
+		WAIT_SERVER_FRAME;
+		Print3d (org, string, color, 1, size);	// origin, text, RGB, alpha, scale
+	}
+	#/
 }
 
 function debugPos( org, string )
@@ -733,6 +796,18 @@ function debugPosSize( org, string, size )
 
 function showDebugProc(fromPoint, toPoint, color, printTime)
 {
+	/#
+	self endon ("death");
+//	self notify ("stop debugline " + self.export);
+//	self endon ("stop debugline " + self.export);
+
+	timer = printTime*20;
+	for (i=0;i<timer;i+=1)
+	{
+		WAIT_SERVER_FRAME;
+		line (fromPoint, toPoint, color);
+	}
+	#/
 }
 
 function showDebugLine( fromPoint, toPoint, color, printTime )
@@ -833,6 +908,15 @@ function checkPitchVisibility( fromPoint, toPoint, atNode )
 
 function showLines(start, end, end2)
 {
+	/#
+	for (;;)
+	{
+		line(start, end, (1,0,0), 1);
+		WAIT_SERVER_FRAME;
+		line(start, end2, (0,0,1), 1);
+		WAIT_SERVER_FRAME;
+	}
+	#/
 }
 
 // Returns an animation from an array of animations with a corresponding array of weights.
@@ -887,10 +971,30 @@ function forcedCover(msg)
 
 function print3dtime(timer, org, msg, color, alpha, scale)
 {
+	/#
+	newtime = timer / 0.05;
+	for (i=0;i<newtime;i++)
+	{
+		Print3d (org, msg, color, alpha, scale);
+		WAIT_SERVER_FRAME;
+	}
+	#/
 }
 
 function print3drise (org, msg, color, alpha, scale)
 {
+	/#
+	newtime = 5 / 0.05;
+	up = 0;
+	org = org;
+
+	for (i=0;i<newtime;i++)
+	{
+		up+=0.5;
+		Print3d (org + (0,0,up), msg, color, alpha, scale);
+		WAIT_SERVER_FRAME;
+	}
+	#/
 }
 
 function crossproduct (vec1, vec2)
@@ -980,6 +1084,17 @@ function setFootstepEffect(name, fx)
 
 function persistentDebugLine(start, end)
 {
+	/#
+	self endon ("death");
+	level notify ("newdebugline");
+	level endon ("newdebugline");
+	
+	for (;;)
+	{
+		line (start,end, (0.3,1,0), 1);
+		WAIT_SERVER_FRAME;
+	}
+	#/
 }
 
 function isNodeDontStand()
@@ -1010,6 +1125,14 @@ function animArray( animname ) /* string */
 
 	assert( IsDefined(self.a.array) );
 
+	/#
+	if ( !IsDefined(self.a.array[animname]) )
+	{
+		dumpAnimArray();
+		assert( IsDefined(self.a.array[animname]), "self.a.array[ \"" + animname + "\" ] is undefined" );
+	}
+	#/
+
 	return self.a.array[animname];
 }
 
@@ -1017,12 +1140,28 @@ function animArrayAnyExist( animname )
 {
 	assert( IsDefined( self.a.array ) );
 
+	/#
+	if ( !IsDefined(self.a.array[animname]) )
+	{
+		dumpAnimArray();
+		assert( IsDefined(self.a.array[animname]), "self.a.array[ \"" + animname + "\" ] is undefined"  );
+	}
+	#/
+	
 	return self.a.array[animname].size > 0;
 }
 
 function animArrayPickRandom( animname )
 {
 	assert( IsDefined( self.a.array ) );
+
+	/#
+	if ( !IsDefined(self.a.array[animname]) )
+	{
+		dumpAnimArray();
+		assert( IsDefined(self.a.array[animname]), "self.a.array[ \"" + animname + "\" ] is undefined"  );
+	}
+	#/
 
 	assert( self.a.array[animname].size > 0 );
 	
@@ -1038,9 +1177,29 @@ function animArrayPickRandom( animname )
 	return self.a.array[animname][index];
 }
 
+/#
+function dumpAnimArray()
+{
+	println("self.a.array:");
+	keys = getArrayKeys( self.a.array );
+
+	for ( i=0; i < keys.size; i++ )
+	{
+		if ( isarray( self.a.array[ keys[i] ] ) )
+		{
+			println( " array[ \"" + keys[i] + "\" ] = {array of size " + self.a.array[ keys[i] ].size + "}" );
+		}
+		else
+		{
+			println( " array[ \"" + keys[i] + "\" ] = ", self.a.array[ keys[i] ] );
+		}
+	}
+}
+#/
+
 function getAnimEndPos( theanim )
 {
-	moveDelta = getMoveDelta( theanim, 0, 1 );
+	moveDelta = getMoveDelta( theanim, 0, 1, self );
 	return self localToWorldCoords( moveDelta );
 }
 
@@ -1204,6 +1363,16 @@ function get_skeleton()
 
 function set_orient_mode( mode, val1 )
 {
+/#
+	if ( level.dog_debug_orient == self getentnum() )
+	{
+		if ( IsDefined( val1 ) )
+			println( "DOG:  Setting orient mode: " + mode + " " + val1 + " " + getTime() );
+		else
+			println( "DOG:  Setting orient mode: " + mode + " " + getTime() );
+	}
+#/
+	
 	if ( IsDefined( val1 ) )
 		self OrientMode( mode, val1 );
 	else
@@ -1212,19 +1381,50 @@ function set_orient_mode( mode, val1 )
 
 function debug_anim_print( text )
 {
+/#		
+	if ( IsDefined( level.dog_debug_anims ) && level.dog_debug_anims  )
+		println( text+ " " + getTime() );
+
+	if ( IsDefined( level.dog_debug_anims_ent ) && level.dog_debug_anims_ent == self getentnum() )
+		println( text+ " " + getTime() );
+#/
 }
 
 function debug_turn_print( text, line )
 {
+/#		
+	if ( IsDefined( level.dog_debug_turns ) && level.dog_debug_turns == self getentnum() )
+	{
+		duration = 200;
+		currentYawColor = (1,1,1);
+		lookaheadYawColor = (1,0,0);
+		desiredYawColor = (1,1,0);
+	
+		currentYaw = AngleClamp180(self.angles[1]);
+		desiredYaw = AngleClamp180(self.desiredangle);
+		lookaheadDir = self.lookaheaddir;
+		lookaheadAngles = vectortoangles(lookaheadDir);
+		lookaheadYaw = AngleClamp180(lookaheadAngles[1]);
+			println( text+ " " + getTime() + " cur: " + currentYaw + " look: " + lookaheadYaw + " desired: " + desiredYaw );
+	}
+#/
 }
 
 function debug_allow_combat()
 {
+/#
+	return ( anim_get_dvar_int( "debug_dog_allow_combat", "1" ) );
+#/
+
 	return true;
 }
 
 function debug_allow_movement()
 {
+/#
+	return ( anim_get_dvar_int( "debug_dog_allow_movement", "1" ) );
+#/
+
 	return true;
 }
 
@@ -1255,6 +1455,7 @@ function spawn_zombie( spawner,target_name,spawn_point,round_number)
 { 
 	if( !IsDefined( spawner ) )
 	{
+	/#	println( "ZM >> spawn_zombie - NO SPAWNER DEFINED" );	#/
 		return undefined; 
 	}
 	
@@ -1319,15 +1520,24 @@ function spawn_zombie( spawner,target_name,spawn_point,round_number)
 				guy thread [[level.move_spawn_func]](spawn_point);
 			}	
 			
+			/#
+				if( IsDefined( spawner.zm_variant_type ) )
+				{
+					guy.variant_type = spawner.zm_variant_type;
+				}
+			#/
+			 
 			return guy;  
 		}
 		else
 		{
+		/#	println( "ZM >> spawn_zombie - FAILED TO SPAWN A ZOMBIE FROM SPAWNER AT ", spawner.origin );	#/
 			return undefined; 
 		}				
 	}
 	else
 	{
+	/#	println( "ZM >> spawn_zombie - ZOMBIE SPAWNER MUST BE SET FORCESPAWN", spawner.origin );	#/
 		return undefined; 
 	}		 
 
@@ -1721,6 +1931,14 @@ function ai_calculate_health( round_number )
 
 function default_max_zombie_func( max_num, n_round )
 {
+	/#
+		count = GetDvarInt( "zombie_default_max", -1 );
+		if ( count > -1 )
+		{
+			return count;
+		}
+	#/
+
 	max = max_num;
 
 	if( n_round < 2 )
@@ -1878,6 +2096,32 @@ function set_zombie_run_cycle( new_move_speed )
 	}
 	if( IsDefined( level.zm_variant_type_max ) )
 	{
+		/#
+		// sjakatdar TU3 (11/12/2015) 
+		// Removed the debugging here to make sure that we have same behavior as ship as this lead to some ship only problems
+		// If you need to test variations, just change the script locally
+		if(0)
+		{
+			debug_variant_type = GetDvarInt( "scr_zombie_variant_type", -1 );
+			
+			if( debug_variant_type != -1 )
+			{
+				if(debug_variant_type <= level.zm_variant_type_max[self.zombie_move_speed][self.zombie_arms_position] )
+				{
+					self.variant_type = debug_variant_type;
+				}
+				else
+				{
+					self.variant_type = level.zm_variant_type_max[self.zombie_move_speed][self.zombie_arms_position] - 1;
+				}
+			}
+			else
+			{
+				self.variant_type = RandomInt( level.zm_variant_type_max[self.zombie_move_speed][self.zombie_arms_position] );				
+			}
+		}
+		#/
+		
 		if( self.archetype === ARCHETYPE_ZOMBIE )
 		{
 			if ( isdefined( self.zm_variant_type_max ) )
@@ -1886,7 +2130,17 @@ function set_zombie_run_cycle( new_move_speed )
 			}
 			else
 			{
-				self.variant_type = RandomInt( level.zm_variant_type_max[self.zombie_move_speed][self.zombie_arms_position] );
+				if ( isdefined( level.zm_variant_type_max[self.zombie_move_speed] ) )
+				{
+					self.variant_type = RandomInt( level.zm_variant_type_max[self.zombie_move_speed][self.zombie_arms_position] );
+				}
+				else
+				{
+					/#
+					ErrorMsg( "No variants set up for move speed " + self.zombie_move_speed );
+					#/
+					self.variant_type = 0;
+				}
 			}
 		}
 	}
@@ -2332,19 +2586,24 @@ function head_should_gib( attacker, type, point )
 	{
 		return false;
 	}
+	
+	if( !isdefined( attacker ) )
+	{
+		return false;
+	}
+	
+	if( !IsPlayer( attacker ) )
+	{
+		if( !IS_TRUE( attacker.can_gib_zombies)  )//allow non player types to gib (robot)
+		{
+			return false; 
+		}
+	}	
 
 	// check if the attacker was a player
-	if( !IsDefined( attacker ) || !IsPlayer( attacker ) )
-	{
-		if( !IS_TRUE( attacker.can_gib_zombies)  )
-		{
-		return false; 
-	}
-	}
-
 	if( IsPlayer(attacker ))
 	{
-	weapon = attacker GetCurrentWeapon(); 
+		weapon = attacker GetCurrentWeapon(); 
 	}
 	else
 	{
@@ -2403,7 +2662,10 @@ function head_should_gib( attacker, type, point )
 	}
 
 	// check weapon - don't want "none", base pistol, or flamethrower
-	if( (type == "MOD_PISTOL_BULLET" && weapon.weapClass != "smg") || weapon == level.weaponNone  || (IsDefined(level.start_weapon) && weapon == level.start_weapon) || weapon.isGasWeapon )
+	if( ( type == "MOD_PISTOL_BULLET" && weapon.weapClass != "smg" && weapon.weapClass != "spread" ) || 
+	    weapon == level.weaponNone || 
+	    (IsDefined(level.start_weapon) && weapon == level.start_weapon) || 
+	    weapon.isGasWeapon )
 	{
 		return false; 
 	}
@@ -2459,7 +2721,7 @@ function zombie_hat_gib( attacker, means_of_death )
 	}
 }
 
-function damage_over_time( dmg, delay, attacker, means_of_death )
+function head_gib_damage_over_time( dmg, delay, attacker, means_of_death )
 {
 	self endon( "death" );
 	self endon( "exploding" );
@@ -2479,6 +2741,9 @@ function damage_over_time( dmg, delay, attacker, means_of_death )
 		means_of_death = "MOD_UNKNOWN";
 	}
 
+	dot_location = self.damageLocation;
+	dot_weapon = self.damageweapon; 
+	
 	while( 1 )
 	{
 		if( IsDefined( delay ) )
@@ -2487,9 +2752,13 @@ function damage_over_time( dmg, delay, attacker, means_of_death )
 		}
 		if (IsDefined(self))
 		{
+			if( IS_TRUE( self.no_gib ) )
+			{
+				return;
+			}
 			if(IsDefined(attacker))
 			{
-				self DoDamage( dmg, self GetTagOrigin( "j_neck" ), attacker, self, self.damageLocation, means_of_death, 0, self.damageweapon );//player can drop out
+				self DoDamage( dmg, self GetTagOrigin( "j_neck" ), attacker, self, dot_location, means_of_death, 0, dot_weapon );//player can drop out
 			}
 			else
 			{
@@ -2666,7 +2935,6 @@ function makeZombieCrawler( b_both_legs )
 	else
 		GibServerUtils::GibLeftLeg( self );
 	
-	self.has_legs = false;
 	self.missingLegs = true;
 	self AllowedStances( "crouch" ); 
 									
@@ -2689,6 +2957,11 @@ function zombie_head_gib( attacker, means_of_death )
 		return;
 	}
 	
+	if( IS_TRUE( self.no_gib ) )
+	{
+		return;
+	}
+	
 	self.head_gibbed = true;
 
 	self zombie_eye_glow_stop();
@@ -2699,7 +2972,7 @@ function zombie_head_gib( attacker, means_of_death )
 		GibServerUtils::GibHead( self );
 	}
 
-	self thread damage_over_time( ceil( self.health * 0.2 ), 1, attacker, means_of_death );
+	self thread head_gib_damage_over_time( ceil( self.health * 0.2 ), 1, attacker, means_of_death );
 }
 
 function gib_random_parts()

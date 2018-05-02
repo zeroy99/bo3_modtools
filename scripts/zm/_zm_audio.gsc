@@ -686,7 +686,12 @@ function do_player_or_npc_playvox( sound_to_play, category, subcategory )
 			playbackTime = 1;
 		}
 		
-		if ( !self IsTestClient() )
+		if( isdefined( level._do_player_or_npc_playvox_override ) )
+		{
+			self thread [[level._do_player_or_npc_playvox_override]](sound_to_play, playbackTime);
+			wait(playbackTime);
+		}
+		else if ( !self IsTestClient() )
 		{
 			self PlaySoundOnTag( sound_to_play, "J_Head" );
 			wait(playbackTime);
@@ -712,34 +717,102 @@ function do_player_or_npc_playvox( sound_to_play, category, subcategory )
 		
 		if( !level flag::get( "solo_game" ) && IS_TRUE( level.sndPlayerVox[category][subcategory].response ) )
 		{
-			level thread setup_response_line( self, category, subcategory );
+			if( IS_TRUE( level.vox_response_override ) )
+			{
+				level thread setup_response_line_override( self, category, subcategory );
+			}
+			else
+			{
+				level thread setup_response_line( self, category, subcategory );
+			}
 		}
 	}
 }
 
-/**function setup_response_line( player, category, subcategory )
+function setup_response_line_override( player, category, subcategory )
 {
-	switch( player.entity_num )
+	if(isdefined(level._audio_custom_response_line))
 	{
-		case DEMPSEY_CHAR_INDEX:
-			level setup_hero_rival( player, NIKOLAI_CHAR_INDEX, RICHTOFEN_CHAR_INDEX, category, subcategory );
-		break;
-		
-		case NIKOLAI_CHAR_INDEX:
-			level setup_hero_rival( player, RICHTOFEN_CHAR_INDEX, TAKEO_CHAR_INDEX, category, subcategory );
-		break;
-		
-		case TAKEO_CHAR_INDEX:
-			level setup_hero_rival( player, DEMPSEY_CHAR_INDEX, NIKOLAI_CHAR_INDEX, category, subcategory );
-		break;
-		
-		case RICHTOFEN_CHAR_INDEX:
-			level setup_hero_rival( player, TAKEO_CHAR_INDEX, DEMPSEY_CHAR_INDEX, category, subcategory );
-		break;
+		self thread [[level._audio_custom_response_line]]( player, category, subcategory );
+	}
+	else
+	{
+		switch( player.characterindex )
+		{
+			case DEMPSEY_CHAR_INDEX_R:
+				level setup_hero_rival( player, NIKOLAI_CHAR_INDEX_R, RICHTOFEN_CHAR_INDEX_R, category, subcategory );
+			break;
+			
+			case NIKOLAI_CHAR_INDEX_R:
+				level setup_hero_rival( player, RICHTOFEN_CHAR_INDEX_R, TAKEO_CHAR_INDEX_R, category, subcategory );
+			break;
+			
+			case TAKEO_CHAR_INDEX_R:
+				level setup_hero_rival( player, DEMPSEY_CHAR_INDEX_R, NIKOLAI_CHAR_INDEX_R, category, subcategory );
+			break;
+			
+			case RICHTOFEN_CHAR_INDEX_R:
+				level setup_hero_rival( player, TAKEO_CHAR_INDEX_R, DEMPSEY_CHAR_INDEX_R, category, subcategory );
+			break;
+		}
 	}
 	return;
 }
-**/
+
+function setup_hero_rival( player, hero, rival, category, type )
+{
+	players = GetPlayers();
+	
+    hero_player = undefined;
+    rival_player = undefined;
+    
+    foreach(ent in players)
+    {
+    	if(ent.characterIndex == hero )
+    	{
+    		hero_player = ent;
+    	}
+    	else if (ent.characterIndex == rival )
+    	{
+    		rival_player = ent;
+    	}
+    }    
+	
+    if(isDefined(hero_player) && isDefined(rival_player))
+	{
+    	if( randomint(100) > 50 )
+		{
+			hero_player = undefined;
+		}
+		else
+		{
+			rival_player = undefined;
+		}
+	}	
+	if( IsDefined( hero_player ) && distancesquared (player.origin, hero_player.origin) < 500*500 )
+	{	
+		if( IS_TRUE( player.isSamantha ) )
+		{
+			hero_player create_and_play_dialog( category, type + "_s" );
+		}
+		else
+		{
+			hero_player create_and_play_dialog( category, type + "_hr" );
+		}
+	}		
+	else if(IsDefined( rival_player ) && distancesquared (player.origin, rival_player.origin) < 500*500  )
+	{
+		if( IS_TRUE( player.isSamantha ) )
+		{
+			rival_player create_and_play_dialog( category, type + "_s" );
+		}
+		else
+		{
+			rival_player create_and_play_dialog( category, type + "_riv" );
+		}
+	}
+}
+
 function setup_response_line( player, category, subcategory )
 {
 	players = array::get_all_closest( player.origin, level.activeplayers );
@@ -789,6 +862,10 @@ function shouldPlayerSpeak(player, category, subcategory, percentage )
 		return undefined;
 	
 	index = zm_utility::get_player_index(player);
+	
+	if( IS_TRUE( player.isSamantha ) )
+		index = 4;
+	
 	return PLAYER_PREFIX + index + "_";
 }
 function isVoxOnCooldown(player, category, subcategory)
@@ -1063,7 +1140,7 @@ function sndMusicSystem_QueueState( state )
 		{
 			wait(.5);
 			count++;
-			if( count >= 120 )
+			if( count >= 25 )
 			{
 				m.queue = false;
 				return;
@@ -1288,16 +1365,26 @@ function zmbAIVox_NotifyConvert()
 		self waittill("bhtn_action_notify", notify_string);
 		
 		switch( notify_string )
-		{					
+		{	
+			case "pain":
+				level thread zmbAIVox_PlayVox( self, notify_string, true, 9 );
+				break;				
 			case "death":
-				level thread zmbAIVox_PlayVox( self, notify_string, true, 10 );
+				if( IS_TRUE( self.bgb_tone_death ) )
+					level thread zmbAIVox_PlayVox( self, "death_whimsy", true, 10 );
+				else
+					level thread zmbAIVox_PlayVox( self, notify_string, true, 10 );
 				break;				
 			case "behind":
 				level thread zmbAIVox_PlayVox( self, notify_string, true, 9 );
 				break;
 			case "attack_melee":
-				level thread zmbAIVox_PlayVox( self, notify_string, true, 8 );
-				break;
+				if( !isdefined( self.animname ) || ( self.animname != "zombie" && self.animname != "quad_zombie" ) ) //Moving standard zombie attack vocals to anims, adding this check here as an easy way to keep them out of playing through script
+                    level thread zmbAIVox_PlayVox( self, notify_string, true, 8, true );
+                break;
+            case "attack_melee_zhd": //Technically not just ZHD, but new way of hooking up attack vocals
+                level thread zmbAIVox_PlayVox( self, "attack_melee", true, 8, true );
+                break;
 			case "electrocute":
 				level thread zmbAIVox_PlayVox( self, notify_string, true, 7 );
 				break;
@@ -1325,7 +1412,7 @@ function zmbAIVox_NotifyConvert()
 		}
 	}
 }
-function zmbAIVox_PlayVox( zombie, type, override, priority )
+function zmbAIVox_PlayVox( zombie, type, override, priority, delayAmbientVox = false )
 {
     zombie endon( "death" ); 
     
@@ -1341,8 +1428,20 @@ function zmbAIVox_PlayVox( zombie, type, override, priority )
     if( !isdefined( zombie.currentvoxpriority ) )
     	zombie.currentvoxpriority = 1;
     
-    alias = "zmb_vocals_" + zombie.voicePrefix + "_" + type;
+    if( !isdefined( self.delayAmbientVox ) )
+    	self.delayAmbientVox = false;
     
+    if( ( type == "ambient" || type == "sprint" || type == "crawler" ) && IS_TRUE( self.delayAmbientVox ) ) //Prevents ambient/sprint/crawl vocals from playing immediately after a vox set with delayAmbientVox plays
+    	return;
+    
+    if( delayAmbientVox ) 
+    {
+    	self.delayAmbientVox = true;
+    	self thread zmbAIVox_AmbientDelay();
+    }
+     
+   alias = "zmb_vocals_" + zombie.voicePrefix + "_" + type;
+      
     if( sndIsNetworkSafe() )
 	{
 	    if( IS_TRUE( override ) )
@@ -1352,7 +1451,7 @@ function zmbAIVox_PlayVox( zombie, type, override, priority )
 	    		zombie stopsound ( zombie.currentvox );
 	    	}
 	    	
-	    	if( type == "death" )
+	    	if( type == "death" || type == "death_whimsy" )
 	    	{
 	    		zombie PlaySound( alias );
 	    		return;
@@ -1396,7 +1495,10 @@ function zmbAIVox_PlayDeath()
 	
 	if ( isdefined( self ) )
 	{	
-		level thread zmbAIVox_PlayVox( self, "death", true );
+		if( IS_TRUE( self.bgb_tone_death ) )
+			level thread zmbAIVox_PlayVox( self, "death_whimsy", true );
+		else
+			level thread zmbAIVox_PlayVox( self, "death", true );
 	}
 }
 function zmbAIVox_PlayElectrocution()
@@ -1412,6 +1514,17 @@ function zmbAIVox_PlayElectrocution()
 			self notify( "bhtn_action_notify", "electrocute" );
 		}
 	}
+}
+function zmbAIVox_AmbientDelay()
+{	
+	self notify( "sndAmbientDelay" );
+	self endon( "sndAmbientDelay" );
+	self endon( "death" );
+	self endon( "disconnect" );
+	
+	wait(2);
+	
+	self.delayAmbientVox = false;
 }
 
 function networkSafeReset()
@@ -1484,6 +1597,8 @@ function sndPerksJingles_Timer()
 }
 function sndPerksJingles_Player(type)
 {
+	self endon( "death" );
+	
 	if( !isdefined( self.sndJingleActive ) )
 	{
 		self.sndJingleActive = false;
@@ -1807,4 +1922,67 @@ function vo_clear_underwater()
 	{
 		ArrayRemoveValue( level.a_e_speakers, self );
 	}
+}
+
+function sndPlayerHitAlert( e_victim, str_meansofdeath, e_inflictor, weapon )
+{
+	if( !IS_TRUE( level.sndZHDAudio ) )
+		return;
+	
+	if( !IsPlayer( self ) )
+		return;
+	
+	if( !CheckForValidMod( str_meansofdeath ) )
+		return;
+	
+	if( !CheckForValidWeapon( weapon ) )
+		return;
+	
+	if( !CheckForValidAIType( e_victim ) )
+		return;
+	
+	str_alias = "zmb_hit_alert";
+	
+	self thread sndPlayerHitAlert_PlaySound( str_alias );
+}
+function sndPlayerHitAlert_PlaySound( str_alias )
+{
+	self endon ("disconnect");
+	
+	if( self.hitSoundTracker )
+	{
+		self.hitSoundTracker = false;
+		
+		self playsoundtoplayer( str_alias, self );
+		
+		wait .05;
+		
+		self.hitSoundTracker = true;
+	}
+}
+function CheckForValidMod( str_meansofdeath ) //TODO: Zombies will require less mods than MP to return true, find out which ones
+{
+	if ( !isdefined( str_meansofdeath ) )
+		return false;
+		
+	switch( str_meansofdeath )
+	{
+		case "MOD_CRUSH":
+		case "MOD_GRENADE_SPLASH":
+		case "MOD_HIT_BY_OBJECT":
+		case "MOD_MELEE_ASSASSINATE":
+		case "MOD_MELEE":
+		case "MOD_MELEE_WEAPON_BUTT":
+			return false;
+	}
+	
+	return true;
+}
+function CheckForValidWeapon( weapon ) //TODO: any weapons where this sound doesn't make sense, return with false
+{
+	return true;
+}
+function CheckForValidAIType( e_victim ) //TODO: any AI where this sound doesn't make sense, or would require a different sound (e.g. metal armor, etc), return with false
+{
+	return true;
 }

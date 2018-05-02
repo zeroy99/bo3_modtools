@@ -48,7 +48,8 @@ REGISTER_SYSTEM( "battlechatter", &__init__, undefined )
 function __init__()
 {
 	callback::on_joined_team( &on_joined_team );
-	callback::on_spawned( &on_player_spawned);
+	callback::on_connect( &on_player_connect );
+	callback::on_spawned( &on_player_spawned );
 	
 	level.heroPlayDialog = &play_dialog;
 	level.playGadgetReady = &play_gadget_ready;
@@ -186,22 +187,14 @@ function set_cdp_dialog()
 	self.pers["mpcommander"] = "cdp_commander";
 }
 
+function on_player_connect()
+{
+	self reset_dialog_fields();
+}
+
 function on_player_spawned()
 {
-	self.enemyThreatTime = 0;
-	self.heartbeatsnd = false; 
-	
-	self.soundMod = "player";
-	
-	self.voxUnderwaterTime = 0;
-	self.voxEmergeBreath = false;
-	self.voxDrowning = false;
-	
-	self.pilotisSpeaking = false;
-	self.playingDialog = false;
-	self.playingGadgetReadyDialog = false;
-	
-	self.playedGadgetSuccess = true;
+	self reset_dialog_fields();
 
 	// help players be stealthy in splitscreen by not announcing their intentions
 	if ( level.splitscreen )
@@ -221,6 +214,24 @@ function on_player_spawned()
 		self thread enemy_threat();
 		self thread check_boost_start_conversation();		
 	}
+}
+
+function reset_dialog_fields()
+{
+	self.enemyThreatTime = 0;
+	self.heartbeatsnd = false; 
+	
+	self.soundMod = "player";
+	
+	self.voxUnderwaterTime = 0;
+	self.voxEmergeBreath = false;
+	self.voxDrowning = false;
+	
+	self.pilotisSpeaking = false;
+	self.playingDialog = false;
+	self.playingGadgetReadyDialog = false;
+	
+	self.playedGadgetSuccess = true;
 }
 
 function dialog_chance( chanceKey )

@@ -87,7 +87,7 @@ function watchForExplosionNotetracks( localClientNum, up, forward )
 	
 	while( 1 )
 	{
-		notetrack = self util::waittill_any_return( "explode_1st", "explode_2nd", "explode_main" );
+		notetrack = self util::waittill_any_return( "explode_1st", "explode_2nd", "explode_main", "entityshutdown" );
 		
 		switch( noteTrack )
 		{

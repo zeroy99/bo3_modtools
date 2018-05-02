@@ -12,7 +12,11 @@
 #using scripts\shared\util_shared;
 #using scripts\mp\gametypes\_dogtags;
 #using scripts\mp\gametypes\_globallogic_spawn;
+
 #using scripts\shared\abilities\gadgets\_gadget_resurrect;
+
+#insert scripts\shared\shared.gsh;
+
 #using scripts\mp\gametypes\_battlechatter;
 #using scripts\mp\gametypes\_globallogic;
 #using scripts\mp\gametypes\_globallogic_audio;
@@ -23,10 +27,9 @@
 #using scripts\mp\gametypes\_spawning;
 #using scripts\mp\gametypes\_spawnlogic;
 #using scripts\mp\gametypes\_spectating;
+
 #using scripts\mp\_challenges;
 #using scripts\mp\_util;
-
-#insert scripts\shared\shared.gsh;
 
 // Rallypoints should be destroyed on leaving your team/getting killed
 // Compass icons need to be looked at
@@ -621,14 +624,14 @@ function bombs()
 	trigger = getEnt( "sd_bomb_pickup_trig", "targetname" );
 	if ( !isdefined( trigger ) )
 	{
-		/#println("No sd_bomb_pickup_trig trigger found in map.");#/
+		/#util::error("No sd_bomb_pickup_trig trigger found in map.");#/
 		return;
 	}
 	
 	visuals[0] = getEnt( "sd_bomb", "targetname" );
 	if ( !isdefined( visuals[0] ) )
 	{
-		/#println("No sd_bomb script_model found in map.");#/
+		/#util::error("No sd_bomb script_model found in map.");#/
 		return;
 	}
 

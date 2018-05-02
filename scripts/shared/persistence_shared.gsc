@@ -131,39 +131,12 @@ function upload_global_stat_counters()
 	for( i = 0; i < players.size; i++)
 	{
 		player = players[i];
-		totalTimePlayed += min( player.timePlayed["total"], level.timeplayedcap );
+		if ( isdefined( player.timePlayed ) && isdefined( player.timePlayed["total"] ) )
+		{
+			totalTimePlayed += min( player.timePlayed["total"], level.timeplayedcap );
+		}
 	}
 		
-	incrementCounter( "global_executions", level.globalExecutions );
-	incrementCounter( "global_sharedpackagemedals", level.globalSharePackages );
-	incrementCounter( "global_dem_bombsdestroyed", level.globalDemBombsDestroyed );
-	incrementCounter( "global_dem_bombsprotected", level.globalDemBombsProtected );
-	incrementCounter( "global_contracts_failed", level.globalContractsFailed );
-	incrementCounter( "global_killstreaks_called", level.globalKillstreaksCalled );
-	incrementCounter( "global_killstreaks_destroyed", level.globalKillstreaksDestroyed );
-	incrementCounter( "global_killstreaks_deathsfrom", level.globalKillstreaksDeathsFrom );
-	incrementCounter( "global_buzzkills", level.globalBuzzKills );
-	incrementCounter( "global_revives", level.globalRevives );
-	incrementCounter( "global_afterlifes", level.globalAfterlifes );
-	incrementCounter( "global_comebacks", level.globalComebacks );
-	incrementCounter( "global_paybacks", level.globalPaybacks );
-	incrementCounter( "global_backstabs", level.globalBackstabs );
-	incrementCounter( "global_bankshots", level.globalBankshots );
-	incrementCounter( "global_skewered", level.globalSkewered );
-	incrementCounter( "global_teammedals", level.globalTeamMedals );
-	incrementCounter( "global_fraggrenadesthrown", level.globalFragGrenadesFired );
-	incrementCounter( "global_c4thrown", level.globalSatchelChargeFired );
-	incrementCounter( "global_shotsfired", level.globalShotsFired );
-	incrementCounter( "global_crossbowfired", level.globalCrossbowFired );
-	incrementCounter( "global_carsdestroyed", level.globalCarsDestroyed );
-	incrementCounter( "global_barrelsdestroyed", level.globalBarrelsDestroyed );
-	incrementCounter( "global_challenges_finished", level.globalChallenges );
-	incrementCounter( "global_contractscppaid", level.globalContractsCPPaid );
-	incrementCounter( "global_distancesprinted100inches", int( level.globalDistanceSprinted ) );	
-	incrementCounter( "global_combattraining_botskilled", level.globalLarrysKilled );
-	incrementCounter( "global_distancefeetfallen", int( level.globalFeetFallen ) );	
-	incrementCounter( "global_minutes", int( totalTimePlayed / 60 ) );
-
 	if ( !util::wasLastRound() )
 		return;
 
@@ -179,7 +152,10 @@ function upload_global_stat_counters()
 		totalHeadshots += player.headshots;	
 		totalSuicides += player.suicides;
 		totalHumiliations += player.humiliated;
-		totalTimePlayed += int( min( player.timePlayed["alive"], level.timeplayedcap ) );
+		if ( isdefined( player.timePlayed ) && isdefined( player.timePlayed["alive"] ) )
+		{
+			totalTimePlayed += int( min( player.timePlayed["alive"], level.timeplayedcap ) );
+		}
 		
 		switch ( level.gameType )
 		{
@@ -212,31 +188,6 @@ function upload_global_stat_counters()
 		}
 	}
 	
-	if( bot::is_bot_ranked_match() ) 
-	{
-		incrementCounter( "global_combattraining_gamesplayed", 1 );
-	}
-
-	incrementCounter( "global_kills", totalKills );
-	incrementCounter( "global_deaths", totalDeaths );
-	incrementCounter( "global_assists", totalAssists );
-	incrementCounter( "global_headshots", totalHeadshots );
-	incrementCounter( "global_suicides", totalSuicides );
-	incrementCounter( "global_games", 1 );
-	incrementCounter( "global_ctf_flagscaptured", totalFlagsCaptured );
-	incrementCounter( "global_ctf_flagsreturned", totalFlagsReturned );
-	incrementCounter( "global_hq_destroyed", totalHQsDestroyed );
-	incrementCounter( "global_hq_captured", totalHQsCaptured );
-	incrementCounter( "global_snd_defuses", totalSDDefused );
-	incrementCounter( "global_snd_plants", totalSDPlants );
-	// TODO MTEAM - Need to update counters if we ever add a third team to sab
-	incrementCounter( "global_sab_destroyedbyops", totalSabDestroyedByTeam["allies"] );
-	incrementCounter( "global_sab_destroyedbycommunists", totalSabDestroyedByTeam["axis"] );
-	incrementCounter( "global_humiliations", totalHumiliations );	
-	if ( isdefined( game["wager_pot"] ) )
-	{
-		incrementCounter( "global_wageredcp", game["wager_pot"] );	
-	}
 }
 
 // ==========================================

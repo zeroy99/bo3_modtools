@@ -97,6 +97,10 @@ function register( equipment_name, hint, howto_hint, hint_icon, equipmentVO)
 	level.zombie_equipment[equipment] = struct;
 }
 
+function register_slot_watcher_override( str_equipment, func_slot_watcher_override )
+{
+	level.a_func_equipment_slot_watcher_override[ str_equipment ] = func_slot_watcher_override;
+}
 
 function is_included( equipment )
 {
@@ -223,23 +227,30 @@ function equipment_spawn_think()
 			continue;
 		}
 		
-		if( is_limited(self.equipment)) //only one player can have limited equipment at a time
-		{			
-			player setup_limited(self.equipment);
-			
-			//move the equpiment respawn to a new location
-			if(isDefined(level.hacker_tool_positions))
-			{
-				new_pos = array::random(level.hacker_tool_positions);
-				self.origin = new_pos.trigger_org;
-				model = getent(self.target,"targetname");
-				model.origin = new_pos.model_org;
-				model.angles = new_pos.model_ang;				
-			}
-			
-		}		
+		if ( !is_limited(self.equipment) || !limited_in_use(self.equipment) )
+		{
+			if( is_limited(self.equipment)) //only one player can have limited equipment at a time
+			{			
+				player setup_limited(self.equipment);
+				
+				//move the equpiment respawn to a new location
+				if(isDefined(level.hacker_tool_positions))
+				{
+					new_pos = array::random(level.hacker_tool_positions);
+					self.origin = new_pos.trigger_org;
+					model = getent(self.target,"targetname");
+					model.origin = new_pos.model_org;
+					model.angles = new_pos.model_ang;				
+				}
+				
+			}		
 		
-		player give( self.equipment );
+			player give( self.equipment );
+		}
+		else
+		{
+			wait( 0.1 );
+		}
 	}
 }
 
@@ -390,29 +401,37 @@ function slot_watcher(equipment)
 	while(1)
 	{
 		self waittill( "weapon_change", curr_weapon, prev_weapon );
-
-		self.prev_weapon_before_equipment_change = undefined;
-		if ( isdefined( prev_weapon ) && level.weaponNone != prev_weapon )
+		if ( self.sessionstate != "spectator" )
 		{
-			prev_weapon_type = prev_weapon.inventoryType;
-			if ( "primary" == prev_weapon_type || "altmode" == prev_weapon_type )
+			self.prev_weapon_before_equipment_change = undefined;
+			if ( isdefined( prev_weapon ) && level.weaponNone != prev_weapon )
 			{
-				self.prev_weapon_before_equipment_change = prev_weapon;
+				prev_weapon_type = prev_weapon.inventoryType;
+				if ( "primary" == prev_weapon_type || "altmode" == prev_weapon_type )
+				{
+					self.prev_weapon_before_equipment_change = prev_weapon;
+				}
 			}
+			
+			DEFAULT(level.a_func_equipment_slot_watcher_override,[]);
+			if( isdefined( level.a_func_equipment_slot_watcher_override[ equipment.name ] ) )
+			{
+				self [[ level.a_func_equipment_slot_watcher_override[ equipment.name ] ]]( equipment, curr_weapon, prev_weapon, notify_strings );
+			}
+			else
+			{
+				if ( curr_weapon == equipment && !self.current_equipment_active[equipment] )
+				{
+					self notify( notify_strings.activate );
+					self.current_equipment_active[equipment] = true;
+				}
+				else if ( curr_weapon != equipment && self.current_equipment_active[equipment] )
+				{
+					self notify( notify_strings.deactivate );
+					self.current_equipment_active[equipment] = false;
+				}
+			}		
 		}
-
-		{
-			if ( curr_weapon == equipment && !self.current_equipment_active[equipment] )
-			{
-				self notify( notify_strings.activate );
-				self.current_equipment_active[equipment] = true;
-			}
-			else if ( curr_weapon != equipment && self.current_equipment_active[equipment] )
-			{
-				self notify( notify_strings.deactivate );
-				self.current_equipment_active[equipment] = false;
-			}
-		}		
 	}
 }
 

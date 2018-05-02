@@ -1,4 +1,5 @@
 #using scripts\codescripts\struct;
+
 #using scripts\shared\callbacks_shared;
 #using scripts\shared\challenges_shared;
 #using scripts\shared\clientfield_shared;
@@ -11,6 +12,7 @@
 #using scripts\shared\util_shared;
 #using scripts\shared\weapons\_heatseekingmissile;
 #using scripts\shared\weapons\_weaponobjects;
+
 #using scripts\mp\gametypes\_globallogic_audio;
 #using scripts\mp\killstreaks\_airsupport;
 #using scripts\mp\killstreaks\_killstreak_bundles;
