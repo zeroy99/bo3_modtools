@@ -5522,6 +5522,12 @@ function can_player_purchase_perk()
 		return true;
 	}
 
+	// you can always buy one more if you currently have unquenchable
+	if ( self bgb::is_enabled( "zm_bgb_unquenchable" ) )
+	{
+		return true;
+	}
+
 	return false;
 }
 

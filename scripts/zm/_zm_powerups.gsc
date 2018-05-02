@@ -1014,7 +1014,7 @@ function powerup_grab(powerup_team)
 				( !IsPlayer( grabber ) ||
 			      player laststand::player_is_in_laststand() ||
 				  ( player UseButtonPressed() && player zm_utility::in_revive_trigger() ) ||
-					0 )
+					player bgb::is_enabled( "zm_bgb_disorderly_combat" ) ) )
 			{
 				continue;
 			}
@@ -1353,6 +1353,11 @@ function powerup_timeout()
 		}
 		wait_time = time;
 		
+	}
+	
+	if( bgb::is_team_enabled( "zm_bgb_temporal_gift" ) )
+	{
+		wait_time += N_POWERUP_DEFAULT_TIME;//Get extra 30 seconds
 	}
 	
 	wait wait_time;
@@ -1719,6 +1724,10 @@ function show_on_hud( player_team, str_powerup )
 	{
 		// reset the time and keep going
 		level.zombie_vars[player_team][str_index_time] = N_POWERUP_DEFAULT_TIME;
+		if( bgb::is_team_enabled( "zm_bgb_temporal_gift" ) )
+		{
+			level.zombie_vars[player_team][str_index_time] += N_POWERUP_DEFAULT_TIME;//Get extra 30 seconds
+		}		
 		return;
 	}
 
@@ -1737,6 +1746,11 @@ function time_remaining_on_powerup( player_team, str_powerup )
 	
 	temp_ent = Spawn("script_origin", (0,0,0));
 	temp_ent PlayLoopSound (str_sound_loop);
+	
+	if( bgb::is_team_enabled( "zm_bgb_temporal_gift" ) )
+	{
+		level.zombie_vars[player_team][str_index_time] += N_POWERUP_DEFAULT_TIME;
+	}
 	
 	// time it down!
 	while ( level.zombie_vars[player_team][str_index_time] >= 0)
@@ -1824,6 +1838,11 @@ function weapon_powerup_countdown( ent_player, str_gun_return_notify, time, str_
 	str_weapon_time = "zombie_powerup_" + str_weapon + "_time";
 	
 	ent_player.zombie_vars[str_weapon_time] = time;
+	
+	if( bgb::is_team_enabled( "zm_bgb_temporal_gift" ) )
+	{
+		ent_player.zombie_vars[str_weapon_time] += N_POWERUP_DEFAULT_TIME;
+	}	
 	
 	[[level._custom_powerups[ str_weapon ].weapon_countdown]]( ent_player, str_weapon_time );
 	

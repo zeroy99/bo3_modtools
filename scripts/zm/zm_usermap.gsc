@@ -53,6 +53,10 @@
 #using scripts\zm\_zm_weap_tesla;
 #using scripts\zm\_zm_weap_rocketshield;
 #using scripts\zm\_zm_weap_gravityspikes;
+#using scripts\zm\_zm_weap_annihilator;
+#using scripts\zm\_zm_weap_thundergun;
+#using scripts\zm\_zm_weap_octobomb;
+#using scripts\zm\_zm_weap_raygun_mark3;
 
 //Traps
 #using scripts\zm\_zm_trap_electric;
@@ -89,8 +93,8 @@
 
 function autoexec opt_in()
 {
-	level.aat_in_use = true;
-	level.bgb_in_use = false;
+	DEFAULT(level.aat_in_use,true);
+	DEFAULT(level.bgb_in_use,true);
 }
 
 function autoexec init_fx()

@@ -1202,6 +1202,12 @@ function wall_weapon_update_prompt( player )
 		cost = get_weapon_cost( weapon );
 		if ( IS_TRUE( level.weapon_cost_client_filled ) )
 		{
+			if ( player bgb::is_enabled( "zm_bgb_secret_shopper" ) && !is_wonder_weapon( player.currentweapon ) && ( player.currentweapon.type !== "melee" ) )
+			{
+				self.stub.hint_string = &"ZOMBIE_WEAPONCOSTONLY_CFILL_BGB_SECRET_SHOPPER";
+				self SetHintString( self.stub.hint_string );
+			}
+			else
 			{
 				self.stub.hint_string = &"ZOMBIE_WEAPONCOSTONLY_CFILL"; 			
 				self SetHintString( self.stub.hint_string);
@@ -1209,6 +1215,13 @@ function wall_weapon_update_prompt( player )
 		}
 		else
 		{
+			if ( player bgb::is_enabled( "zm_bgb_secret_shopper" ) && !is_wonder_weapon( player.currentweapon ) && ( player.currentweapon.type !== "melee" ) )
+			{
+				self.stub.hint_string = &"ZOMBIE_WEAPONCOSTONLYFILL_BGB_SECRET_SHOPPER";
+				n_bgb_cost = player get_ammo_cost_for_weapon( player.currentweapon );
+				self SetHintString( self.stub.hint_string, cost, n_bgb_cost );
+			}
+			else
 			{
 				self.stub.hint_string = &"ZOMBIE_WEAPONCOSTONLYFILL"; 			
 				self SetHintString( self.stub.hint_string, cost);
@@ -1217,7 +1230,11 @@ function wall_weapon_update_prompt( player )
 	}
 	else
 	{
-		if ( player has_upgrade( weapon ) )
+		if ( player bgb::is_enabled( "zm_bgb_secret_shopper" ) && !is_wonder_weapon( player.currentweapon ) && ( player.currentweapon.type !== "melee" ) )
+		{
+			ammo_cost = player get_ammo_cost_for_weapon( weapon );
+		}
+		else if ( player has_upgrade( weapon ) )
 		{
 			ammo_cost = get_upgraded_ammo_cost( weapon ); 
 		}
@@ -1228,6 +1245,12 @@ function wall_weapon_update_prompt( player )
 
 		if ( IS_TRUE( level.weapon_cost_client_filled ) )
 		{
+			if ( player bgb::is_enabled( "zm_bgb_secret_shopper" ) && !is_wonder_weapon( player.currentweapon ) && ( player.currentweapon.type !== "melee" ) )
+			{
+				self.stub.hint_string = &"ZOMBIE_WEAPONAMMOONLY_CFILL_BGB_SECRET_SHOPPER";
+				self SetHintString( self.stub.hint_string );			
+			}
+			else
 			{
 				self.stub.hint_string = &"ZOMBIE_WEAPONAMMOONLY_CFILL"; 
 				self SetHintString( self.stub.hint_string );
@@ -1235,6 +1258,13 @@ function wall_weapon_update_prompt( player )
 		}
 		else
 		{
+			if ( player bgb::is_enabled( "zm_bgb_secret_shopper" ) && !is_wonder_weapon( player.currentweapon ) && ( player.currentweapon.type !== "melee" ) )
+			{
+				self.stub.hint_string = &"ZOMBIE_WEAPONAMMOONLY_BGB_SECRET_SHOPPER";
+				n_bgb_cost = player get_ammo_cost_for_weapon( player.currentweapon );
+				self SetHintString( self.stub.hint_string, ammo_cost, n_bgb_cost );			
+			}
+			else
 			{
 				self.stub.hint_string = &"ZOMBIE_WEAPONAMMOONLY"; //get_weapon_hint_ammo(); 
 				self SetHintString( self.stub.hint_string, ammo_cost );
@@ -2212,6 +2242,11 @@ function weapon_spawn_think()
 				ammo_cost = int( ammo_cost / 2 );
 			}
 			
+			if ( player bgb::is_enabled( "zm_bgb_secret_shopper" ) && !zm_weapons::is_wonder_weapon( weapon ) )
+			{
+				ammo_cost = player get_ammo_cost_for_weapon( weapon );
+			}
+
 			if ( weapon.isriotshield )
 			{
 				zm_utility::play_sound_on_ent( "no_purchase" );
@@ -2286,6 +2321,11 @@ function should_upgrade_weapon( player )
 	if( isdefined( level.wallbuy_should_upgrade_weapon_override ) )
 	{
 		return [[ level.wallbuy_should_upgrade_weapon_override ]]();
+	}
+	
+	if( player bgb::is_enabled( "zm_bgb_wall_power" ) )
+	{
+		return true;
 	}
 	
 	return false;

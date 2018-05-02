@@ -24,6 +24,10 @@
 
 #namespace zm_powerup_bonfire_sale;
 
+//
+// This powerup is deprecated - use it at your own risk 
+//
+
 REGISTER_SYSTEM_EX( "zm_powerup_bonfire_sale", &__init__, &__main__, undefined )
 
 
@@ -36,6 +40,7 @@ function __init__()
 	if( ToLower( GetDvarString( "g_gametype" ) ) != "zcleansed" )
 	{
 		zm_powerups::add_zombie_powerup( "bonfire_sale", "zombie_bonfiresale", &"ZOMBIE_POWERUP_MAX_AMMO", &zm_powerups::func_should_never_drop, !POWERUP_ONLY_AFFECTS_GRABBER, !POWERUP_ANY_TEAM, !POWERUP_ZOMBIE_GRABBABLE, undefined, CLIENTFIELD_POWERUP_BON_FIRE, "zombie_powerup_bonfire_sale_time", "zombie_powerup_bonfire_sale_on" );
+		zm_powerups::powerup_set_statless_powerup( "bonfire_sale" );
 	}
 }
 
@@ -62,6 +67,11 @@ function start_bonfire_sale( item )
 	level thread toggle_bonfire_sale_on();
 	level.zombie_vars["zombie_powerup_bonfire_sale_time"] = N_POWERUP_DEFAULT_TIME;
 	
+	if( bgb::is_team_enabled( "zm_bgb_temporal_gift" ) )
+	{
+		level.zombie_vars["zombie_powerup_bonfire_sale_time"] += N_POWERUP_DEFAULT_TIME;//Doubles the amount of time
+	}	
+
 	while ( level.zombie_vars["zombie_powerup_bonfire_sale_time"] > 0)
 	{
 		WAIT_SERVER_FRAME;

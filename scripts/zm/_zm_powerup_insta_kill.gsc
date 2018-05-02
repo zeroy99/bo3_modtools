@@ -67,6 +67,10 @@ function insta_kill_powerup( drop_item, player )
 
 	level.zombie_vars[team]["zombie_insta_kill"] = 1;	
 	n_wait_time = N_POWERUP_DEFAULT_TIME;
+	if( bgb::is_team_enabled( "zm_bgb_temporal_gift" ) )
+	{
+		n_wait_time += N_POWERUP_DEFAULT_TIME;//Doubles the amount of time
+	}	
 	wait n_wait_time;	
 	level.zombie_vars[team]["zombie_insta_kill"] = 0;
 

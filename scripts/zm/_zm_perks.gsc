@@ -896,6 +896,12 @@ function perk_think( perk )
 	
 	result = self util::waittill_any_return( "fake_death", "death", "player_downed", perk_str );
 
+	// give the bgb system a chance to override losing the perk, or to do something triggered by the loss of the perk
+	while( self bgb::lost_perk_override( perk ) )
+	{
+		result = self util::waittill_any_return( "fake_death", "death", "player_downed", perk_str );
+	}
+	
 	do_retain = true;
 	
 	if( use_solo_revive() && perk == PERK_QUICK_REVIVE)

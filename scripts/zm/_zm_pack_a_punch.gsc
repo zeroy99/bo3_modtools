@@ -289,7 +289,7 @@ function private player_use_can_pack_now()
 		return false;
 	}
 
-	if( !self zm_magicbox::can_buy_weapon() )
+	if( !self zm_magicbox::can_buy_weapon() || self bgb::is_enabled( "zm_bgb_disorderly_combat" ) )
 	{
 		return false;
 	}
@@ -322,7 +322,7 @@ function private pack_a_punch_machine_trigger_think()
 		for(i = 0; i < players.size; i ++)
 		{
 			if ( ( IsDefined( self.pack_player ) && self.pack_player != players[i] ) ||
-			    !players[i] player_use_can_pack_now() )
+			    !players[i] player_use_can_pack_now() || players[i] bgb::is_active("zm_bgb_ephemeral_enhancement") )
 			{
 				self SetInvisibleToPlayer( players[i], true );
 			}

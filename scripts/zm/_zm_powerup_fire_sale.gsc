@@ -66,6 +66,11 @@ function start_fire_sale( item )
 	level thread toggle_fire_sale_on();
 	level.zombie_vars["zombie_powerup_fire_sale_time"] = N_POWERUP_DEFAULT_TIME;
 	
+	if( bgb::is_team_enabled( "zm_bgb_temporal_gift" ) )
+	{
+		level.zombie_vars["zombie_powerup_fire_sale_time"] += N_POWERUP_DEFAULT_TIME;//Doubles the amount of time
+	}
+
 	while ( level.zombie_vars["zombie_powerup_fire_sale_time"] > 0)
 	{
 		WAIT_SERVER_FRAME;
@@ -86,6 +91,8 @@ function toggle_fire_sale_on()
 	}
 
 	level thread sndFiresaleMusic_Start();
+
+	bgb_machine::turn_on_fire_sale();
 
 	for ( i = 0; i < level.chests.size; i++ )
 	{
@@ -115,6 +122,8 @@ function toggle_fire_sale_on()
 	waittillframeend;
 
 	level thread sndFiresaleMusic_Stop();
+
+	bgb_machine::turn_off_fire_sale();
 
 	for ( i = 0; i < level.chests.size; i++ )
 	{

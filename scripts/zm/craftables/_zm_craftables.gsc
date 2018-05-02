@@ -2519,6 +2519,12 @@ function craftablestub_update_prompt( player, unitrigger, slot = self.craftableS
 		return false;
 	}
 	
+	if ( player bgb::is_enabled( "zm_bgb_disorderly_combat" ) )
+	{
+		self.hint_string = "";
+		return false;	
+	}
+
 	if ( IS_TRUE( self.is_locked ) )
 	{
 		return true;
@@ -3224,6 +3230,11 @@ function craftable_place_think()
 				continue;
 			}
 			
+			if ( player bgb::is_enabled( "zm_bgb_disorderly_combat" ) )
+			{
+				continue; 	// PORTIZ 7/22/16: player can't pick up weapons during Disorderly Combat. had to move here instead of visibility because the visibility function is
+			}				// shared with the individual craftable pieces...
+			
 			if ( isdefined( level.custom_craftable_validation ) )
 			{
 				valid = self [[ level.custom_craftable_validation ]]( player );
@@ -3335,6 +3346,11 @@ function craftable_place_think()
 				continue;
 			}
 			
+			if ( player bgb::is_enabled( "zm_bgb_disorderly_combat" ) )
+			{
+				continue; 	// PORTIZ 7/22/16: player can't pick up weapons during Disorderly Combat. had to move here instead of visibility because the visibility function is
+			}				// shared with the individual craftable pieces...
+
 			if ( isdefined( level.zombie_craftable_persistent_weapon ) )
 			{
 				if ( self [[level.zombie_craftable_persistent_weapon]]( player ) )

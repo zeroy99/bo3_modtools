@@ -2337,6 +2337,7 @@ function zombie_death_event( zombie )
 	}
 	
 	zombie check_zombie_death_event_callbacks( attacker );
+	zombie bgb::actor_death_override( attacker );
 	
 	// Need to check in case he got deleted in the callback
 	if ( !IsDefined( zombie ) )
@@ -3132,7 +3133,7 @@ function zombie_rise_dust_fx(zombie)
 	dust_interval = .3; //randomfloatrange(.1,.25); // wait this time in between playing the effect
 	
 	//TODO - add rising dust stuff ere
-	if(IsDefined(self.script_string) && self.script_string == "in_water")
+	if(IsDefined(self.script_parameters) && self.script_parameters == "in_water")
 	{
 
 		for (t = 0; t < dust_time; t += dust_interval)
@@ -3142,7 +3143,7 @@ function zombie_rise_dust_fx(zombie)
 		}
 
 	}
-	else if(IsDefined(self.script_string) && self.script_string == "in_snow")
+	else if(IsDefined(self.script_parameters) && self.script_parameters == "in_snow")
 	{
 
 		for (t = 0; t < dust_time; t += dust_interval)
@@ -3152,7 +3153,7 @@ function zombie_rise_dust_fx(zombie)
 		}
 
 	}
-	else if(IsDefined(self.script_string) && self.script_string == "in_foliage")
+	else if(IsDefined(self.script_parameters) && self.script_parameters == "in_foliage")
 	{
 
 		for (t = 0; t < dust_time; t += dust_interval)

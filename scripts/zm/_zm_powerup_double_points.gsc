@@ -88,6 +88,10 @@ function double_points_powerup( drop_item, player )
 	}
 
 	n_wait = N_POWERUP_DEFAULT_TIME;
+	if( bgb::is_team_enabled( "zm_bgb_temporal_gift" ) )
+	{
+		n_wait += N_POWERUP_DEFAULT_TIME;//Get extra 30 seconds
+	}	
 	wait n_wait;
 
 	level.zombie_vars[team]["zombie_point_scalar"] = 1;

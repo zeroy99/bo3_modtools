@@ -9,10 +9,6 @@
 #using scripts\shared\weapons_shared;
 #using scripts\shared\weapons\_weapons;
 
-#insert scripts\shared\shared.gsh;
-
-#insert scripts\mp\bots\_bot.gsh;
-
 #using scripts\shared\bots\_bot;
 #using scripts\shared\bots\_bot_combat;
 #using scripts\shared\bots\bot_traversals;
@@ -22,7 +18,7 @@
 #using scripts\mp\bots\_bot_koth;
 #using scripts\mp\bots\_bot_loadout;
 #using scripts\mp\bots\_bot_sd;
-
+#using scripts\mp\bots\_bot_ctf;
 #using scripts\mp\killstreaks\_killstreakrules;
 #using scripts\mp\killstreaks\_killstreaks;
 #using scripts\mp\killstreaks\_uav;
@@ -30,6 +26,9 @@
 #using scripts\mp\killstreaks\_emp;
 #using scripts\mp\teams\_teams;
 #using scripts\mp\_util;
+
+#insert scripts\shared\shared.gsh;
+#insert scripts\mp\bots\_bot.gsh;
 
 #define MAX_LOCAL_PLAYERS	10
 #define MAX_ONLINE_PLAYERS	18

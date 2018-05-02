@@ -4938,8 +4938,19 @@ function player_damage_override( eInflictor, eAttacker, iDamage, iDFlags, sMeans
 		self thread [[ self.player_damage_override ]]( eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, weapon, vPoint, vDir, sHitLoc, psOffsetTime );
 	}	
 	
+	// Players can't die from cooked grenade if trhey have the bgb Danger Closet
+	if ( sMeansOfDeath == "MOD_SUICIDE" && self bgb::is_enabled( "zm_bgb_danger_closest" ) )
+	{
+		return 0;
+	}
+	
 	if ( sMeansOfDeath == "MOD_PROJECTILE" || sMeansOfDeath == "MOD_PROJECTILE_SPLASH" || sMeansOfDeath == "MOD_GRENADE" || sMeansOfDeath == "MOD_GRENADE_SPLASH" || sMeansOfDeath == "MOD_EXPLOSIVE" )
 	{
+		if( self bgb::is_enabled( "zm_bgb_danger_closest" ) )
+		{
+			return 0;
+		}
+		
 		// player explosive splash damage (caps explosive damage), fixes raygun damage being fatal (or grenades) when damaging yourself
 		if ( !IS_TRUE( self.is_zombie ) )
 		{
@@ -5273,6 +5284,8 @@ function actor_damage_override( inflictor, attacker, damage, flags, meansofdeath
 	if ( !isdefined( self ) || !isdefined( attacker ) )
 		return damage;
 
+	damage = bgb::actor_damage_override( inflictor, attacker, damage, flags, meansofdeath, weapon, vpoint, vdir, sHitLoc, psOffsetTime, boneIndex, surfaceType );
+	
 	damage = self check_actor_damage_callbacks( inflictor, attacker, damage, flags, meansofdeath, weapon, vpoint, vdir, sHitLoc, psOffsetTime, boneIndex, surfaceType );
 
 	self.knuckles_extinguish_flames = (weapon.name == "tazer_knuckles");

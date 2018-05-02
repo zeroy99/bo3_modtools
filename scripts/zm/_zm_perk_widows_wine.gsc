@@ -284,7 +284,7 @@ function widows_wine_damage_callback( eInflictor, eAttacker, iDamage, iDFlags, s
 	//		Player does not have the Burned Out bubblegum buff
 	if (	self.current_lethal_grenade == level.w_widows_wine_grenade
 	     && self getWeaponAmmoClip( self.current_lethal_grenade ) > WIDOWS_WINE_CONTACT_EXPLOSION_COUNT
-	     			)
+	     && !self bgb::is_enabled( "zm_bgb_burned_out" ) 			)
 	{
 		if ( ( sMeansOfDeath == "MOD_MELEE" && IsAI(eAttacker) ) || 
 		     ( sMeansOfDeath == "MOD_EXPLOSIVE" && IsVehicle( eAttacker ) ) )

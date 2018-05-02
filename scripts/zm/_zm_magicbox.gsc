@@ -370,6 +370,13 @@ function trigger_visible_to_player(player)
 		}
 	}
 	
+	// PORTIZ 7/20/16: players could start spinning a weapon, acquire Disorderly Combat from a nearby BGB machine, and then take the weapon.
+	// separating out Disorderly Combat check since we never want a player to interact with the box while it's enabled
+	if ( player bgb::is_enabled( "zm_bgb_disorderly_combat" ) )
+	{
+		visible = false;
+	}
+	
 	if(!visible)
 	{
 		return false;
@@ -1312,7 +1319,7 @@ function decide_hide_show_hint( endon_notify, second_endon_notify, onlyplayer, c
 		}
 		else if ( IsDefined( onlyplayer ) )
 		{
-			if ( onlyplayer can_buy_weapon() && ( !IsDefined( can_buy_weapon_extra_check_func ) || onlyplayer [[ can_buy_weapon_extra_check_func ]]( self.weapon ) ) )
+			if ( onlyplayer can_buy_weapon() && ( !IsDefined( can_buy_weapon_extra_check_func ) || onlyplayer [[ can_buy_weapon_extra_check_func ]]( self.weapon ) ) && !onlyplayer bgb::is_enabled( "zm_bgb_disorderly_combat" ) )
 			{
 				self SetInvisibleToPlayer( onlyplayer, false );
 			}
@@ -1326,7 +1333,7 @@ function decide_hide_show_hint( endon_notify, second_endon_notify, onlyplayer, c
 			players = GetPlayers();
 			for ( i = 0; i < players.size; i++ )
 			{
-				if ( players[ i ] can_buy_weapon() && ( !IsDefined( can_buy_weapon_extra_check_func ) || players[ i ] [[ can_buy_weapon_extra_check_func ]]( self.weapon ) ) )
+				if ( players[ i ] can_buy_weapon() && ( !IsDefined( can_buy_weapon_extra_check_func ) || players[ i ] [[ can_buy_weapon_extra_check_func ]]( self.weapon ) ) && !players[ i ] bgb::is_enabled( "zm_bgb_disorderly_combat" ) )
 				{
 					self SetInvisibleToPlayer( players[i], false );
 				}
@@ -1674,6 +1681,14 @@ function treasure_chest_weapon_spawn( chest, player, respin )
 			self.weapon_model_dw = undefined;
 		}
 		
+		if( IsPlayer( chest.chest_user ) && chest.chest_user bgb::is_enabled( "zm_bgb_unbearable" ) )
+		{
+			level.chest_accessed = 0;
+			chest.unbearable_respin = true;
+			chest.chest_user notify( "zm_bgb_unbearable", chest );
+			chest waittill( "forever" );
+		}
+		
 		self.chest_moving = true;
 		level flag::set("moving_chest_now");
 		level.chest_accessed = 0;
@@ -1910,6 +1925,11 @@ function should_upgrade_weapon( player, weapon )
 	if( isdefined( level.magicbox_should_upgrade_weapon_override ) )
 	{
 		return [[ level.magicbox_should_upgrade_weapon_override ]]( player, weapon ); // PORTIZ 7/19/2016: pass in player and weapon to check specific conditions
+	}
+	
+	if( player bgb::is_enabled( "zm_bgb_crate_power" ) )
+	{
+		return true;
 	}
 	
 	return false;
