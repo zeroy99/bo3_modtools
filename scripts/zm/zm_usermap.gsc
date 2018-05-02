@@ -51,6 +51,8 @@
 #using scripts\zm\_zm_weap_bouncingbetty;
 #using scripts\zm\_zm_weap_cymbal_monkey;
 #using scripts\zm\_zm_weap_tesla;
+#using scripts\zm\_zm_weap_rocketshield;
+#using scripts\zm\_zm_weap_gravityspikes;
 
 //Traps
 #using scripts\zm\_zm_trap_electric;
@@ -84,6 +86,12 @@
 //*****************************************************************************
 // MAIN
 //*****************************************************************************
+
+function autoexec opt_in()
+{
+	level.aat_in_use = true;
+	level.bgb_in_use = false;
+}
 
 function autoexec init_fx()
 {
@@ -280,14 +288,6 @@ function giveCustomCharacters()
 	self.favorite_wall_weapons_list = [];
 	self.talks_in_danger = false;	
 	
-	/#
-		if(GetDvarString("force_char") != "")
-		{
-			self.characterIndex = getdvarint("force_char");
-		}
-
-	#/
-
 	self SetCharacterBodyType( self.characterIndex );
 	self SetCharacterBodyStyle( 0 );
 	self SetCharacterHelmetStyle( 0 );

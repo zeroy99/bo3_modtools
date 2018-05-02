@@ -39,6 +39,8 @@
 #using scripts\zm\_zm_weap_bouncingbetty;
 #using scripts\zm\_zm_weap_cymbal_monkey;
 #using scripts\zm\_zm_weap_tesla;
+#using scripts\zm\_zm_weap_rocketshield;
+#using scripts\zm\_zm_weap_gravityspikes;
 
 // AI
 #using scripts\zm\_zm_ai_dogs;
@@ -55,6 +57,8 @@
 
 function autoexec opt_in()
 {
+	level.aat_in_use = true;
+	level.bgb_in_use = false;
 }
 
 function main()

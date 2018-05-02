@@ -122,7 +122,7 @@ function perk_wire_fx(notify_wait, init_targetname, done_notify )
 //	Actually Plays the FX along the wire
 function perk_wire_fx_client( clientnum, init_targetname, done_notify )
 {
-	/#println( "perk_wire_fx_client for client #"+clientnum );#/
+
 	targ = struct::get(init_targetname,"targetname");
 	if ( !IsDefined( targ ) )
 	{
@@ -140,7 +140,7 @@ function perk_wire_fx_client( clientnum, init_targetname, done_notify )
 	{
 		if(isDefined(targ.target))
 		{
-			/#println( "perk_wire_fx_client#"+clientnum+" next target: "+targ.target );#/
+		
 			target = struct::get(targ.target,"targetname");
 			
 //			PlayFx( clientnum, level._effect["wire_spark"], mover.origin );

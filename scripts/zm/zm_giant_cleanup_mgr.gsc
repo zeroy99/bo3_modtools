@@ -239,7 +239,7 @@ function private delete_zombie_noone_looking()
 	
 	if ( isdefined( self ) )
 	{
-		/# debugstar( self.origin, 1000, ( 1, 1, 1 ) ); #/
+	
 			
 		self Delete();
 	}

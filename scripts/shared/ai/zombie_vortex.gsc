@@ -14,3 +14,5 @@
 #insert scripts\shared\archetype_shared\archetype_shared.gsh;
 
 #namespace zombie_vortex;
+
+function player_vortex_visionset( name ) {}

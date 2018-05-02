@@ -515,17 +515,6 @@ function magic_box_init()
 #define ADDITIONAL_PRIMARY_WEAPON_MACHINE_LIGHT_FX					"additionalprimaryweapon_light"
 
 
-/# 
-function power_on_listener( trig )
-{
-	trig endon( "trigger" );
-
-	level flag::wait_till("power_on");
-
-	trig notify( "trigger" );
-}
-#/
-
 
 /*------------------------------------
 the electric switch under the bridge
@@ -545,19 +534,9 @@ function power_electric_switch()
 
 	cheat = false;
 	
-/# 
-	if( GetDvarInt( "zombie_cheat" ) >= 3 )
-	{
-		wait( 5 );
-		cheat = true;
-	}
-#/	
-
 	user = undefined;
 	if ( cheat != true )
 	{
-		level thread power_on_listener( trig );
-
 		trig waittill("trigger",user);
 		if( isdefined( user ) )
 		{

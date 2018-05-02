@@ -4,3 +4,4 @@
 
 #insert scripts\shared\shared.gsh;
 
+function flame_death_fx( localClientNum ) {}

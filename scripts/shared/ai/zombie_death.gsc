@@ -5,3 +5,7 @@
 #using scripts\shared\ai\systems\gib;
 
 #insert scripts\shared\shared.gsh;
+
+function flame_death_fx() {}
+function do_gib() {}
+

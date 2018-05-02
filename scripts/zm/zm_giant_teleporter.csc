@@ -87,7 +87,7 @@ function teleport_aftereffect_shellshock_electric( localClientNum )
 
 function teleport_aftereffect_fov( localClientNum )
 {
-	/#println( "***FOV Aftereffect***\n" );#/
+
 
 	start_fov = 30;
 	end_fov = GetDvarfloat( "cg_fov_default" );
@@ -103,7 +103,7 @@ function teleport_aftereffect_fov( localClientNum )
 
 function teleport_aftereffect_bw_vision( localClientNum )
 {
-	/#println( "***B&W Aftereffect***\n" );#/
+
 	savedVis = GetVisionSetNaked( localClientNum );
 	VisionSetNaked( localClientNum, "cheat_bw_invert_contrast", 0.4 );
 	wait( 1.25 );
@@ -112,7 +112,7 @@ function teleport_aftereffect_bw_vision( localClientNum )
 
 function teleport_aftereffect_red_vision( localClientNum )
 {
-	/#println( "***Red Aftereffect***\n" );#/
+
 	savedVis = GetVisionSetNaked( localClientNum );
 	VisionSetNaked( localClientNum, "zombie_turned", 0.4 );
 	wait( 1.25 );
@@ -121,7 +121,7 @@ function teleport_aftereffect_red_vision( localClientNum )
 
 function teleport_aftereffect_flashy_vision( localClientNum )
 {
-	/#println( "***Flashy Aftereffect***\n" );#/
+
 	savedVis = GetVisionSetNaked( localClientNum );
 	VisionSetNaked( localClientNum, "cheat_bw_invert_contrast", 0.1 );
 	wait( 0.4 );
@@ -136,7 +136,7 @@ function teleport_aftereffect_flashy_vision( localClientNum )
 
 function teleport_aftereffect_flare_vision( localClientNum )
 {
-	/#println( "***Flare Aftereffect***\n" );#/
+
 	savedVis = GetVisionSetNaked( localClientNum );
 	VisionSetNaked( localClientNum, "flare", 0.4 );
 	wait( 1.25 );

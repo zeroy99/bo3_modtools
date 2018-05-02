@@ -971,17 +971,11 @@ function teleport_aftereffects()
 
 function teleport_aftereffect_shellshock()
 {
-/#
-	println( "*** Explosion Aftereffect***\n" );
-#/
 	self shellshock( "explosion", 4 );
 }
 
 function teleport_aftereffect_shellshock_electric()
 {
-/#
-	println( "***Electric Aftereffect***\n" );
-#/
 	self shellshock( "electrocution", 4 );
 }
 
