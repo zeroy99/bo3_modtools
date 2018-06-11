@@ -1,0 +1,108 @@
+{
+    "states": {
+        "debug": {
+            "substates": {
+                "void": {
+                    "animation_selector": "void@debug"
+                }
+            }
+        },
+        "traversal": {
+            "substates": {
+                "air": {
+                    "animation_selector": "air@traversal",
+                    "loopsync": true
+                },
+                "jump": {
+                    "animation_selector": "jump@traversal"
+                },
+                "land": {
+                    "animation_selector": "land@traversal"
+                }
+            }
+        },
+        "zombie": {
+            "substates": {
+                "barricadeEnter": {
+                    "animation_selector": "barricadeEnter@zombie"
+                },
+                "death": {
+                    "animation_selector": "death@zombie",
+                    "requires_ragdoll_notetrack": true,
+                    "terminal": true
+                },
+                "death_idgun": {
+                    "animation_selector": "death_idgun@zombie",
+                    "loopsync": true
+                },
+                "death_idgun_blackhole": {
+                    "animation_selector": "death_idgun_blackhole@zombie",
+                    "terminal": true
+                },
+                "getup": {
+                    "animation_selector": "getup@zombie"
+                },
+                "grab": {
+                    "animation_selector": "grab@zombie"
+                },
+                "hold": {
+                    "animation_selector": "hold@zombie"
+                },
+                "idle": {
+                    "animation_selector": "idle@zombie"
+                },
+                "juke": {
+                    "animation_selector": "juke@zombie"
+                },
+                "knockdown": {
+                    "animation_selector": "knockdown@zombie"
+                },
+                "melee": {
+                    "animation_selector": "melee@zombie"
+                },
+                "meleeBehindBoards": {
+                    "animation_selector": "meleeBehindBoards@zombie"
+                },
+                "move": {
+                    "animation_selector": "move@zombie",
+                    "cleanloop": true,
+                    "loopsync": true,
+                    "multipledelta": true
+                },
+                "move_lowg": {
+                    "animation_selector": "move_lowg@zombie",
+                    "cleanloop": true,
+                    "loopsync": true,
+                    "multipledelta": true
+                },
+                "pain": {
+                    "animation_selector": "pain@zombie",
+                    "cleanloop": true,
+                    "loopsync": true,
+                    "multipledelta": true
+                },
+                "pull": {
+                    "animation_selector": "pull@zombie"
+                },
+                "stun_tesla": {
+                    "animation_selector": "stun_tesla@zombie",
+                    "cleanloop": true,
+                    "loopsync": true
+                },
+                "taunt": {
+                    "animation_selector": "taunt@zombie"
+                },
+                "traverse": {
+                    "animation_selector": "traverse@zombie"
+                },
+                "traverse_crawler": {
+                    "animation_selector": "traverse_crawler@zombie"
+                },
+                "vortex_pull": {
+                    "animation_selector": "vortex_pull@zombie",
+                    "loopsync": true
+                }
+            }
+        }
+    }
+}

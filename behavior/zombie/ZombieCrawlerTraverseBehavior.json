@@ -1,0 +1,25 @@
+{
+    "type": "sequence",
+    "id": "CrawlerTraverseBehavior",
+    "children": [
+        {
+            "type": "condition_script",
+            "id": "shouldTraverse",
+            "scriptFunction": "locomotionShouldTraverse",
+            "interruptName": "traverse"
+        },
+        {
+            "type": "condition_script_negate",
+            "id": "zombieHasLegs",
+            "scriptFunction": "zombieHasLegs"
+        },
+        {
+            "type": "action",
+            "id": "traverseAction",
+            "ActionName": "zombieTraverseAction",
+            "ASMStateName": "traverse_crawler@zombie",
+            "loopingAction": 0,
+            "actionTimeMax": 0
+        }
+    ]
+}

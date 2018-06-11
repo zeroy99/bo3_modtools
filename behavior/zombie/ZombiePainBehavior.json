@@ -1,0 +1,25 @@
+{
+    "type": "sequence",
+    "id": "PainBehavior",
+    "children": [
+        {
+            "type": "condition_script",
+            "id": "shouldShowPain",
+            "scriptFunction": "isZombieWalking",
+            "interruptName": "pain"
+        },
+        {
+            "type": "condition_script_negate",
+            "id": "shouldBeStunned",
+            "scriptFunction": "zombieShouldStun"
+        },
+        {
+            "type": "action",
+            "id": "defaultAction",
+            "ActionName": "defaultAction",
+            "ASMStateName": "pain@zombie",
+            "loopingAction": 0,
+            "actionTimeMax": 350
+        }
+    ]
+}

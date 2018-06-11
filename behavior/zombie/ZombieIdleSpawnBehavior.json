@@ -1,0 +1,19 @@
+{
+    "type": "parallel",
+    "id": "IdleSpawnBehavior",
+    "children": [
+        {
+            "type": "condition_script_negate",
+            "id": "IsSpawnDone",
+            "scriptFunction": "zombieIsThinkDone"
+        },
+        {
+            "type": "action",
+            "id": "idleAction",
+            "ActionName": "zombieIdleAction",
+            "ASMStateName": "idle@zombie",
+            "loopingAction": 1,
+            "actionTimeMax": 0
+        }
+    ]
+}

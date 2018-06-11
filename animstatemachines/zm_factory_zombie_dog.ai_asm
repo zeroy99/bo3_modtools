@@ -1,0 +1,50 @@
+{
+    "states": {
+        "debug": {
+            "substates": {
+                "void": {
+                    "animation_selector": "void@debug"
+                }
+            }
+        },
+        "zombie_dog": {
+            "substates": {
+                "death": {
+                    "animation_selector": "death@zombie_dog",
+                    "terminal": true
+                },
+                "idle": {
+                    "animation_selector": "idle@zombie_dog",
+                    "transitions": {
+                        "walk@zombie_dog": {
+                            "animation_selector": "idle@zombie_dog>locomotion"
+                        }
+                    }
+                },
+                "melee": {
+                    "animation_selector": "melee@zombie_dog"
+                },
+                "run": {
+                    "animation_selector": "locomotion@zombie_dog",
+                    "loopsync": true,
+                    "multipledelta": true,
+                    "transition_decorator": "locomotion@zombie_dog>locomotion@zombie_dog"
+                },
+                "traverse": {
+                    "animation_selector": "traverse@zombie_dog"
+                },
+                "walk": {
+                    "animation_selector": "locomotion@zombie_dog",
+                    "loopsync": true,
+                    "multipledelta": true,
+                    "transition_decorator": "locomotion@zombie_dog>locomotion@zombie_dog",
+                    "transitions": {
+                        "run@zombie_dog": {
+                            "animation_selector": "walk@zombie_dog>run"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

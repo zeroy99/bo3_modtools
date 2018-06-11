@@ -1,0 +1,30 @@
+{
+    "type": "sequence",
+    "id": "ZombieJukeBehavior",
+    "children": [
+        {
+            "type": "condition_script",
+            "id": "shouldJuke",
+            "scriptFunction": "zombieShouldJuke"
+        },
+        {
+            "type": "condition_script_negate",
+            "id": "shouldBeStunned",
+            "scriptFunction": "zombieShouldStun"
+        },
+        {
+            "type": "condition_script_negate",
+            "id": "zombieIsBeingGrappled",
+            "scriptFunction": "zombieIsBeingGrappled"
+        },
+        {
+            "type": "action",
+            "id": "jukeAction",
+            "ActionName": "defaultAction",
+            "ASMStateName": "juke@zombie",
+            "StartFunction": "zombieJukeActionStart",
+            "loopingAction": 0,
+            "actionTimeMax": 0
+        }
+    ]
+}

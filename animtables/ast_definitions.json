@@ -1,0 +1,1649 @@
+{
+    "version": 1,
+    "definitions": [
+        {
+            "name": "_context",
+            "parentColumn": null,
+            "desired": false,
+            "type": "string",
+            "outputColumn": false
+        },
+        {
+            "name": "_context2",
+            "parentColumn": null,
+            "desired": false,
+            "type": "string",
+            "outputColumn": false
+        },
+        {
+            "name": "_cover_concealed",
+            "parentColumn": null,
+            "desired": false,
+            "type": "enum",
+            "possibleValues": [
+                "CONCEALED",
+                "UNCONCEALED"
+            ],
+            "outputColumn": false
+        },
+        {
+            "name": "_cover_direction",
+            "parentColumn": null,
+            "desired": false,
+            "type": "enum",
+            "possibleValues": [
+                "COVER_BACK_DIRECTION",
+                "COVER_FRONT_DIRECTION",
+                "COVER_LEFT_DIRECTION",
+                "COVER_RIGHT_DIRECTION"
+            ],
+            "outputColumn": false
+        },
+        {
+            "name": "_previous_cover_direction",
+            "parentColumn": null,
+            "desired": false,
+            "type": "enum",
+            "possibleValues": [
+                "COVER_BACK_DIRECTION",
+                "COVER_FRONT_DIRECTION",
+                "COVER_LEFT_DIRECTION",
+                "COVER_RIGHT_DIRECTION"
+            ],
+            "outputColumn": false
+        },
+        {
+            "name": "_desired_cover_direction",
+            "parentColumn": "_cover_direction",
+            "desired": true,
+            "type": "enum",
+            "possibleValues": [
+                "COVER_BACK_DIRECTION",
+                "COVER_FRONT_DIRECTION",
+                "COVER_LEFT_DIRECTION",
+                "COVER_RIGHT_DIRECTION"
+            ],
+            "outputColumn": false
+        },
+        {
+            "name": "_cover_mode",
+            "parentColumn": null,
+            "desired": false,
+            "type": "enum",
+            "possibleValues": [
+                "COVER_ALERT",
+                "COVER_BLIND",
+                "COVER_LEAN",
+                "COVER_OVER",
+                "COVER_SCAN",
+                "COVER_VANTAGE"
+            ],
+            "outputColumn": false
+        },
+        {
+            "name": "_previous_cover_mode",
+            "parentColumn": null,
+            "desired": false,
+            "type": "enum",
+            "possibleValues": [
+                "COVER_ALERT",
+                "COVER_BLIND",
+                "COVER_LEAN",
+                "COVER_OVER",
+                "COVER_VANTAGE"
+            ],
+            "outputColumn": false
+        },
+        {
+            "name": "_cover_type",
+            "parentColumn": null,
+            "desired": false,
+            "type": "enum",
+            "possibleValues": [
+                "COVER_CROUCH",
+                "COVER_EXPOSED",
+                "COVER_LEFT",
+                "COVER_NONE",
+                "COVER_PILLAR",
+                "COVER_RIGHT",
+                "COVER_STAND"
+            ],
+            "outputColumn": false
+        },
+        {
+            "name": "_current_location_cover_type",
+            "parentColumn": null,
+            "desired": false,
+            "type": "enum",
+            "possibleValues": [
+                "COVER_CROUCH",
+                "COVER_EXPOSED",
+                "COVER_LEFT",
+                "COVER_NONE",
+                "COVER_PILLAR",
+                "COVER_RIGHT",
+                "COVER_STAND"
+            ],
+            "outputColumn": false
+        },
+        {
+            "name": "_previous_cover_type",
+            "parentColumn": null,
+            "desired": false,
+            "type": "enum",
+            "possibleValues": [
+                "COVER_CROUCH",
+                "COVER_EXPOSED",
+                "COVER_LEFT",
+                "COVER_NONE",
+                "COVER_PILLAR",
+                "COVER_RIGHT",
+                "COVER_STAND"
+            ],
+            "outputColumn": false
+        },
+        {
+            "name": "_exposed_type",
+            "parentColumn": null,
+            "desired": false,
+            "type": "enum",
+            "possibleValues": [
+                "EXPOSED_YES",
+                "EXPOSED_NO"
+            ],
+            "outputColumn": false
+        },
+        {
+            "name": "_stance",
+            "parentColumn": null,
+            "desired": false,
+            "type": "enum",
+            "possibleValues": [
+                "CROUCH",
+                "PRONE",
+                "PRONE_BACK",
+                "PRONE_FRONT",
+                "STAND",
+                "SWIM"
+            ],
+            "outputColumn": false
+        },
+        {
+            "name": "_desired_stance",
+            "parentColumn": "_stance",
+            "desired": true,
+            "type": "enum",
+            "possibleValues": [
+                "STAND",
+                "CROUCH",
+                "PRONE"
+            ],
+            "outputColumn": false
+        },
+        {
+            "name": "_arrival_stance",
+            "parentColumn": "_stance",
+            "desired": true,
+            "type": "enum",
+            "possibleValues": [
+                "CROUCH",
+                "STAND",
+                "PRONE"
+            ],
+            "outputColumn": false
+        },
+        {
+            "name": "_locomotion_should_turn",
+            "parentColumn": null,
+            "desired": false,
+            "type": "enum",
+            "possibleValues": [
+                "SHOULD_TURN",
+                "SHOULD_NOT_TURN"
+            ],
+            "outputColumn": false
+        },
+        {
+            "name": "_arrival_type",
+            "parentColumn": null,
+            "desired": false,
+            "type": "enum",
+            "possibleValues": [
+                "DONT_ARRIVE_AT_GOAL",
+                "ARRIVE_AT_GOAL"                
+            ],
+            "outputColumn": false
+        },
+        {
+            "name": "_locomotion_speed",
+            "parentColumn": null,
+            "desired": false,
+            "type": "enum",
+            "possibleValues": [
+                "LOCOMOTION_SPEED_WALK",
+                "LOCOMOTION_SPEED_RUN",
+                "LOCOMOTION_SPEED_SPRINT",
+                "LOCOMOTION_SPEED_SUPER_SPRINT",
+				"LOCOMOTION_SPEED_BURNED",
+				"LOCOMOTION_SPEED_JUMP_PAD_SUPER_SPRINT",
+				"LOCOMOTION_SPEED_SLIDE"
+            ],
+            "outputColumn": false
+        },
+        {
+            "name": "_grapple_direction",
+            "parentColumn": null,
+            "desired": false,
+            "type": "enum",
+            "possibleValues": [
+                "FRONT",
+                "BACK",
+                "LEFT",
+                "RIGHT"
+            ],
+            "outputColumn": false
+        },
+        {
+            "name": "_run_n_gun_variation",
+            "parentColumn": null,
+            "desired": false,
+            "type": "enum",
+            "possibleValues": [
+                "VARIATION_STRAFE_1",
+                "VARIATION_STRAFE_2",
+                "VARIATION_FORWARD"                
+            ],
+            "outputColumn": false
+        },
+        {
+            "name": "_has_legs",
+            "parentColumn": null,
+            "desired": false,
+            "type": "enum",
+            "possibleValues": [
+                "HAS_LEGS_YES",
+                "HAS_LEGS_NO"
+            ],
+            "outputColumn": false
+        },
+		{
+            "name": "_idgun_damage_direction",
+            "parentColumn": null,
+            "desired": false,
+            "type": "enum",
+            "possibleValues": [
+                "FRONT",
+                "BACK",
+                "LEFT",
+                "RIGHT"
+            ],
+            "outputColumn": false
+        },
+        {
+            "name": "_which_board_pull",
+            "parentColumn": null,
+            "desired": false,
+            "type": "int",
+            "outputColumn": false
+        },
+        {
+            "name": "_variant_type",
+            "parentColumn": null,
+            "desired": false,
+            "type": "int",
+            "outputColumn": false
+        },
+        {
+            "name": "_low_gravity_variant",
+            "parentColumn": null,
+            "desired": false,
+            "type": "int",
+            "outputColumn": false
+        },
+        {
+            "name": "_board_attack_spot",
+            "parentColumn": null,
+            "desired": false,
+            "type": "float",
+            "outputColumn": false
+        },
+        {
+            "name": "_weapon_class",
+            "parentColumn": null,
+            "desired": false,
+            "type": "enum",
+            "possibleValues": [
+                "RIFLE"
+            ],
+            "outputColumn": false
+        },
+        {
+            "name": "_weapon_type",
+            "parentColumn": null,
+            "desired": false,
+            "type": "enum",
+            "possibleValues": [
+                "AUTO",
+                "SEMI"
+            ],
+            "outputColumn": false
+        },
+        {
+            "name": "_damage_weapon",
+            "parentColumn": null,
+            "desired": false,
+            "type": "enum",
+            "possibleValues": [
+                "unknown",
+                "gadget_servo_shortout",
+                "gadget_immolation",
+                "gadget_firefly_swarm",
+                "gadget_firefly_swarm_upgraded",
+                "gadget_system_overload",
+				"gadget_system_overload_upgraded",
+                "gadget_exo_breakdown",
+                "gadget_sensory_overload",
+                "gadget_forced_malfunction",
+                "gadget_concussive_wave",
+                "gadget_rapid_strike",
+                "gadget_rapid_strike_upgraded",
+                "gadget_es_strike",
+                "gadget_es_strike_upgraded",
+                "gadget_surge",
+                "gadget_takedown",
+                "gadget_takedown_upgraded",
+                "gadget_ravage_core",
+                "gadget_ravage_core_upgraded",
+                "gadget_proximity_det",
+                "gadget_mrpukey",
+                "hero_gravityspikes_cybercom",
+                "hero_gravityspikes_cybercom_upgraded",
+                "ravage_core_emp_grenade"
+            ],
+            "outputColumn": false
+        },
+        {
+            "name": "_damage_direction",
+            "parentColumn": null,
+            "desired": false,
+            "type": "enum",
+            "possibleValues": [
+                "BACK",
+                "FRONT",
+                "LEFT",
+                "RIGHT"
+            ],
+            "outputColumn": false
+        },
+        {
+            "name": "_damage_location",
+            "parentColumn": null,
+            "desired": false,
+            "type": "enum",
+            "possibleValues": [
+                "CHEST",
+                "GROIN",
+                "HEAD",
+                "LEFT_ARM",
+                "LEFT_LEG",
+                "LEGS",
+                "RIGHT_ARM",
+                "RIGHT_LEG"
+            ],
+            "outputColumn": false
+        },
+        {
+            "name": "_fatal_damage_location",
+            "parentColumn": null,
+            "desired": false,
+            "type": "enum",
+            "possibleValues": [
+                "HEAD",
+                "CHEST",
+                "HIPS",
+                "LEFT_ARM",
+                "RIGHT_ARM",
+                "LEGS"              
+            ],
+            "outputColumn": false
+        },
+        {
+            "name": "_damage_taken",
+            "parentColumn": null,
+            "desired": false,
+            "type": "enum",
+            "possibleValues": [
+                "LIGHT",
+                "HEAVY"            
+            ],
+            "outputColumn": false
+        },
+        {
+            "name": "_damage_weapon_class",
+            "parentColumn": null,
+            "desired": false,
+            "type": "enum",
+            "possibleValues": [
+                "EXPLOSIVE",
+                "ELECTRIFIED",
+				"MELEE",
+				"PISTOL",
+				"RIFLE"
+            ],
+            "outputColumn": false
+        },
+        {
+            "name": "_tracking_turn_yaw_min",
+            "parentColumn": "_tracking_turn_yaw",
+            "desired": false,
+            "type": "float_min",
+            "maximumValue": null,
+            "minimumValue": null,
+            "outputColumn": false
+        },
+        {
+            "name": "_tracking_turn_yaw_max",
+            "parentColumn": "_tracking_turn_yaw",
+            "desired": false,
+            "type": "float_max",
+            "maximumValue": null,
+            "minimumValue": null,
+            "outputColumn": false
+        },
+        {
+            "name": "_melee_distance_min",
+            "parentColumn": "_melee_distance",
+            "desired": false,
+            "type": "float_min",
+            "maximumValue": null,
+            "minimumValue": null,
+            "outputColumn": false
+        },
+        {
+            "name": "_melee_distance_max",
+            "parentColumn": "_melee_distance",
+            "desired": false,
+            "type": "float_max",
+            "maximumValue": null,
+            "minimumValue": null,
+            "outputColumn": false
+        },
+        {
+            "name": "_throw_distance_min",
+            "parentColumn": "_throw_distance",
+            "desired": false,
+            "type": "float_min",
+            "maximumValue": null,
+            "minimumValue": null,
+            "outputColumn": false
+        },
+        {
+            "name": "_throw_distance_max",
+            "parentColumn": "_throw_distance",
+            "desired": false,
+            "type": "float_max",
+            "maximumValue": null,
+            "minimumValue": null,
+            "outputColumn": false
+        },
+        {
+            "name": "_locomotion_exit_yaw_min",
+            "parentColumn": "_locomotion_exit_yaw",
+            "desired": false,
+            "type": "float_min",
+            "maximumValue": null,
+            "minimumValue": null,
+            "outputColumn": false
+        },
+        {
+            "name": "_locomotion_exit_yaw_max",
+            "parentColumn": "_locomotion_exit_yaw",
+            "desired": false,
+            "type": "float_max",
+            "maximumValue": null,
+            "minimumValue": null,
+            "outputColumn": false
+        },
+        {
+            "name": "_locomotion_motion_angle_min",
+            "parentColumn": "_locomotion_motion_angle",
+            "desired": false,
+            "type": "float_min",
+            "maximumValue": null,
+            "minimumValue": null,
+            "outputColumn": false
+        },
+        {
+            "name": "_locomotion_motion_angle_max",
+            "parentColumn": "_locomotion_motion_angle",
+            "desired": false,
+            "type": "float_max",
+            "maximumValue": null,
+            "minimumValue": null,
+            "outputColumn": false
+        },
+        {
+            "name": "_lookahead_angle_min",
+            "parentColumn": "_lookahead_angle",
+            "desired": false,
+            "type": "float_min",
+            "maximumValue": 360,
+            "minimumValue": 0,
+            "outputColumn": false
+        },
+        {
+            "name": "_lookahead_angle_max",
+            "parentColumn": "_lookahead_angle",
+            "desired": false,
+            "type": "float_max",
+            "maximumValue": 360,
+            "minimumValue": 0,
+            "outputColumn": false
+        },
+        {
+            "name": "_locomotion_turn_yaw_min",
+            "parentColumn": "_locomotion_turn_yaw",
+            "desired": false,
+            "type": "float_min",
+            "maximumValue": null,
+            "minimumValue": null,
+            "outputColumn": false
+        },
+        {
+            "name": "_locomotion_turn_yaw_max",
+            "parentColumn": "_locomotion_turn_yaw",
+            "desired": false,
+            "type": "float_max",
+            "maximumValue": null,
+            "minimumValue": null,
+            "outputColumn": false
+        },
+        {
+            "name": "_locomotion_arrival_yaw_min",
+            "parentColumn": "_locomotion_arrival_yaw",
+            "desired": false,
+            "type": "float_min",
+            "maximumValue": null,
+            "minimumValue": null,
+            "outputColumn": false
+        },
+        {
+            "name": "_locomotion_arrival_yaw_max",
+            "parentColumn": "_locomotion_arrival_yaw",
+            "desired": false,
+            "type": "float_max",
+            "maximumValue": null,
+            "minimumValue": null,
+            "outputColumn": false
+        },
+    {
+            "name": "_tactical_arrival_facing_yaw_min",
+            "parentColumn": "_tactical_arrival_facing_yaw",
+            "desired": false,
+            "type": "float_min",
+            "maximumValue": null,
+            "minimumValue": null,
+            "outputColumn": false
+        },
+    {
+            "name": "_tactical_arrival_facing_yaw_max",
+            "parentColumn": "_tactical_arrival_facing_yaw",
+            "desired": false,
+            "type": "float_max",
+            "maximumValue": null,
+            "minimumValue": null,
+            "outputColumn": false
+        },
+        {
+            "name": "_locomotion_arrival_distance_min",
+            "parentColumn": "_locomotion_arrival_distance",
+            "desired": false,
+            "type": "float_min",
+            "maximumValue": null,
+            "minimumValue": null,
+            "outputColumn": false
+        },
+        {
+            "name": "_locomotion_arrival_distance_max",
+            "parentColumn": "_locomotion_arrival_distance",
+            "desired": false,
+            "type": "float_max",
+            "maximumValue": null,
+            "minimumValue": null,
+            "outputColumn": false
+        },
+        {
+            "name": "_enemy_yaw_min",
+            "parentColumn": "_enemy_yaw",
+            "desired": false,
+            "type": "float_min",
+            "maximumValue": 360,
+            "minimumValue": 0,
+            "outputColumn": false
+        },
+        {
+            "name": "_enemy_yaw_max",
+            "parentColumn": "_enemy_yaw",
+            "desired": false,
+            "type": "float_max",
+            "maximumValue": 360,
+            "minimumValue": 0,
+            "outputColumn": false
+        },
+        {
+            "name": "_perfect_enemy_yaw_min",
+            "parentColumn": "_perfect_enemy_yaw",
+            "desired": false,
+            "type": "float_min",
+            "maximumValue": 360,
+            "minimumValue": 0,
+            "outputColumn": false
+        },
+        {
+            "name": "_perfect_enemy_yaw_max",
+            "parentColumn": "_perfect_enemy_yaw",
+            "desired": false,
+            "type": "float_max",
+            "maximumValue": 360,
+            "minimumValue": 0,
+            "outputColumn": false
+        },
+        {
+            "name": "_react_yaw_min",
+            "parentColumn": "_react_yaw",
+            "desired": false,
+            "type": "float_min",
+            "maximumValue": 360,
+            "minimumValue": 0,
+            "outputColumn": false
+        },
+        {
+            "name": "_react_yaw_max",
+            "parentColumn": "_react_yaw",
+            "desired": false,
+            "type": "float_max",
+            "maximumValue": 360,
+            "minimumValue": 0,
+            "outputColumn": false
+        },
+        {
+            "name": "_speed_min",
+            "parentColumn": "_speed",
+            "desired": false,
+            "type": "float_min",
+            "maximumValue": null,
+            "minimumValue": 0,
+            "outputColumn": false
+        },
+        {
+            "name": "_speed_max",
+            "parentColumn": "_speed",
+            "desired": false,
+            "type": "float_max",
+            "maximumValue": null,
+            "minimumValue": null,
+            "outputColumn": false
+        },
+        {
+            "name": "_locomotion_face_enemy_quadrant",
+            "parentColumn": null,
+            "desired": false,
+            "type": "enum",
+            "possibleValues": [
+                "LOCOMOTION_FACE_ENEMY_BACK",
+                "LOCOMOTION_FACE_ENEMY_FRONT",
+                "LOCOMOTION_FACE_ENEMY_LEFT",
+                "LOCOMOTION_FACE_ENEMY_NONE",
+                "LOCOMOTION_FACE_ENEMY_RIGHT"
+            ],
+            "outputColumn": false
+        },
+        {
+            "name": "_locomotion_face_enemy_quadrant_previous",
+            "parentColumn": null,
+            "desired": false,
+            "type": "enum",
+            "possibleValues": [
+                "LOCOMOTION_FACE_ENEMY_BACK",
+                "LOCOMOTION_FACE_ENEMY_FRONT",
+                "LOCOMOTION_FACE_ENEMY_LEFT",
+                "LOCOMOTION_FACE_ENEMY_NONE",
+                "LOCOMOTION_FACE_ENEMY_RIGHT"
+            ],
+            "outputColumn": false
+        },
+        {
+            "name": "_traversal_type",
+            "parentColumn": null,
+            "desired": false,
+            "type": "string",
+            "outputColumn": false
+        },
+        {
+            "name": "_locomotion_pain_type",
+            "parentColumn": null,
+            "desired": false,
+            "type": "string",
+            "possibleValues": [
+                "LOCOMOTION_MOVING_PAIN_SHORT",
+                "LOCOMOTION_MOVING_PAIN_MED",
+                "LOCOMOTION_MOVING_PAIN_LONG"
+            ],
+            "outputColumn": false
+        },          
+        {
+            "name": "_human_locomotion_movement_type",
+            "parentColumn": null,
+            "desired": false,
+            "type": "enum",
+            "possibleValues": [
+                "HUMAN_LOCOMOTION_MOVEMENT_PATROL",
+                "HUMAN_LOCOMOTION_MOVEMENT_SPRINT",
+                "HUMAN_LOCOMOTION_MOVEMENT_DEFAULT"
+            ],
+            "outputColumn": false
+        },          
+        {
+            "name": "_animation_alias",
+            "parentColumn": null,
+            "desired": false,
+            "type": "string",
+            "outputColumn": true,
+            "alias": true
+        },
+        {
+            "name": "_aim_up_alias",
+            "parentColumn": null,
+            "desired": false,
+            "type": "string",
+            "outputColumn": true,
+            "alias": true
+        },
+        {
+            "name": "_aim_down_alias",
+            "parentColumn": null,
+            "desired": false,
+            "type": "string",
+            "outputColumn": true,
+            "alias": true
+        },
+        {
+            "name": "_aim_left_alias",
+            "parentColumn": null,
+            "desired": false,
+            "type": "string",
+            "outputColumn": true,
+            "alias": true
+        },
+        {
+            "name": "_aim_right_alias",
+            "parentColumn": null,
+            "desired": false,
+            "type": "string",
+            "outputColumn": true,
+            "alias": true
+        },
+        {
+            "name": "_animation_alias_semi",
+            "parentColumn": null,
+            "desired": false,
+            "type": "string",
+            "outputColumn": true,
+            "alias": true
+        },
+        {
+            "name": "_animation_alias_singleshot",
+            "parentColumn": null,
+            "desired": false,
+            "type": "string",
+            "outputColumn": true,
+            "alias": true
+        },
+        {
+            "name": "_animation_alias_burst3",
+            "parentColumn": null,
+            "desired": false,
+            "type": "string",
+            "outputColumn": true,
+            "alias": true
+        },
+        {
+            "name": "_animation_alias_burst4",
+            "parentColumn": null,
+            "desired": false,
+            "type": "string",
+            "outputColumn": true,
+            "alias": true
+        },
+        {
+            "name": "_animation_alias_burst5",
+            "parentColumn": null,
+            "desired": false,
+            "type": "string",
+            "outputColumn": true,
+            "alias": true
+        },
+        {
+            "name": "_animation_alias_burst6",
+            "parentColumn": null,
+            "desired": false,
+            "type": "string",
+            "outputColumn": true,
+            "alias": true
+        },
+        {
+            "name": "_animation_alias_param_f",
+            "parentColumn": null,
+            "desired": false,
+            "type": "string",
+            "outputColumn": true,
+            "alias": true
+        },
+        {
+            "name": "_animation_alias_param_b",
+            "parentColumn": null,
+            "desired": false,
+            "type": "string",
+            "outputColumn": true,
+            "alias": true
+        },
+        {
+            "name": "_animation_alias_param_l",
+            "parentColumn": null,
+            "desired": false,
+            "type": "string",
+            "outputColumn": true,
+            "alias": true
+        },
+        {
+            "name": "_animation_alias_param_r",
+            "parentColumn": null,
+            "desired": false,
+            "type": "string",
+            "outputColumn": true,
+            "alias": true
+        },
+        {
+            "name": "_animation_alias_param_balance",
+            "parentColumn": null,
+            "desired": false,
+            "type": "string",
+            "outputColumn": true,
+            "alias": true
+        },
+        {
+            "name": "_animation_alias_turn_r",
+            "parentColumn": null,
+            "desired": false,
+            "type": "string",
+            "outputColumn": true,
+            "alias": true
+        },
+        {
+            "name": "_animation_alias_turn_l",
+            "parentColumn": null,
+            "desired": false,
+            "type": "string",
+            "outputColumn": true,
+            "alias": true
+        },
+        {
+            "name": "_param_idle_blend_dropoff",
+            "parentColumn": null,
+            "desired": false,
+            "type": "float",
+            "maximumValue": 1,
+            "minimumValue": 0.1,
+            "outputColumn": true
+        },
+        {
+            "name": "_param_turn_blend_min_ratio",
+            "parentColumn": null,
+            "desired": false,
+            "type": "float",
+            "maximumValue": 10.0,
+            "minimumValue": 0.0,
+            "outputColumn": true
+        },
+        {
+            "name": "_param_turn_blend_scale",
+            "parentColumn": null,
+            "desired": false,
+            "type": "float",
+            "maximumValue": 10.0,
+            "minimumValue": 0.0,
+            "outputColumn": true
+        },
+        {
+            "name": "_blend_in_time",
+            "parentColumn": null,
+            "desired": false,
+            "type": "float",
+            "maximumValue": 10,
+            "minimumValue": 0,
+            "outputColumn": true
+        },
+        {
+            "name": "_blend_out_time",
+            "parentColumn": null,
+            "desired": false,
+            "type": "float",
+            "maximumValue": 10,
+            "minimumValue": 0,
+            "outputColumn": true
+        },
+        {
+            "name": "_animation_mocomp",
+            "parentColumn": null,
+            "desired": false,
+            "type": "enum",
+            "possibleValues": [
+                "",
+                "adjust_to_cover",
+                "mocomp_adjust_stance@cover",
+                "mocomp_adjust_to_cover@cover",
+                "mocomp_charge_in_melee@locomotion",
+                "mocomp_charge_melee@locomotion",
+                "mocomp_cover_exit@locomotion",
+                "mocomp_cover_pain@cover",
+                "mocomp_death@exposed",
+                "mocomp_death@locomotion",
+                "mocomp_death_gravity@exposed",
+                "mocomp_death_gravity@locomotion",
+                "mocomp_default_ignore_pain@cover",
+                "mocomp_flank@cover",
+                "mocomp_flank_stand",
+                "mocomp_force_face_enemy",
+                "mocomp_exposed_exit@locomotion",
+                "mocomp_exposed_face_current_angle@exposed",
+                "mocomp_exposed_face_enemy@locomotion",
+                "mocomp_generic_ignore_pain@cover",
+                "mocomp_generic_animation",
+                "mocomp_idle@cover",
+                "mocomp_idle@exposed",
+                "mocomp_move@locomotion",
+                "mocomp_move_arrival@locomotion",
+                "mocomp_move_pain@locomotion",
+                "mocomp_move_tactical_walk@locomotion",
+                "mocomp_move_traversal@locomotion",
+                "mocomp_move_strict_traversal@locomotion",
+                "mocomp_move_turn@locomotion",
+                "mocomp_move_turn_dog@locomotion",
+                "mocomp_pain@exposed",
+                "mocomp_turn@exposed",
+                "mocomp_melee@exposed",
+                "mocomp_tactical_turn@locomotion",
+                "mocomp_tactical_face_enemy@locomotion",
+				"mocomp_trap_attack@mechz",
+                "mocomp_board_tear@zombie",
+                "mocomp_barricade_enter@zombie",
+                "mocomp_barricade_enter_no_z@zombie",
+                "robot_charge_in@locomotion",
+                "robot_exposed_exit@locomotion",
+                "robot_rogue_charge_melee",
+                "robot_juke",
+                "robot_procedural_traversal",
+                "robot_start_traversal",
+                "robot_start_wallrun",
+                "mocomp_death_balcony@exposed",
+                "mocomp_ignore_pain_face_enemy",
+                "mocomp_recovery@special_pain",
+                "mocomp_death_idgun@zombie",
+                "mocomp_vortex_pull@zombie",
+                "mocomp_death_idgun_hole@zombie",
+                "mocomp_staircase_enter",
+                "mocomp_staircase_loop",
+                "mocomp_staircase_exit",
+                "mocomp_teleport_traversal@margwa",
+                "mocomp_teleport_traversal@zombie",
+                "mocomp_turn@zombie",
+                "mocomp_bonuszm_special_traversal",
+                "mocomp_idle_special_factory",
+                "mocomp_melee_jump@zombie",
+                "mocomp_zombie_idle@zombie",
+                "mocomp_attack_object@zombie",
+				"mocomp_teleport_traversal@mechz",
+				"mocomp_tomb_mechz_traversal@mechz",
+				"mocomp_teleport_traversal@zombie_quad",
+				"mocomp_teleport_out_traversal@keeper_companion",
+                "mocomp_teleport_in_traversal@keeper_companion",
+				"mocomp_keeper_companion_idle@keeper_companion",
+				"mocomp_keeper_tactical_walk@keeper_companion",
+				"mocomp_teleport@apothicon_fury",
+                "mocomp_juke@apothicon_fury",
+                "mocomp_bamf@apothicon_fury",
+				"quad_wall_traversal",
+				"quad_wall_jump_off",
+				"quad_move_strict_traversal",
+				"quad_phase",
+				"mocomp_face_tank@mechz",
+				"mocomp_jump_tank@mechz",
+				"mocomp_drop@faller",
+				"mocomp_ceiling_death@faller"
+            ],
+            "outputColumn": true
+        },
+        {
+            "name": "_aim_table",
+            "parentColumn": null,
+            "desired": false,
+            "type": "enum",
+            "possibleValues": [
+                "cover",
+                "default",
+                "default_wide",
+                "locomotion",
+                "locomotion_wide",
+                "cover_concealed_over",
+                "cover_left_lean",
+                "cover_right_lean",
+                "cover_over",
+                "cover_vantage",
+                "pillar_left_lean",
+                "pillar_right_lean",
+                "robot_cover_over",
+                "robot_crawler",
+                "robot_locomotion",
+                "wallrun_l",
+                "wallrun_r",
+                "staircase",
+				"robot_wallrun_l",
+				"robot_wallrun_r"
+            ],
+            "outputColumn": true
+        },
+        {
+            "name": "_gib_location",
+            "parentColumn": null,
+            "desired": false,
+            "type": "enum",
+            "possibleValues": [
+                "HEAD",
+                "ARMS",
+                "LEFT_ARM",
+                "RIGHT_ARM",
+                "LEGS",
+                "LEFT_LEG",
+                "RIGHT_LEG"
+            ],
+            "outputColumn": false
+        },
+        {
+            "name": "_yaw_to_cover_min",
+            "parentColumn": "_yaw_to_cover",
+            "desired": false,
+            "type": "float_min",
+            "maximumValue": 180,
+            "minimumValue": -180,
+            "outputColumn": false
+        },
+        {
+            "name": "_yaw_to_cover_max",
+            "parentColumn": "_yaw_to_cover",
+            "desired": false,
+            "type": "float_max",
+            "maximumValue": 180,
+            "minimumValue": -180,
+            "outputColumn": false
+        },
+        {
+            "name": "_should_run",
+            "parentColumn": null,
+            "desired": false,
+            "type": "enum",
+            "possibleValues": [
+                "RUN",
+                "WALK"
+            ],
+            "outputColumn": false
+        },
+        {
+            "name": "_should_howl",
+            "parentColumn": null,
+            "desired": false,
+            "type": "enum",
+            "possibleValues": [
+                "HOWL",
+                "DONT_HOWL"
+            ],
+            "outputColumn": false
+        },
+        {
+            "name": "_arms_position",
+            "parentColumn": null,
+            "desired": false,
+            "type": "enum",
+            "possibleValues": [
+                "ARMS_UP",
+                "ARMS_DOWN"
+            ],
+            "outputColumn": false
+        },
+        {
+            "name": "_mind_control",
+            "parentColumn": null,
+            "desired": false,
+            "type": "enum",
+            "possibleValues": [
+                "NORMAL",
+                "MIND_CONTROLLED"
+            ],
+            "outputColumn": false
+        },
+        {
+            "name": "_move_mode",
+            "parentColumn": null,
+            "desired": false,
+            "type": "enum",
+            "possibleValues": [
+                "NORMAL",
+                "MARCHING"
+            ],
+            "outputColumn": false
+        },
+        {
+            "name": "_fire_mode",
+            "parentColumn": null,
+            "desired": false,
+            "type": "enum",
+            "possibleValues": [
+                "FULLAUTO",
+                "BURST",
+                "SINGLESHOT"
+            ],
+            "outputColumn": false
+        },
+        {
+            "name": "_special_death",
+            "parentColumn": null,
+            "desired": false,
+            "type": "enum",
+            "possibleValues": [
+                "BALCONY",
+                "BALCONY_NORAIL"
+            ],
+            "outputColumn": false
+        },
+        {
+            "name": "_juke_direction",
+            "parentColumn": null,
+            "desired": false,
+            "type": "enum",
+            "possibleValues": [
+                "BACK",
+                "FORWARD",
+                "LEFT",
+                "RIGHT",
+                "RIGHT_FRONT",
+                "LEFT_FRONT"
+            ],
+            "outputColumn": false
+        },
+        {
+            "name": "_juke_distance",
+            "parentColumn": null,
+            "desired": false,
+            "type": "enum",
+            "possibleValues": [
+                "LONG",
+                "MEDIUM",
+                "SHORT"
+            ],
+            "outputColumn": false
+        },
+        {
+            "name": "_panic",
+            "parentColumn": null,
+            "desired": false,
+            "type": "enum",
+            "possibleValues": [
+                "PANIC",
+                "CALM"
+            ],
+            "outputColumn": false
+        },
+        {
+            "name": "_gibbed_limbs",
+            "parentColumn": null,
+            "desired": false,
+            "type": "enum",
+            "possibleValues": [
+                "BOTH_ARMS",
+                "RIGHT_ARM",
+                "LEFT_ARM",
+                "NONE"
+            ],
+            "outputColumn": false
+        },
+        {
+            "name": "_human_cover_flankability",
+            "parentColumn": null,
+            "desired": false,
+            "type": "enum",
+            "possibleValues": [
+                "FLANKABLE",
+                "UNFLANKABLE"
+            ],
+            "outputColumn": false
+        },
+        {
+            "name": "_robot_step_in",
+            "parentColumn": null,
+            "desired": false,
+            "type": "enum",
+            "possibleValues": [
+                "FAST",
+                "SLOW"
+            ],
+            "outputColumn": false
+        },
+        {
+            "name": "_awareness",
+            "parentColumn": null,
+            "desired": false,
+            "type": "enum",
+            "possibleValues": [
+                "UNAWARE",
+                "LOW_ALERT",
+                "HIGH_ALERT",
+                "COMBAT"
+            ],
+            "outputColumn": false
+        },
+        {
+            "name": "_awareness_prev",
+            "parentColumn": null,
+            "desired": false,
+            "type": "enum",
+            "possibleValues": [
+                "UNAWARE",
+                "LOW_ALERT",
+                "HIGH_ALERT",
+                "COMBAT"
+            ],
+            "outputColumn": false
+        },
+        {
+            "name": "_robot_jump_direction",
+            "parentColumn": null,
+            "desired": false,
+            "type": "enum",
+            "possibleValues": [
+                "DOWN",
+                "IN",
+                "OUT",
+                "UP"
+            ],
+            "outputColumn": false
+        },
+        {
+            "name": "_robot_wallrun_direction",
+            "parentColumn": null,
+            "desired": false,
+            "type": "enum",
+            "possibleValues": [
+                "LEFT",
+                "RIGHT"
+            ],
+            "outputColumn": false
+        },
+        {
+            "name": "_robot_locomotion_type",
+            "parentColumn": null,
+            "desired": false,
+            "type": "enum",
+            "possibleValues": [
+                "alt1",
+                "alt2",
+                "alt3",
+                "alt4",
+                "alt5"
+            ],
+            "outputColumn": false
+        },
+        {
+            "name": "_robot_traversal_type",
+            "parentColumn": null,
+            "desired": false,
+            "type": "enum",
+            "possibleValues": [
+                "GROUND",
+                "WALL"
+            ],
+            "outputColumn": false
+        },
+        {
+            "name": "_staircase_exit_type",
+            "parentColumn": null,
+            "desired": false,
+            "type": "enum",
+            "possibleValues": [
+                "STAIRCASE_UP_EXIT_L_3_STAIRS",
+                "STAIRCASE_UP_EXIT_L_4_STAIRS",
+                "STAIRCASE_UP_EXIT_R_3_STAIRS",
+                "STAIRCASE_UP_EXIT_R_4_STAIRS",
+                "STAIRCASE_DOWN_EXIT_L_2_STAIRS",
+                "STAIRCASE_DOWN_EXIT_R_2_STAIRS"
+            ],
+            "outputColumn": false
+        },
+        {
+            "name": "_staircase_type",
+            "parentColumn": null,
+            "desired": false,
+            "type": "enum",
+            "possibleValues": [
+                "stairs8x8",
+                "stairs8x12",
+                "stairs8x16"
+            ],
+            "outputColumn": false
+        },
+        {
+            "name": "_staircase_state",
+            "parentColumn": null,
+            "desired": false,
+            "type": "enum",
+            "possibleValues": [
+                "STAIRCASE_START",
+                "STAIRCASE_LOOP",
+                "STAIRCASE_END"
+            ],
+            "outputColumn": false
+        },
+        {
+            "name": "_staircase_direction",
+            "parentColumn": null,
+            "desired": false,
+            "type": "enum",
+            "possibleValues": [
+                "STAIRCASE_UP",
+                "STAIRCASE_DOWN"                
+            ],
+            "outputColumn": false
+        },
+        {
+            "name": "_staircase_skip_num",
+            "parentColumn": null,
+            "desired": false,
+            "type": "enum",
+            "possibleValues": [
+                "STAIRCASE_SKIP_3",
+                "STAIRCASE_SKIP_4",
+                "STAIRCASE_SKIP_6",
+                "STAIRCASE_SKIP_8"
+            ],
+            "outputColumn": false
+        },
+        {
+            "name": "_melee_enemy_type",
+            "parentColumn": null,
+            "desired": false,
+            "type": "enum",
+            "possibleValues": [
+                "FIREFLYSWARM"
+            ],
+            "outputColumn": false
+        },
+		{
+            "name": "_zombie_damageweapon_type",
+            "parentColumn": null,
+            "desired": false,
+            "type": "enum",
+            "possibleValues": [
+                "REGULAR",
+                "PACKED"
+            ],
+            "outputColumn": false
+        },
+		{
+            "name": "_parasite_firing_rate",
+            "parentColumn": null,
+            "desired": false,
+            "type": "enum",
+            "possibleValues": [
+                "SLOW",
+                "MEDIUM",
+                "FAST"
+            ],
+            "outputColumn": false
+        },
+        {
+            "name": "_margwa_head",
+            "parentColumn": null,
+            "desired": false,
+            "type": "enum",
+            "possibleValues": [
+                "LEFT",
+                "MIDDLE",
+                "RIGHT"
+            ],
+            "outputColumn": false
+        },
+        {
+            "name": "_margwa_teleport",
+            "parentColumn": null,
+            "desired": false,
+            "type": "enum",
+            "possibleValues": [
+                "IN",
+                "OUT"
+            ],
+            "outputColumn": false
+        },
+        {
+            "name": "_enemy",
+            "parentColumn": null,
+            "desired": false,
+            "type": "enum",
+            "possibleValues": [
+                "HAS_ENEMY",
+                "NO_ENEMY"
+            ],
+            "outputColumn": false
+        },
+        {
+            "name": "_patrol",
+            "parentColumn": null,
+            "desired": false,
+            "type": "enum",
+            "possibleValues": [
+                "PATROL_ENABLED",
+                "PATROL_DISABLED"
+            ],
+            "outputColumn": false
+        },
+        {
+            "name": "_knockdown_direction",
+            "parentColumn": null,
+            "desired": false,
+            "type": "enum",
+            "possibleValues": [
+                "BACK",
+                "FRONT",
+                "LEFT",
+                "RIGHT"
+            ],
+            "outputColumn": false
+        },
+        {
+            "name": "_getup_direction",
+            "parentColumn": null,
+            "desired": false,
+            "type": "enum",
+            "possibleValues": [
+                "GETUP_BACK",
+                "GETUP_BELLY"
+            ],
+            "outputColumn": false
+        },
+        {
+            "name": "_push_direction",
+            "parentColumn": null,
+            "desired": false,
+            "type": "enum",
+            "possibleValues": [
+                "RIGHT",
+                "LEFT"
+            ],
+            "outputColumn": false
+        },
+        {
+            "name": "_human_locomotion_variation",
+            "parentColumn": null,
+            "desired": false,
+            "type": "enum",
+            "possibleValues": [
+                "alt1",
+                "alt2",
+                "alt3",
+                "alt4"
+            ],
+            "outputColumn": false
+        },
+        {
+            "name": "_robot_mode",
+            "parentColumn": null,
+            "desired": false,
+            "type": "enum",
+            "possibleValues": [
+                "NORMAL",
+                "COMBAT",
+                "COMPANION"
+            ],
+            "outputColumn": false
+        },
+        {
+            "name": "_low_gravity",
+            "parentColumn": null,
+            "desired": false,
+            "type": "enum",
+            "possibleValues": [
+                "NORMAL",
+                "LOW"
+            ],
+            "outputColumn": false
+        },
+        {
+            "name": "_knockdown_type",
+            "parentColumn": null,
+            "desired": false,
+            "type": "enum",
+            "possibleValues": [
+                "KNOCKDOWN_STUN",
+                "KNOCKDOWN_SHOVED"
+            ],
+            "outputColumn": false
+        },
+        {
+            "name": "_mechz_part",
+            "parentColumn": null,
+            "desired": false,
+            "type": "enum",
+            "possibleValues": [
+                "MECHZ_FACEPLATE",
+                "MECHZ_POWERCORE",
+                "MECHZ_GUN"
+            ],
+            "outputColumn": false
+        },
+        {
+            "name": "_apothicon_bamf_distance_min",
+            "parentColumn": "_apothicon_bamf_distance",
+            "desired": false,
+            "type": "float_min",
+            "maximumValue": null,
+            "minimumValue": null,
+            "outputColumn": false
+        },
+        {
+            "name": "_apothicon_bamf_distance_max",
+            "parentColumn": "_apothicon_bamf_distance",
+            "desired": false,
+            "type": "float_max",
+            "maximumValue": null,
+            "minimumValue": null,
+            "outputColumn": false
+        },
+        {
+            "name": "_keeper_protector_attack",
+            "parentColumn": null,
+            "desired": false,
+            "type": "enum",
+            "possibleValues": [
+                "ACTIVE",
+                "INACTIVE"                
+            ],
+            "outputColumn": false
+        },
+        {
+            "name": "_keeper_protector_attack_type",
+            "parentColumn": null,
+            "desired": false,
+            "type": "enum",
+            "possibleValues": [
+                "LEFT",
+                "RIGHT",
+                "UP",
+                "COMBO"                                
+            ],
+            "outputColumn": false
+        },
+        {
+            "name": "_whirlwind_speed",
+            "parentColumn": null,
+            "desired": false,
+            "type": "enum",
+            "possibleValues": [
+                "WHIRLWIND_NORMAL",
+                "WHIRLWIND_FAST"
+            ],
+            "outputColumn": false
+        },
+        {
+            "name": "_quad_wall_crawl",
+            "parentColumn": null,
+            "desired": false,
+            "type": "enum",
+            "possibleValues": [
+                "QUAD_WALL_CRAWL_START",
+                "QUAD_WALL_CRAWL_THEATER"
+            ],
+            "outputColumn": false
+        },
+        {
+            "name": "_quad_phase_direction",
+            "parentColumn": null,
+            "desired": false,
+            "type": "enum",
+            "possibleValues": [
+                "QUAD_PHASE_LEFT",
+                "QUAD_PHASE_RIGHT",
+				"QUAD_PHASE_FORWARD"
+            ],
+            "outputColumn": false
+        },
+        {
+            "name": "_quad_phase_distance",
+            "parentColumn": null,
+            "desired": false,
+            "type": "enum",
+            "possibleValues": [
+                "QUAD_PHASE_SHORT",
+                "QUAD_PHASE_LONG"
+            ],
+            "outputColumn": false
+        },
+		{
+			"name": "_zombie_blackholebomb_pull_state",
+            "parentColumn": null,
+            "desired": false,
+            "type": "enum",
+            "possibleValues": [
+                "BHB_PULL_SLOW",
+                "BHB_PULL_FAST"
+            ],
+            "outputColumn": false
+		}
+    ]
+}
