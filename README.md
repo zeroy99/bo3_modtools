@@ -13,6 +13,15 @@ with previous versions if present.
 
 Project created by ZeRoY - May 2018.
 
+Credits for updated files 11 June 2018
+**************************************
+Hydra 0.1.3
+
+Scobalula
+Harry Bo21 - AI Information / Alpha Testing
+DidUknowiPwn - Bug Fixes
+https://github.com/Scobalula/HydraX
+
 Access via GitList: http://bo3repo.zeroy.com/bo3_modtools/
 
 Any questions or queries should be directed to bo3repo@zeroy.com
