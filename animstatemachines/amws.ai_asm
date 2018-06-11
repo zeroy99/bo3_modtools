@@ -1,0 +1,28 @@
+{
+    "states": {
+        "movement": {
+            "substates": {
+                "locomotion": {
+                    "animation_selector": "cobra_retracted_pose@movement",
+                    "transitions": {
+                        "stationary": {
+                            "animation_selector": "cobra_extend@stationary"
+                        }
+                    }
+                }
+            }
+        },
+        "stationary": {
+            "substates": {
+                "cobra": {
+                    "animation_selector": "cobra_extended_pose@stationary",
+                    "transitions": {
+                        "movement": {
+                            "animation_selector": "cobra_retract@movement"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

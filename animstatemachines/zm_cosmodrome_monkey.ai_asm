@@ -1,0 +1,44 @@
+{
+    "states": {
+        "debug": {
+            "substates": {
+                "void": {
+                    "animation_selector": "void@debug"
+                }
+            }
+        },
+        "zombie": {
+            "substates": {
+                "death": {
+                    "animation_selector": "death@zombie",
+                    "terminal": true,
+                    "requires_ragdoll_notetrack": true
+                },
+                "grenade_throw_back_run": {
+                    "animation_selector": "grenade_throw_back_run@zombie"
+                },
+                "grenade_throw_back_still": {
+                    "animation_selector": "grenade_throw_back_still@zombie"
+                },
+                "ground_hit": {
+                    "animation_selector": "ground_hit@zombie"
+                },
+                "idle": {
+                    "animation_selector": "idle@zombie"
+                },
+                "melee": {
+                    "animation_selector": "melee@zombie"
+                },
+                "move": {
+                    "animation_selector": "move@zombie",
+                    "loopsync": true,
+                    "cleanloop": true,
+                    "multipledelta": true
+                },
+                "taunt": {
+                    "animation_selector": "taunt@zombie"
+                }
+            }
+        }
+    }
+}

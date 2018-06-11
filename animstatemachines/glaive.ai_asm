@@ -1,0 +1,23 @@
+{
+    "states": {
+        "movement": {
+            "substates": {
+                "forward": {
+                    "animation_selector": "forward@movement",
+                    "loopsync": true
+                },
+                "idle": {
+                    "animation_selector": "idle@movement",
+                    "loopsync": true
+                }
+            }
+        },
+        "stationary": {
+            "substates": {
+                "attack": {
+                    "animation_selector": "attack@stationary"
+                }
+            }
+        }
+    }
+}

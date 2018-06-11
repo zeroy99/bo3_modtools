@@ -1,0 +1,127 @@
+{
+    "states": {
+        "debug": {
+            "substates": {
+                "void": {
+                    "animation_selector": "void@debug"
+                }
+            }
+        },
+        "mechz": {
+            "substates": {
+                "berserk": {
+                    "animation_selector": "berserk@mechz"
+                },
+                "death": {
+                    "animation_selector": "death@mechz",
+                    "terminal": true
+                },
+                "face_tank": {
+                    "animation_selector": "face_tank@mechz",
+                    "loopsync": true,
+                    "cleanloop": true
+                },
+                "hit_by_tank_in": {
+                    "animation_selector": "hit_by_tank_in@mechz"
+                },
+                "hit_by_tank_loop": {
+                    "animation_selector": "hit_by_tank_loop@mechz",
+                    "loopsync": true
+                },
+                "hit_by_tank_out": {
+                    "animation_selector": "hit_by_tank_out@mechz"
+                },
+                "idle": {
+                    "animation_selector": "idle@mechz"
+                },
+                "jump_tank_in": {
+                    "animation_selector": "jump_up_tank@mechz"
+                },
+                "jump_tank_loop": {
+                    "animation_selector": "jump_hover_tank@mechz",
+                    "loopsync": true
+                },
+                "jump_tank_out": {
+                    "animation_selector": "jump_down_tank@mechz"
+                },
+                "melee": {
+                    "animation_selector": "melee@mechz"
+                },
+                "melee_trap": {
+                    "animation_selector": "melee_trap@mechz"
+                },
+                "move": {
+                    "animation_selector": "move@mechz",
+                    "loopsync": true,
+                    "cleanloop": true,
+                    "multipledelta": true
+                },
+                "pain": {
+                    "animation_selector": "pain@mechz"
+                },
+                "prep_grenade": {
+                    "animation_selector": "prep_grenade@mechz",
+                    "aim_selector": "aim_additive@shoot_grenade"
+                },
+                "robot_stomped_in": {
+                    "animation_selector": "robot_stomped_in@mechz"
+                },
+                "robot_stomped_loop": {
+                    "animation_selector": "robot_stomped_loop@mechz",
+                    "loopsync": true
+                },
+                "robot_stomped_out": {
+                    "animation_selector": "robot_stomped_out@mechz"
+                },
+                "shoot_claw": {
+                    "animation_selector": "shoot_claw@mechz",
+                    "aim_selector": "aim_additive@shoot_claw"
+                },
+                "shoot_claw_intro": {
+                    "animation_selector": "shoot_claw_intro@mechz"
+                },
+                "shoot_flame": {
+                    "animation_selector": "shoot_flame@mechz",
+                    "aim_selector": "aim_additive@shoot_grenade"
+                },
+                "shoot_flame_run": {
+                    "animation_selector": "shoot_flame_run@mechz",
+                    "aim_selector": "aim_additive@shoot_flame_run",
+                    "loopsync": true,
+                    "cleanloop": true,
+                    "multipledelta": true
+                },
+                "shoot_flame_sweep": {
+                    "animation_selector": "shoot_flame_sweep@mechz"
+                },
+                "shoot_grenade": {
+                    "animation_selector": "shoot_grenade@mechz",
+                    "aim_selector": "aim_additive@shoot_grenade"
+                },
+                "stumble_in": {
+                    "animation_selector": "stumble_in@mechz"
+                },
+                "stumble_loop": {
+                    "animation_selector": "stumble_loop@mechz",
+                    "loopsync": true
+                },
+                "stumble_out": {
+                    "animation_selector": "stumble_out@mechz"
+                },
+                "stun_in": {
+                    "animation_selector": "stun_in@mechz"
+                },
+                "stun_loop": {
+                    "animation_selector": "stun_loop@mechz",
+                    "loopsync": true
+                },
+                "stun_out": {
+                    "animation_selector": "stun_out@mechz"
+                },
+                "traverse": {
+                    "animation_selector": "traverse@mechz"
+                }
+            }
+        }
+    }
+}

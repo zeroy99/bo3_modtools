@@ -1,0 +1,53 @@
+{
+    "states": {
+        "debug": {
+            "substates": {
+                "void": {
+                    "animation_selector": "void@debug"
+                }
+            }
+        },
+        "raz": {
+            "substates": {
+                "death": {
+                    "animation_selector": "death@raz",
+                    "terminal": true
+                },
+                "dragonshield_pain": {
+                    "animation_selector": "dragonshield_pain@raz"
+                },
+                "go_berserk": {
+                    "animation_selector": "go_berserk@raz"
+                },
+                "ground_torpedo": {
+                    "animation_selector": "ground_torpedo@raz"
+                },
+                "idle": {
+                    "animation_selector": "idle@raz"
+                },
+                "jump_throw_window": {
+                    "animation_selector": "jump_throw_window@raz"
+                },
+                "melee": {
+                    "animation_selector": "melee@raz"
+                },
+                "move": {
+                    "animation_selector": "move@raz",
+                    "loopsync": true,
+                    "cleanloop": true,
+                    "multipledelta": true
+                },
+                "pain": {
+                    "animation_selector": "pain@raz",
+                    "loopsync": true
+                },
+                "special_pain": {
+                    "animation_selector": "special_pain@raz"
+                },
+                "traverse": {
+                    "animation_selector": "traverse@raz"
+                }
+            }
+        }
+    }
+}

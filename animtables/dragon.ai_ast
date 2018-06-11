@@ -1,0 +1,8 @@
+fire@stationary,
+_context,_blend_in_time,_blend_out_time,_animation_alias,
+*,0.2,0.2,dragon_attack,
+,
+locomotion@movement,
+_speed_min,_speed_max,_context,_blend_in_time,_blend_out_time,_animation_alias_param_f,_animation_alias_param_b,_animation_alias_param_l,_animation_alias_param_r,_animation_alias_param_balance,_param_idle_blend_dropoff,
+0,*,*,0.3,0.3,dragon_fly_f,dragon_fly_b,dragon_fly_l,dragon_fly_r,dragon_fly_idle,0.6,
+,

@@ -1,0 +1,437 @@
+{
+    "type": "selector",
+    "id": "thrasher",
+    "children": [
+        {
+            "type": "parallel",
+            "id": "thrasherbehaviormain",
+            "children": [
+                {
+                    "type": "condition_service_script",
+                    "id": "thrasherattackableobjectservice",
+                    "scriptFunction": "zombieattackableobjectservice",
+                    "cooldownMin": 250,
+                    "cooldownMax": 500
+                },
+                {
+                    "type": "condition_service_script",
+                    "id": "thrasherrageservice",
+                    "scriptFunction": "thrasherrageservice",
+                    "cooldownMin": 1000,
+                    "cooldownMax": 1000
+                },
+                {
+                    "type": "condition_service_script",
+                    "id": "thrashertargetservice",
+                    "scriptFunction": "thrashertargetservice",
+                    "cooldownMin": 300,
+                    "cooldownMax": 500
+                },
+                {
+                    "type": "condition_service_script",
+                    "id": "thrasherknockdownservice",
+                    "scriptFunction": "thrasherknockdownservice",
+                    "cooldownMin": 200,
+                    "cooldownMax": 200
+                },
+                {
+                    "type": "selector",
+                    "id": "thrasherbehaviorselector",
+                    "children": [
+                        {
+                            "type": "sequence",
+                            "id": "thrasherdeathbehavior",
+                            "children": [
+                                {
+                                    "type": "condition_script",
+                                    "id": "waskilled",
+                                    "interruptName": "death",
+                                    "cooldownMin": 0,
+                                    "cooldownMax": 0
+                                },
+                                {
+                                    "type": "action",
+                                    "id": "deathaction",
+                                    "ActionName": "defaultaction",
+                                    "ASMStateName": "death@thrasher",
+                                    "actionNotify": "death",
+                                    "StartFunction": "thrasherdeath",
+                                    "TerminateFunction": "startragdoll",
+                                    "loopingAction": 0,
+                                    "actionTimeMax": 0
+                                }
+                            ]
+                        },
+                        {
+                            "type": "sequence",
+                            "id": "thrashertraversebehavior",
+                            "children": [
+                                {
+                                    "type": "condition_script",
+                                    "id": "shouldtraverse",
+                                    "scriptFunction": "locomotionshouldtraverse",
+                                    "interruptName": "traverse",
+                                    "cooldownMin": 0,
+                                    "cooldownMax": 0
+                                },
+                                {
+                                    "type": "action",
+                                    "id": "traverseaction",
+                                    "ActionName": "defaultaction",
+                                    "ASMStateName": "traverse@thrasher",
+                                    "StartFunction": "thrasherstarttraverse",
+                                    "TerminateFunction": "thrasherterminatetraverse",
+                                    "loopingAction": 0,
+                                    "actionTimeMax": 0
+                                }
+                            ]
+                        },
+                        {
+                            "type": "parallel",
+                            "id": "thrasherstunbehavior",
+                            "children": [
+                                {
+                                    "type": "condition_script",
+                                    "id": "shouldbestunned",
+                                    "scriptFunction": "thrashershouldbestunned",
+                                    "cooldownMin": 0,
+                                    "cooldownMax": 0
+                                },
+                                {
+                                    "type": "action",
+                                    "id": "stunaction",
+                                    "ActionName": "defaultaction",
+                                    "ASMStateName": "stun@thrasher",
+                                    "StartFunction": "thrasherstuninitialize",
+                                    "UpdateFunction": "thrasherstunupdate",
+                                    "loopingAction": 1,
+                                    "actionTimeMax": 0
+                                }
+                            ]
+                        },
+                        {
+                            "type": "sequence",
+                            "id": "thrashergoberserkbehavior",
+                            "children": [
+                                {
+                                    "type": "condition_script_negate",
+                                    "id": "shouldshowpain",
+                                    "scriptFunction": "thrashershouldshowpain",
+                                    "cooldownMin": 0,
+                                    "cooldownMax": 0
+                                },
+                                {
+                                    "type": "condition_script",
+                                    "id": "thrashershouldturnberserk",
+                                    "scriptFunction": "thrashershouldturnberserk",
+                                    "cooldownMin": 0,
+                                    "cooldownMax": 0
+                                },
+                                {
+                                    "type": "action",
+                                    "id": "playturnberserkanimation",
+                                    "ActionName": "defaultaction",
+                                    "ASMStateName": "berserk@thrasher",
+                                    "TerminateFunction": "thrasherplayedberserkintro",
+                                    "loopingAction": 0,
+                                    "actionTimeMax": 0
+                                }
+                            ]
+                        },
+                        {
+                            "type": "sequence",
+                            "id": "thrasherpainbehavior",
+                            "children": [
+                                {
+                                    "type": "condition_script",
+                                    "id": "shouldshowpain",
+                                    "scriptFunction": "thrashershouldshowpain",
+                                    "cooldownMin": 0,
+                                    "cooldownMax": 0
+                                },
+                                {
+                                    "type": "action",
+                                    "id": "painaction",
+                                    "ActionName": "defaultaction",
+                                    "ASMStateName": "pain@thrasher",
+                                    "loopingAction": 0,
+                                    "actionTimeMax": 0
+                                }
+                            ]
+                        },
+                        {
+                            "type": "parallel",
+                            "id": "thrasherbehavior",
+                            "children": [
+                                {
+                                    "type": "condition_script_negate",
+                                    "id": "shouldshowpain",
+                                    "scriptFunction": "thrashershouldshowpain",
+                                    "cooldownMin": 0,
+                                    "cooldownMax": 0
+                                },
+                                {
+                                    "type": "condition_script_negate",
+                                    "id": "shouldbestunned",
+                                    "scriptFunction": "thrashershouldbestunned",
+                                    "cooldownMin": 0,
+                                    "cooldownMax": 0
+                                },
+                                {
+                                    "type": "condition_script_negate",
+                                    "id": "thrashershouldturnberserk",
+                                    "scriptFunction": "thrashershouldturnberserk",
+                                    "cooldownMin": 0,
+                                    "cooldownMax": 0
+                                },
+                                {
+                                    "type": "selector",
+                                    "id": "thrasherselector",
+                                    "children": [
+                                        {
+                                            "type": "parallel",
+                                            "id": "movebehavior",
+                                            "children": [
+                                                {
+                                                    "type": "condition_script",
+                                                    "id": "shouldmove",
+                                                    "scriptFunction": "locomotionbehaviorcondition",
+                                                    "cooldownMin": 0,
+                                                    "cooldownMax": 0
+                                                },
+                                                {
+                                                    "type": "condition_script_negate",
+                                                    "id": "shouldconsumezombie",
+                                                    "scriptFunction": "thrashershouldconsumezombie",
+                                                    "cooldownMin": 0,
+                                                    "cooldownMax": 0
+                                                },
+                                                {
+                                                    "type": "condition_script_negate",
+                                                    "id": "shouldconsumeplayer",
+                                                    "scriptFunction": "thrashershouldconsumeplayer",
+                                                    "cooldownMin": 0,
+                                                    "cooldownMax": 0
+                                                },
+                                                {
+                                                    "type": "condition_script_negate",
+                                                    "id": "shouldmelee",
+                                                    "scriptFunction": "thrashershouldmelee",
+                                                    "cooldownMin": 0,
+                                                    "cooldownMax": 0
+                                                },
+                                                {
+                                                    "type": "condition_script_negate",
+                                                    "id": "shouldteleport",
+                                                    "scriptFunction": "thrashershouldteleport",
+                                                    "cooldownMin": 0,
+                                                    "cooldownMax": 0
+                                                },
+                                                {
+                                                    "type": "action",
+                                                    "id": "moveaction",
+                                                    "ActionName": "defaultaction",
+                                                    "ASMStateName": "move@thrasher",
+                                                    "loopingAction": 1,
+                                                    "actionTimeMax": 0
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "type": "sequence",
+                                            "id": "teleportbehavior",
+                                            "children": [
+                                                {
+                                                    "type": "condition_script",
+                                                    "id": "shouldteleport",
+                                                    "scriptFunction": "thrashershouldteleport",
+                                                    "cooldownMin": 0,
+                                                    "cooldownMax": 0
+                                                },
+                                                {
+                                                    "type": "condition_script_negate",
+                                                    "id": "shouldconsumezombie",
+                                                    "scriptFunction": "thrashershouldconsumezombie",
+                                                    "cooldownMin": 0,
+                                                    "cooldownMax": 0
+                                                },
+                                                {
+                                                    "type": "condition_script_negate",
+                                                    "id": "shouldconsumeplayer",
+                                                    "scriptFunction": "thrashershouldconsumeplayer",
+                                                    "cooldownMin": 0,
+                                                    "cooldownMax": 0
+                                                },
+                                                {
+                                                    "type": "condition_script_negate",
+                                                    "id": "shouldmelee",
+                                                    "scriptFunction": "thrashershouldmelee",
+                                                    "cooldownMin": 0,
+                                                    "cooldownMax": 0
+                                                },
+                                                {
+                                                    "type": "action",
+                                                    "id": "teleportout",
+                                                    "ActionName": "defaultaction",
+                                                    "ASMStateName": "out@teleport",
+                                                    "StartFunction": "thrasherteleportout",
+                                                    "loopingAction": 0,
+                                                    "actionTimeMax": 0
+                                                },
+                                                {
+                                                    "type": "action",
+                                                    "id": "teleportaction",
+                                                    "ActionName": "defaultaction",
+                                                    "ASMStateName": "in@teleport",
+                                                    "StartFunction": "thrasherteleport",
+                                                    "loopingAction": 0,
+                                                    "actionTimeMax": 0
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "type": "sequence",
+                                            "id": "consumeplayerbehavior",
+                                            "children": [
+                                                {
+                                                    "type": "condition_script",
+                                                    "id": "shouldconsumeplayer",
+                                                    "scriptFunction": "thrashershouldconsumeplayer",
+                                                    "cooldownMin": 0,
+                                                    "cooldownMax": 0
+                                                },
+                                                {
+                                                    "type": "action",
+                                                    "id": "consumeplayeraction",
+                                                    "ActionName": "defaultaction",
+                                                    "ASMStateName": "consume@thrasher",
+                                                    "StartFunction": "thrasherconsumeplayer",
+                                                    "loopingAction": 0,
+                                                    "actionTimeMax": 0
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "type": "sequence",
+                                            "id": "consumezombiebehavior",
+                                            "children": [
+                                                {
+                                                    "type": "condition_script",
+                                                    "id": "shouldconsumezombie",
+                                                    "scriptFunction": "thrashershouldconsumezombie",
+                                                    "cooldownMin": 0,
+                                                    "cooldownMax": 0
+                                                },
+                                                {
+                                                    "type": "action",
+                                                    "id": "consumezombieaction",
+                                                    "ActionName": "defaultaction",
+                                                    "ASMStateName": "consume_zombie@thrasher",
+                                                    "StartFunction": "thrasherconsumezombie",
+                                                    "loopingAction": 0,
+                                                    "actionTimeMax": 0
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "type": "sequence",
+                                            "id": "attackobjectbehavior",
+                                            "children": [
+                                                {
+                                                    "type": "condition_script",
+                                                    "id": "isatattackobject",
+                                                    "scriptFunction": "isatattackobject",
+                                                    "cooldownMin": 0,
+                                                    "cooldownMax": 0
+                                                },
+                                                {
+                                                    "type": "parallel",
+                                                    "id": "parallel",
+                                                    "children": [
+                                                        {
+                                                            "type": "condition_script",
+                                                            "id": "shouldattackobject",
+                                                            "scriptFunction": "shouldattackobject",
+                                                            "cooldownMin": 0,
+                                                            "cooldownMax": 0
+                                                        },
+                                                        {
+                                                            "type": "action",
+                                                            "id": "attackobject",
+                                                            "ActionName": "defaultaction",
+                                                            "ASMStateName": "attack_object@thrasher",
+                                                            "actionNotify": "attack_melee",
+                                                            "loopingAction": 1,
+                                                            "actionTimeMax": 0
+                                                        }
+                                                    ]
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "type": "sequence",
+                                            "id": "meleebehavior",
+                                            "children": [
+                                                {
+                                                    "type": "condition_script",
+                                                    "id": "shouldmelee",
+                                                    "scriptFunction": "thrashershouldmelee",
+                                                    "cooldownMin": 0,
+                                                    "cooldownMax": 0
+                                                },
+                                                {
+                                                    "type": "action",
+                                                    "id": "meleeaction",
+                                                    "ActionName": "defaultaction",
+                                                    "ASMStateName": "melee@thrasher",
+                                                    "loopingAction": 0,
+                                                    "actionTimeMax": 0
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "type": "parallel",
+                                            "id": "idlebehavior",
+                                            "children": [
+                                                {
+                                                    "type": "condition_script_negate",
+                                                    "id": "shouldmove",
+                                                    "scriptFunction": "locomotionbehaviorcondition",
+                                                    "cooldownMin": 0,
+                                                    "cooldownMax": 0
+                                                },
+                                                {
+                                                    "type": "condition_script_negate",
+                                                    "id": "shouldmelee",
+                                                    "scriptFunction": "thrashershouldmelee",
+                                                    "cooldownMin": 0,
+                                                    "cooldownMax": 0
+                                                },
+                                                {
+                                                    "type": "action",
+                                                    "id": "idleaction",
+                                                    "ActionName": "defaultaction",
+                                                    "ASMStateName": "idle@thrasher",
+                                                    "loopingAction": 0,
+                                                    "actionTimeMax": 0
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "type": "action",
+            "id": "debugvoidaction",
+            "ActionName": "defaultaction",
+            "ASMStateName": "void@debug",
+            "loopingAction": 0,
+            "actionTimeMax": 0
+        }
+    ]
+}

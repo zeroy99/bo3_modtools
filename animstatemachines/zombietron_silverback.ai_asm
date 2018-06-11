@@ -1,0 +1,32 @@
+{
+    "states": {
+        "debug": {
+            "substates": {
+                "void": {
+                    "animation_selector": "void@debug"
+                }
+            }
+        },
+        "zombie": {
+            "substates": {
+                "death": {
+                    "animation_selector": "death@zombie",
+                    "terminal": true,
+                    "requires_ragdoll_notetrack": true
+                },
+                "idle": {
+                    "animation_selector": "idle@zombie"
+                },
+                "melee": {
+                    "animation_selector": "melee@zombie"
+                },
+                "move": {
+                    "animation_selector": "move@zombie",
+                    "loopsync": true,
+                    "cleanloop": true,
+                    "multipledelta": true
+                }
+            }
+        }
+    }
+}

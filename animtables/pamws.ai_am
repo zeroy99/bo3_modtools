@@ -1,0 +1,5 @@
+#
+cobra_extend,ai_amws_armored_turret_extend
+cobra_extended_pose,ai_amws_armored_turret_extended_pose
+cobra_retract,ai_amws_armored_turret_retract
+cobra_retracted_pose,ai_amws_armored_turret_retracted_pose

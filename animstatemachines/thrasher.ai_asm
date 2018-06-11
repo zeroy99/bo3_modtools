@@ -1,0 +1,63 @@
+{
+    "states": {
+        "debug": {
+            "substates": {
+                "void": {
+                    "animation_selector": "void@debug"
+                }
+            }
+        },
+        "teleport": {
+            "substates": {
+                "in": {
+                    "animation_selector": "in@teleport"
+                },
+                "out": {
+                    "animation_selector": "out@teleport"
+                }
+            }
+        },
+        "thrasher": {
+            "substates": {
+                "attack_object": {
+                    "animation_selector": "attack_object@thrasher"
+                },
+                "berserk": {
+                    "animation_selector": "berserk@thrasher"
+                },
+                "consume": {
+                    "animation_selector": "consume@thrasher"
+                },
+                "consume_zombie": {
+                    "animation_selector": "consume_zombie@thrasher"
+                },
+                "death": {
+                    "animation_selector": "death@thrasher",
+                    "terminal": true
+                },
+                "idle": {
+                    "animation_selector": "idle@thrasher"
+                },
+                "melee": {
+                    "animation_selector": "melee@thrasher"
+                },
+                "move": {
+                    "animation_selector": "move@thrasher",
+                    "transition_decorator": "evaluatehumanturnanimations",
+                    "loopsync": true,
+                    "cleanloop": true,
+                    "multipledelta": true
+                },
+                "pain": {
+                    "animation_selector": "pain@thrasher"
+                },
+                "stun": {
+                    "animation_selector": "stun@thrasher"
+                },
+                "traverse": {
+                    "animation_selector": "traverse@thrasher"
+                }
+            }
+        }
+    }
+}

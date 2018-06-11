@@ -1,0 +1,91 @@
+{
+    "states": {
+        "debug": {
+            "substates": {
+                "void": {
+                    "animation_selector": "void@debug"
+                }
+            }
+        },
+        "zombie": {
+            "substates": {
+                "barricadeenter": {
+                    "animation_selector": "barricadeenter@zombie"
+                },
+                "death": {
+                    "animation_selector": "death@zombie",
+                    "terminal": true,
+                    "requires_ragdoll_notetrack": true
+                },
+                "getup": {
+                    "animation_selector": "getup@zombie"
+                },
+                "grab": {
+                    "animation_selector": "grab@zombie"
+                },
+                "hold": {
+                    "animation_selector": "hold@zombie"
+                },
+                "idle": {
+                    "animation_selector": "idle@zombie"
+                },
+                "juke": {
+                    "animation_selector": "juke@zombie"
+                },
+                "knockdown": {
+                    "animation_selector": "knockdown@zombie"
+                },
+                "melee": {
+                    "animation_selector": "melee@zombie"
+                },
+                "meleebehindboards": {
+                    "animation_selector": "meleebehindboards@zombie"
+                },
+                "melee_jump": {
+                    "animation_selector": "melee_jump@zombie"
+                },
+                "move": {
+                    "animation_selector": "move@zombie",
+                    "loopsync": true,
+                    "cleanloop": true,
+                    "multipledelta": true
+                },
+                "move_lowg": {
+                    "animation_selector": "move_lowg@zombie",
+                    "loopsync": true,
+                    "cleanloop": true,
+                    "multipledelta": true
+                },
+                "pain": {
+                    "animation_selector": "pain@zombie",
+                    "loopsync": true,
+                    "cleanloop": true,
+                    "multipledelta": true
+                },
+                "pain_lowg": {
+                    "animation_selector": "pain_lowg@zombie",
+                    "loopsync": true,
+                    "cleanloop": true,
+                    "multipledelta": true
+                },
+                "pull": {
+                    "animation_selector": "pull@zombie"
+                },
+                "stun_tesla": {
+                    "animation_selector": "stun_tesla@zombie",
+                    "loopsync": true,
+                    "cleanloop": true
+                },
+                "taunt": {
+                    "animation_selector": "taunt@zombie"
+                },
+                "traverse": {
+                    "animation_selector": "traverse@zombie"
+                },
+                "traverse_crawler": {
+                    "animation_selector": "traverse_crawler@zombie"
+                }
+            }
+        }
+    }
+}

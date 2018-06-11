@@ -1,0 +1,34 @@
+{
+    "states": {
+        "movement": {
+            "substates": {
+                "idgun": {
+                    "animation_selector": "idgun@movement",
+                    "loopsync": true,
+                    "parametric2d": true
+                },
+                "idgun_crush": {
+                    "animation_selector": "idgun_crush@movement",
+                    "loopsync": true,
+                    "parametric2d": true
+                },
+                "locomotion": {
+                    "animation_selector": "locomotion@movement",
+                    "loopsync": true,
+                    "parametric2d": true,
+                    "speedblend": true
+                }
+            }
+        },
+        "stationary": {
+            "substates": {
+                "death": {
+                    "animation_selector": "death@stationary"
+                },
+                "fire": {
+                    "animation_selector": "fire@stationary"
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,47 @@
+{
+    "states": {
+        "civilian": {
+            "substates": {
+                "arrive": {
+                    "animation_selector": "arrive@civilian",
+                    "delta_layer_function": "evaluatehumanexposedarrivalanimations"
+                },
+                "death": {
+                    "animation_selector": "death@civilian",
+                    "terminal": true,
+                    "requires_ragdoll_notetrack": true
+                },
+                "electrified_death": {
+                    "animation_selector": "electrified_death@civilian",
+                    "terminal": true
+                },
+                "idle": {
+                    "animation_selector": "idle@civilian",
+                    "transitions": {
+                        "move@civilian": {
+                            "animation_selector": "idle@civilian>move@civilian"
+                        }
+                    }
+                },
+                "move": {
+                    "animation_selector": "move@civilian",
+                    "loopsync": true
+                },
+                "stand_to_crouch": {
+                    "animation_selector": "stand_to_crouch@civilian"
+                },
+                "turn": {
+                    "animation_selector": "turn@civilian",
+                    "delta_layer_function": "evaluatehumanturnanimations"
+                }
+            }
+        },
+        "debug": {
+            "substates": {
+                "void": {
+                    "animation_selector": "void@debug"
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,290 @@
+{
+    "type": "selector",
+    "id": "doa zombie",
+    "children": [
+        {
+            "type": "selector",
+            "id": "zombiedeathbehavior",
+            "children": [
+                {
+                    "type": "sequence",
+                    "id": "idgun_blackhole",
+                    "children": [
+                        {
+                            "type": "condition_script",
+                            "id": "wascrushedbyinterdimensionalgunblackhole",
+                            "scriptFunction": "wascrushedbyinterdimensionalgunblackhole",
+                            "interruptName": "death",
+                            "cooldownMin": 0,
+                            "cooldownMax": 0
+                        },
+                        {
+                            "type": "action",
+                            "id": "idgunblackholedeathaction",
+                            "ActionName": "defaultaction",
+                            "ASMStateName": "death_idgun_blackhole@zombie",
+                            "actionNotify": "death",
+                            "StartFunction": "zombiedeathaction",
+                            "loopingAction": 0,
+                            "actionTimeMax": 0
+                        }
+                    ]
+                },
+                {
+                    "type": "sequence",
+                    "id": "deathexplosive",
+                    "children": [
+                        {
+                            "type": "condition_script",
+                            "id": "hasbeenexplosivekilled",
+                            "scriptFunction": "explosivekilled",
+                            "interruptName": "death",
+                            "cooldownMin": 0,
+                            "cooldownMax": 0
+                        },
+                        {
+                            "type": "action",
+                            "id": "explosivedeathaction",
+                            "ActionName": "defaultaction",
+                            "ASMStateName": "death_explosive@zombie",
+                            "actionNotify": "death_explosive",
+                            "StartFunction": "setupexplosionanimscale",
+                            "TerminateFunction": "startragdoll",
+                            "loopingAction": 0,
+                            "actionTimeMax": 0
+                        }
+                    ]
+                },
+                {
+                    "type": "sequence",
+                    "id": "deathbehavior",
+                    "children": [
+                        {
+                            "type": "condition_script",
+                            "id": "waskilled",
+                            "interruptName": "death",
+                            "cooldownMin": 0,
+                            "cooldownMax": 0
+                        },
+                        {
+                            "type": "action",
+                            "id": "defaultaction",
+                            "ActionName": "doalocomotiondeathaction",
+                            "ASMStateName": "death@zombie",
+                            "actionNotify": "death",
+                            "TerminateFunction": "startragdoll",
+                            "loopingAction": 0,
+                            "actionTimeMax": 0
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "type": "sequence",
+            "id": "traverselegsbehavior",
+            "children": [
+                {
+                    "type": "condition_script",
+                    "id": "shouldtraverse",
+                    "scriptFunction": "locomotionshouldtraverse",
+                    "interruptName": "traverse",
+                    "cooldownMin": 0,
+                    "cooldownMax": 0
+                },
+                {
+                    "type": "condition_script",
+                    "id": "zombiehaslegs",
+                    "scriptFunction": "zombiehaslegs",
+                    "cooldownMin": 0,
+                    "cooldownMax": 0
+                },
+                {
+                    "type": "action",
+                    "id": "traverselegsaction",
+                    "ActionName": "zombietraverseaction",
+                    "ASMStateName": "traverse@zombie",
+                    "loopingAction": 0,
+                    "actionTimeMax": 0
+                }
+            ]
+        },
+        {
+            "type": "sequence",
+            "id": "traverseleglessbehavior",
+            "children": [
+                {
+                    "type": "condition_script",
+                    "id": "shouldtraverse",
+                    "scriptFunction": "locomotionshouldtraverse",
+                    "interruptName": "traverse",
+                    "cooldownMin": 0,
+                    "cooldownMax": 0
+                },
+                {
+                    "type": "condition_script_negate",
+                    "id": "zombiehaslegs",
+                    "scriptFunction": "zombiehaslegs",
+                    "cooldownMin": 0,
+                    "cooldownMax": 0
+                },
+                {
+                    "type": "action",
+                    "id": "traverseleglessaction",
+                    "ActionName": "zombietraverseaction",
+                    "ASMStateName": "traverse_legless@zombie",
+                    "loopingAction": 0,
+                    "actionTimeMax": 0
+                }
+            ]
+        },
+        {
+            "type": "parallel",
+            "id": "behaviors",
+            "children": [
+                {
+                    "type": "condition_service_script",
+                    "id": "update goal",
+                    "scriptFunction": "doaupdatetogoal",
+                    "cooldownMin": 250,
+                    "cooldownMax": 250
+                },
+                {
+                    "type": "selector",
+                    "id": "available behaviors",
+                    "children": [
+                        {
+                            "type": "parallel",
+                            "id": "vortexpullbehavior",
+                            "children": [
+                                {
+                                    "type": "condition_script",
+                                    "id": "waskilledbyinterdimensionalgun",
+                                    "scriptFunction": "waskilledbyinterdimensionalgun",
+                                    "cooldownMin": 0,
+                                    "cooldownMax": 0
+                                },
+                                {
+                                    "type": "action",
+                                    "id": "vortexpullaction",
+                                    "ActionName": "defaultaction",
+                                    "ASMStateName": "vortex_pull@zombie",
+                                    "UpdateFunction": "zombievortexpullupdate",
+                                    "loopingAction": 1,
+                                    "actionTimeMax": 0
+                                }
+                            ]
+                        },
+                        {
+                            "type": "parallel",
+                            "id": "meleeattackbehavior",
+                            "children": [
+                                {
+                                    "type": "condition_script_negate",
+                                    "id": "waskilledbyinterdimensionalgun",
+                                    "scriptFunction": "waskilledbyinterdimensionalgun",
+                                    "cooldownMin": 0,
+                                    "cooldownMax": 0
+                                },
+                                {
+                                    "type": "condition_script",
+                                    "id": "shouldmeleeattack",
+                                    "scriptFunction": "doaactorshouldmelee",
+                                    "cooldownMin": 0,
+                                    "cooldownMax": 0
+                                },
+                                {
+                                    "type": "action",
+                                    "id": "meleeattackaction",
+                                    "ActionName": "doameleeaction",
+                                    "ASMStateName": "melee@zombie",
+                                    "actionNotify": "attack_melee",
+                                    "loopingAction": 0,
+                                    "actionTimeMax": 0
+                                }
+                            ]
+                        },
+                        {
+                            "type": "parallel",
+                            "id": "movebehavior",
+                            "children": [
+                                {
+                                    "type": "condition_script_negate",
+                                    "id": "waskilledbyinterdimensionalgun",
+                                    "scriptFunction": "waskilledbyinterdimensionalgun",
+                                    "cooldownMin": 0,
+                                    "cooldownMax": 0
+                                },
+                                {
+                                    "type": "condition_script",
+                                    "id": "shouldmove",
+                                    "scriptFunction": "doaactorshouldmove",
+                                    "cooldownMin": 0,
+                                    "cooldownMax": 0
+                                },
+                                {
+                                    "type": "condition_script_negate",
+                                    "id": "shouldmeleeattack",
+                                    "scriptFunction": "doaactorshouldmelee",
+                                    "cooldownMin": 0,
+                                    "cooldownMax": 0
+                                },
+                                {
+                                    "type": "action",
+                                    "id": "moveaction",
+                                    "ActionName": "zombiemoveaction",
+                                    "ASMStateName": "move@zombie",
+                                    "loopingAction": 1,
+                                    "actionTimeMax": 0
+                                }
+                            ]
+                        },
+                        {
+                            "type": "parallel",
+                            "id": "idlebehavior",
+                            "children": [
+                                {
+                                    "type": "condition_script_negate",
+                                    "id": "waskilledbyinterdimensionalgun",
+                                    "scriptFunction": "waskilledbyinterdimensionalgun",
+                                    "cooldownMin": 0,
+                                    "cooldownMax": 0
+                                },
+                                {
+                                    "type": "condition_script_negate",
+                                    "id": "shouldmove",
+                                    "scriptFunction": "doaactorshouldmove",
+                                    "cooldownMin": 0,
+                                    "cooldownMax": 0
+                                },
+                                {
+                                    "type": "condition_script_negate",
+                                    "id": "shouldmeleeattack",
+                                    "scriptFunction": "doaactorshouldmelee",
+                                    "cooldownMin": 0,
+                                    "cooldownMax": 0
+                                },
+                                {
+                                    "type": "action",
+                                    "id": "idleaction",
+                                    "ActionName": "doazombieidleaction",
+                                    "ASMStateName": "idle@zombie",
+                                    "loopingAction": 1,
+                                    "actionTimeMax": 0
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "type": "action",
+            "id": "debugvoidaction",
+            "ActionName": "doavoidaction",
+            "ASMStateName": "void@debug",
+            "loopingAction": 0,
+            "actionTimeMax": 0
+        }
+    ]
+}

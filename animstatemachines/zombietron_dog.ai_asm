@@ -1,0 +1,38 @@
+{
+    "states": {
+        "debug": {
+            "substates": {
+                "void": {
+                    "animation_selector": "void@debug"
+                }
+            }
+        },
+        "zombie_dog": {
+            "substates": {
+                "death": {
+                    "animation_selector": "death@zombie_dog",
+                    "terminal": true
+                },
+                "idle": {
+                    "animation_selector": "idle@zombie_dog",
+                    "transitions": {
+                        "locomotion@zombie_dog": {
+                            "animation_selector": "idle@zombie_dog>locomotion"
+                        }
+                    }
+                },
+                "locomotion": {
+                    "animation_selector": "locomotion@zombie_dog",
+                    "loopsync": true,
+                    "multipledelta": true
+                },
+                "melee": {
+                    "animation_selector": "melee@zombie_dog"
+                },
+                "traverse": {
+                    "animation_selector": "traverse@zombie_dog"
+                }
+            }
+        }
+    }
+}

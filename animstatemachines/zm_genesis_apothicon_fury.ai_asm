@@ -1,0 +1,70 @@
+{
+    "states": {
+        "bamf_melee": {
+            "substates": {
+                "lunge_forward": {
+                    "animation_selector": "lunge_forward@bamf_melee"
+                }
+            }
+        },
+        "debug": {
+            "substates": {
+                "void": {
+                    "animation_selector": "void@debug"
+                }
+            }
+        },
+        "zombie": {
+            "substates": {
+                "death": {
+                    "animation_selector": "death@zombie",
+                    "terminal": true
+                },
+                "death_idgun": {
+                    "animation_selector": "death_idgun@zombie",
+                    "loopsync": true
+                },
+                "death_idgun_blackhole": {
+                    "animation_selector": "death_idgun_blackhole@zombie",
+                    "terminal": true
+                },
+                "idle": {
+                    "animation_selector": "idle@zombie"
+                },
+                "juke": {
+                    "animation_selector": "juke@zombie"
+                },
+                "melee": {
+                    "animation_selector": "melee@zombie"
+                },
+                "move": {
+                    "animation_selector": "move@zombie",
+                    "loopsync": true,
+                    "cleanloop": true,
+                    "multipledelta": true
+                },
+                "moving_death": {
+                    "animation_selector": "moving_death@zombie",
+                    "terminal": true
+                },
+                "pain": {
+                    "animation_selector": "pain@zombie",
+                    "loopsync": true,
+                    "cleanloop": true,
+                    "multipledelta": true
+                },
+                "stun_tesla": {
+                    "animation_selector": "stun_tesla@zombie",
+                    "loopsync": true,
+                    "cleanloop": true
+                },
+                "taunt": {
+                    "animation_selector": "taunt@zombie"
+                },
+                "traverse": {
+                    "animation_selector": "traversal@zombie"
+                }
+            }
+        }
+    }
+}

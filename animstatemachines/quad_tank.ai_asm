@@ -1,0 +1,40 @@
+{
+    "states": {
+        "movement": {
+            "substates": {
+                "locomotion": {
+                    "animation_selector": "locomotion@movement",
+                    "loopsync": true,
+                    "parametric2d": true,
+                    "coderate": true
+                }
+            }
+        },
+        "stationary": {
+            "substates": {
+                "close_vents": {
+                    "animation_selector": "close_vents@stationary"
+                },
+                "death": {
+                    "animation_selector": "death@stationary"
+                },
+                "fire": {
+                    "animation_selector": "fire@stationary",
+                    "animdrivenlocomotion": true
+                },
+                "idle": {
+                    "animation_selector": "idle@stationary"
+                },
+                "open_vents": {
+                    "animation_selector": "open_vents@stationary"
+                },
+                "pain": {
+                    "animation_selector": "pain@stationary"
+                },
+                "trophy_disabled": {
+                    "animation_selector": "trophy_disabled@stationary"
+                }
+            }
+        }
+    }
+}

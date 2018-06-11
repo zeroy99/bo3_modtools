@@ -1,0 +1,139 @@
+{
+    "type": "selector",
+    "id": "civilian",
+    "children": [
+        {
+            "type": "sequence",
+            "id": "death",
+            "children": [
+                {
+                    "type": "condition_script",
+                    "id": "waskilled",
+                    "interruptName": "death",
+                    "cooldownMin": 0,
+                    "cooldownMax": 0
+                },
+                {
+                    "type": "selector",
+                    "id": "choosedeath",
+                    "children": [
+                        {
+                            "type": "sequence",
+                            "id": "electrifieddeath",
+                            "children": [
+                                {
+                                    "type": "condition_script",
+                                    "id": "electrifieddied",
+                                    "scriptFunction": "electrifiedkilled",
+                                    "cooldownMin": 0,
+                                    "cooldownMax": 0
+                                },
+                                {
+                                    "type": "action",
+                                    "id": "electrifieddeath",
+                                    "ActionName": "defaultaction",
+                                    "ASMStateName": "electrified_death@civilian",
+                                    "actionNotify": "death",
+                                    "TerminateFunction": "startragdoll",
+                                    "loopingAction": 0,
+                                    "actionTimeMax": 0
+                                }
+                            ]
+                        },
+                        {
+                            "type": "action",
+                            "id": "death",
+                            "ActionName": "defaultaction",
+                            "ASMStateName": "death@civilian",
+                            "actionNotify": "death",
+                            "TerminateFunction": "startragdoll",
+                            "loopingAction": 0,
+                            "actionTimeMax": 0
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "type": "parallel",
+            "id": "move",
+            "children": [
+                {
+                    "type": "condition_script",
+                    "id": "shouldmove",
+                    "scriptFunction": "locomotionbehaviorcondition",
+                    "cooldownMin": 0,
+                    "cooldownMax": 0
+                },
+                {
+                    "type": "behavior_state_machine",
+                    "id": "locomotionstatemachine"
+                }
+            ]
+        },
+        {
+            "type": "sequence",
+            "id": "sequence",
+            "children": [
+                {
+                    "type": "condition_script_negate",
+                    "id": "shouldmove",
+                    "scriptFunction": "locomotionbehaviorcondition",
+                    "cooldownMin": 0,
+                    "cooldownMax": 0
+                },
+                {
+                    "type": "condition_script",
+                    "id": "civilianispanicked",
+                    "scriptFunction": "civilianispanicked",
+                    "cooldownMin": 0,
+                    "cooldownMax": 0
+                },
+                {
+                    "type": "condition_script",
+                    "id": "notcrouchingcondition",
+                    "scriptFunction": "notcrouchingcondition",
+                    "cooldownMin": 0,
+                    "cooldownMax": 0
+                },
+                {
+                    "type": "action",
+                    "id": "tocrouch",
+                    "ActionName": "defaultaction",
+                    "ASMStateName": "stand_to_crouch@civilian",
+                    "loopingAction": 0,
+                    "actionTimeMax": 0
+                }
+            ]
+        },
+        {
+            "type": "parallel",
+            "id": "parallel",
+            "children": [
+                {
+                    "type": "condition_script_negate",
+                    "id": "shouldmove",
+                    "scriptFunction": "locomotionbehaviorcondition",
+                    "cooldownMin": 0,
+                    "cooldownMax": 0
+                },
+                {
+                    "type": "action",
+                    "id": "idle",
+                    "ActionName": "civiliancoweraction",
+                    "ASMStateName": "idle@civilian",
+                    "loopingAction": 1,
+                    "actionTimeMax": 0
+                }
+            ]
+        },
+        {
+            "type": "action",
+            "id": "debugvoidaction",
+            "ActionName": "defaultaction",
+            "ASMStateName": "void@debug",
+            "loopingAction": 0,
+            "actionTimeMax": 0
+        }
+    ]
+}

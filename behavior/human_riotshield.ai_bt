@@ -1,0 +1,1051 @@
+{
+    "type": "selector",
+    "id": "humanriotshield",
+    "children": [
+        {
+            "type": "parallel",
+            "id": "combatbehaviormain",
+            "children": [
+                {
+                    "type": "condition_service_script",
+                    "id": "riotshieldadvanceonenemyservice",
+                    "scriptFunction": "riotshieldadvanceonenemyservice",
+                    "cooldownMin": 0,
+                    "cooldownMax": 0
+                },
+                {
+                    "type": "condition_service_script",
+                    "id": "updatefrustrationlevel",
+                    "scriptFunction": "updatefrustrationlevel",
+                    "cooldownMin": 2000,
+                    "cooldownMax": 4500
+                },
+                {
+                    "type": "selector",
+                    "id": "combatbehaviorselector",
+                    "children": [
+                        {
+                            "type": "selector",
+                            "id": "deathbehavior",
+                            "children": [
+                                {
+                                    "type": "selector",
+                                    "id": "specialdeathbehavior",
+                                    "children": [
+                                        {
+                                            "type": "selector",
+                                            "id": "special death",
+                                            "children": [
+                                                {
+                                                    "type": "sequence",
+                                                    "id": "special death",
+                                                    "children": [
+                                                        {
+                                                            "type": "condition_script",
+                                                            "id": "shouldspecialdeath",
+                                                            "scriptFunction": "shouldchoosespecialdeath",
+                                                            "interruptName": "death",
+                                                            "cooldownMin": 0,
+                                                            "cooldownMax": 0
+                                                        },
+                                                        {
+                                                            "type": "action",
+                                                            "id": "specialdeathaction",
+                                                            "ActionName": "defaultaction",
+                                                            "ASMStateName": "death@special_death",
+                                                            "actionNotify": "death",
+                                                            "TerminateFunction": "startragdoll",
+                                                            "loopingAction": 0,
+                                                            "actionTimeMax": 0
+                                                        }
+                                                    ]
+                                                },
+                                                {
+                                                    "type": "sequence",
+                                                    "id": "prone death",
+                                                    "children": [
+                                                        {
+                                                            "type": "condition_script",
+                                                            "id": "shouldpronedeath",
+                                                            "scriptFunction": "shouldchoosespecialpronedeath",
+                                                            "interruptName": "death",
+                                                            "cooldownMin": 0,
+                                                            "cooldownMax": 0
+                                                        },
+                                                        {
+                                                            "type": "action",
+                                                            "id": "specialdeathaction",
+                                                            "ActionName": "defaultaction",
+                                                            "ASMStateName": "death@special_death",
+                                                            "actionNotify": "death",
+                                                            "TerminateFunction": "startragdoll",
+                                                            "loopingAction": 0,
+                                                            "actionTimeMax": 0
+                                                        }
+                                                    ]
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                },
+                                {
+                                    "type": "sequence",
+                                    "id": "exposeddeathbehavior",
+                                    "children": [
+                                        {
+                                            "type": "condition_script",
+                                            "id": "hasbeenkilledinexposed",
+                                            "interruptName": "death",
+                                            "cooldownMin": 0,
+                                            "cooldownMax": 0
+                                        },
+                                        {
+                                            "type": "action",
+                                            "id": "defaultaction",
+                                            "ActionName": "defaultaction",
+                                            "ASMStateName": "exposed@death",
+                                            "actionNotify": "death",
+                                            "TerminateFunction": "startragdoll",
+                                            "loopingAction": 0,
+                                            "actionTimeMax": 0
+                                        }
+                                    ]
+                                }
+                            ]
+                        },
+                        {
+                            "type": "selector",
+                            "id": "painbehaviorselector",
+                            "children": [
+                                {
+                                    "type": "selector",
+                                    "id": "specialpainbehavior",
+                                    "children": [
+                                        {
+                                            "type": "sequence",
+                                            "id": "special prone pain",
+                                            "children": [
+                                                {
+                                                    "type": "condition_script",
+                                                    "id": "shouldspecialpronepain",
+                                                    "scriptFunction": "shouldchoosespecialpronepain",
+                                                    "interruptName": "pain",
+                                                    "cooldownMin": 0,
+                                                    "cooldownMax": 0
+                                                },
+                                                {
+                                                    "type": "action",
+                                                    "id": "specialpronepainaction",
+                                                    "ActionName": "defaultaction",
+                                                    "ASMStateName": "pronepain@special_pain",
+                                                    "actionNotify": "pain",
+                                                    "loopingAction": 0,
+                                                    "actionTimeMax": 0
+                                                },
+                                                {
+                                                    "type": "condition_service_script",
+                                                    "id": "resetcoverparameters",
+                                                    "scriptFunction": "resetcoverparameters",
+                                                    "cooldownMin": 0,
+                                                    "cooldownMax": 0
+                                                },
+                                                {
+                                                    "type": "action",
+                                                    "id": "recovertocrouch",
+                                                    "ActionName": "defaultaction",
+                                                    "ASMStateName": "painrecovery@special_pain",
+                                                    "loopingAction": 0,
+                                                    "actionTimeMax": 0
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "type": "sequence",
+                                            "id": "special weapon pain",
+                                            "children": [
+                                                {
+                                                    "type": "condition_script",
+                                                    "id": "shouldspecialpain",
+                                                    "scriptFunction": "shouldchoosespecialpain",
+                                                    "interruptName": "pain",
+                                                    "cooldownMin": 0,
+                                                    "cooldownMax": 0
+                                                },
+                                                {
+                                                    "type": "condition_service_script",
+                                                    "id": "resetcoverparameters",
+                                                    "scriptFunction": "resetcoverparameters",
+                                                    "cooldownMin": 0,
+                                                    "cooldownMax": 0
+                                                },
+                                                {
+                                                    "type": "action",
+                                                    "id": "specialpainaction",
+                                                    "ActionName": "defaultaction",
+                                                    "ASMStateName": "pain@special_pain",
+                                                    "actionNotify": "specialpain",
+                                                    "loopingAction": 0,
+                                                    "actionTimeMax": 0
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                },
+                                {
+                                    "type": "sequence",
+                                    "id": "tacticalwalkflinchpainbehavior",
+                                    "children": [
+                                        {
+                                            "type": "condition_script",
+                                            "id": "shouldtacticalwalkpain",
+                                            "scriptFunction": "locomotionbehaviorcondition",
+                                            "interruptName": "pain",
+                                            "cooldownMin": 0,
+                                            "cooldownMax": 0
+                                        },
+                                        {
+                                            "type": "condition_script",
+                                            "id": "riotshieldshouldflinch",
+                                            "scriptFunction": "riotshieldshouldflinch",
+                                            "cooldownMin": 0,
+                                            "cooldownMax": 0
+                                        },
+                                        {
+                                            "type": "action",
+                                            "id": "tacticalwalkpainaction",
+                                            "ActionName": "defaultaction",
+                                            "ASMStateName": "walk_flinch_pain@tactical_locomotion",
+                                            "actionNotify": "pain",
+                                            "loopingAction": 0,
+                                            "actionTimeMax": 160
+                                        }
+                                    ]
+                                },
+                                {
+                                    "type": "sequence",
+                                    "id": "exposedflinchpainbehavior",
+                                    "children": [
+                                        {
+                                            "type": "condition_script",
+                                            "id": "tookdamageinexposed",
+                                            "interruptName": "pain",
+                                            "cooldownMin": 0,
+                                            "cooldownMax": 0
+                                        },
+                                        {
+                                            "type": "condition_script",
+                                            "id": "riotshieldshouldflinch",
+                                            "scriptFunction": "riotshieldshouldflinch",
+                                            "cooldownMin": 0,
+                                            "cooldownMax": 0
+                                        },
+                                        {
+                                            "type": "action",
+                                            "id": "defaultaction",
+                                            "ActionName": "defaultaction",
+                                            "ASMStateName": "flinch_pain@exposed",
+                                            "actionNotify": "pain",
+                                            "loopingAction": 0,
+                                            "actionTimeMax": 0
+                                        }
+                                    ]
+                                },
+                                {
+                                    "type": "sequence",
+                                    "id": "exposedpainbehavior",
+                                    "children": [
+                                        {
+                                            "type": "condition_script",
+                                            "id": "tookdamageinexposed",
+                                            "interruptName": "pain",
+                                            "cooldownMin": 0,
+                                            "cooldownMax": 0
+                                        },
+                                        {
+                                            "type": "action",
+                                            "id": "defaultaction",
+                                            "ActionName": "defaultaction",
+                                            "ASMStateName": "pain@exposed",
+                                            "actionNotify": "pain",
+                                            "StartFunction": "riotshieldclearflinchcount",
+                                            "loopingAction": 0,
+                                            "actionTimeMax": 0
+                                        }
+                                    ]
+                                }
+                            ]
+                        },
+                        {
+                            "type": "selector",
+                            "id": "traversebehaviorselector",
+                            "children": [
+                                {
+                                    "type": "sequence",
+                                    "id": "locomotiontraversebehavior",
+                                    "children": [
+                                        {
+                                            "type": "condition_script",
+                                            "id": "shouldtraverse",
+                                            "scriptFunction": "locomotionshouldtraverse",
+                                            "interruptName": "traverse",
+                                            "cooldownMin": 0,
+                                            "cooldownMax": 0
+                                        },
+                                        {
+                                            "type": "action",
+                                            "id": "traverseaction",
+                                            "ActionName": "traverseactionstart",
+                                            "ASMStateName": "combat_traverse@traversal",
+                                            "loopingAction": 0,
+                                            "actionTimeMax": 0
+                                        }
+                                    ]
+                                }
+                            ]
+                        },
+                        {
+                            "type": "selector",
+                            "id": "reactionbehaviorsequence",
+                            "children": [
+                                {
+                                    "type": "sequence",
+                                    "id": "reactiontoweaponmalfunction",
+                                    "children": [
+                                        {
+                                            "type": "condition_script",
+                                            "id": "hasweaponmalfunctioned",
+                                            "scriptFunction": "hasweaponmalfunctioned",
+                                            "cooldownMin": 0,
+                                            "cooldownMax": 0
+                                        },
+                                        {
+                                            "type": "condition_service_script",
+                                            "id": "resetreactiontoenemy",
+                                            "cooldownMin": 0,
+                                            "cooldownMax": 0
+                                        },
+                                        {
+                                            "type": "condition_service_script",
+                                            "id": "resetcoverparameters",
+                                            "scriptFunction": "resetcoverparameters",
+                                            "cooldownMin": 0,
+                                            "cooldownMax": 0
+                                        },
+                                        {
+                                            "type": "parallel",
+                                            "id": "parallel",
+                                            "children": [
+                                                {
+                                                    "type": "condition_script_negate",
+                                                    "id": "shouldmelee",
+                                                    "scriptFunction": "shouldmelee",
+                                                    "cooldownMin": 0,
+                                                    "cooldownMax": 0
+                                                },
+                                                {
+                                                    "type": "action",
+                                                    "id": "malfunctionreactionaction",
+                                                    "ActionName": "defaultaction",
+                                                    "ASMStateName": "malfunction@exposed",
+                                                    "actionNotify": "weaponmalfunction",
+                                                    "StartFunction": "preparetoreacttoenemy",
+                                                    "loopingAction": 0,
+                                                    "actionTimeMax": 0
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        },
+                        {
+                            "type": "parallel",
+                            "id": "phalanxbehaviors",
+                            "children": [
+                                {
+                                    "type": "condition_script",
+                                    "id": "isinphalanx",
+                                    "scriptFunction": "isinphalanx",
+                                    "cooldownMin": 0,
+                                    "cooldownMax": 0
+                                },
+                                {
+                                    "type": "condition_service_script",
+                                    "id": "refillammoifneededservice",
+                                    "scriptFunction": "refillammoifneededservice",
+                                    "cooldownMin": 0,
+                                    "cooldownMax": 0
+                                },
+                                {
+                                    "type": "selector",
+                                    "id": "selector",
+                                    "children": [
+                                        {
+                                            "type": "parallel",
+                                            "id": "locomotionbehaviors",
+                                            "children": [
+                                                {
+                                                    "type": "condition_script",
+                                                    "id": "locomotionbehaviorcondition",
+                                                    "scriptFunction": "locomotionbehaviorcondition",
+                                                    "cooldownMin": 0,
+                                                    "cooldownMax": 0
+                                                },
+                                                {
+                                                    "type": "action",
+                                                    "id": "combatrunaction",
+                                                    "ActionName": "defaultaction",
+                                                    "ASMStateName": "walk@tactical_locomotion",
+                                                    "StartFunction": "riotshieldtacticalwalkstart",
+                                                    "loopingAction": 1,
+                                                    "actionTimeMax": 0
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "type": "sequence",
+                                            "id": "changephalanxstancebehavior",
+                                            "children": [
+                                                {
+                                                    "type": "condition_script_negate",
+                                                    "id": "isinphalanxstance",
+                                                    "scriptFunction": "isinphalanxstance",
+                                                    "cooldownMin": 0,
+                                                    "cooldownMax": 0
+                                                },
+                                                {
+                                                    "type": "action",
+                                                    "id": "changephalanxstanceaction",
+                                                    "ActionName": "defaultaction",
+                                                    "ASMStateName": "changestance@exposed",
+                                                    "StartFunction": "togglephalanxstance",
+                                                    "loopingAction": 0,
+                                                    "actionTimeMax": 0
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "type": "parallel",
+                                            "id": "exposedbehaviors",
+                                            "children": [
+                                                {
+                                                    "type": "condition_script",
+                                                    "id": "isinphalanxstance",
+                                                    "scriptFunction": "isinphalanxstance",
+                                                    "cooldownMin": 0,
+                                                    "cooldownMax": 0
+                                                },
+                                                {
+                                                    "type": "condition_script_negate",
+                                                    "id": "locomotionbehaviorcondition",
+                                                    "scriptFunction": "locomotionbehaviorcondition",
+                                                    "cooldownMin": 0,
+                                                    "cooldownMax": 0
+                                                },
+                                                {
+                                                    "type": "selector",
+                                                    "id": "selector",
+                                                    "children": [
+                                                        {
+                                                            "type": "sequence",
+                                                            "id": "exposedshootbehavior",
+                                                            "children": [
+                                                                {
+                                                                    "type": "condition_script",
+                                                                    "id": "hasenemy",
+                                                                    "scriptFunction": "hasenemy",
+                                                                    "cooldownMin": 0,
+                                                                    "cooldownMax": 0
+                                                                },
+                                                                {
+                                                                    "type": "parallel",
+                                                                    "id": "parallel",
+                                                                    "children": [
+                                                                        {
+                                                                            "type": "condition_script",
+                                                                            "id": "hasammo",
+                                                                            "scriptFunction": "hasammo",
+                                                                            "cooldownMin": 0,
+                                                                            "cooldownMax": 0
+                                                                        },
+                                                                        {
+                                                                            "type": "selector",
+                                                                            "id": "selector",
+                                                                            "children": [
+                                                                                {
+                                                                                    "type": "parallel",
+                                                                                    "id": "parallel",
+                                                                                    "children": [
+                                                                                        {
+                                                                                            "type": "condition_script",
+                                                                                            "id": "shouldstopmoving",
+                                                                                            "scriptFunction": "shouldstopmoving",
+                                                                                            "cooldownMin": 0,
+                                                                                            "cooldownMax": 0
+                                                                                        },
+                                                                                        {
+                                                                                            "type": "action",
+                                                                                            "id": "shootatenemydontmoveaction",
+                                                                                            "ActionName": "defaultaction",
+                                                                                            "ASMStateName": "shoot@exposed",
+                                                                                            "StartFunction": "setpathmovedelayedrandom",
+                                                                                            "loopingAction": 0,
+                                                                                            "actionTimeMax": 0
+                                                                                        }
+                                                                                    ]
+                                                                                },
+                                                                                {
+                                                                                    "type": "action",
+                                                                                    "id": "shootenemyaction",
+                                                                                    "ActionName": "defaultaction",
+                                                                                    "ASMStateName": "shoot@exposed",
+                                                                                    "StartFunction": "releaseclaimnode",
+                                                                                    "loopingAction": 0,
+                                                                                    "actionTimeMax": 0
+                                                                                }
+                                                                            ]
+                                                                        }
+                                                                    ]
+                                                                }
+                                                            ]
+                                                        },
+                                                        {
+                                                            "type": "sequence",
+                                                            "id": "exposedidlebehavior",
+                                                            "children": [
+                                                                {
+                                                                    "type": "parallel",
+                                                                    "id": "parallel",
+                                                                    "children": [
+                                                                        {
+                                                                            "type": "condition_script_negate",
+                                                                            "id": "hasenemy",
+                                                                            "scriptFunction": "hasenemy",
+                                                                            "cooldownMin": 0,
+                                                                            "cooldownMax": 0
+                                                                        },
+                                                                        {
+                                                                            "type": "action",
+                                                                            "id": "defaultaction",
+                                                                            "ActionName": "defaultaction",
+                                                                            "ASMStateName": "idle@exposed",
+                                                                            "StartFunction": "releaseclaimnode",
+                                                                            "loopingAction": 0,
+                                                                            "actionTimeMax": 0
+                                                                        }
+                                                                    ]
+                                                                }
+                                                            ]
+                                                        }
+                                                    ]
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        },
+                        {
+                            "type": "selector",
+                            "id": "movebehaviorselector",
+                            "children": [
+                                {
+                                    "type": "selector",
+                                    "id": "locomotionbehaviorselector",
+                                    "children": [
+                                        {
+                                            "type": "parallel",
+                                            "id": "locomotionbehaviormain",
+                                            "children": [
+                                                {
+                                                    "type": "condition_script_negate",
+                                                    "id": "shouldmelee",
+                                                    "scriptFunction": "shouldmelee",
+                                                    "cooldownMin": 0,
+                                                    "cooldownMax": 0
+                                                },
+                                                {
+                                                    "type": "condition_script",
+                                                    "id": "locomotionbehaviorcondition",
+                                                    "scriptFunction": "locomotionbehaviorcondition",
+                                                    "cooldownMin": 0,
+                                                    "cooldownMax": 0
+                                                },
+                                                {
+                                                    "type": "condition_service_script",
+                                                    "id": "refillammoifneededservice",
+                                                    "scriptFunction": "refillammoifneededservice",
+                                                    "cooldownMin": 0,
+                                                    "cooldownMax": 0
+                                                },
+                                                {
+                                                    "type": "selector",
+                                                    "id": "locomotionbehaviorselector",
+                                                    "children": [
+                                                        {
+                                                            "type": "parallel",
+                                                            "id": "noncombatlocomotionbehavior",
+                                                            "children": [
+                                                                {
+                                                                    "type": "condition_script",
+                                                                    "id": "riotshieldnoncombatlocomotioncondition",
+                                                                    "scriptFunction": "riotshieldnoncombatlocomotioncondition",
+                                                                    "cooldownMin": 0,
+                                                                    "cooldownMax": 0
+                                                                },
+                                                                {
+                                                                    "type": "action",
+                                                                    "id": "noncombatrunaction",
+                                                                    "ActionName": "defaultaction",
+                                                                    "ASMStateName": "move@locomotion",
+                                                                    "loopingAction": 0,
+                                                                    "actionTimeMax": 0
+                                                                }
+                                                            ]
+                                                        }
+                                                    ]
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                },
+                                {
+                                    "type": "parallel",
+                                    "id": "tacticalbehaviorparallel",
+                                    "children": [
+                                        {
+                                            "type": "condition_script_negate",
+                                            "id": "shouldmelee",
+                                            "scriptFunction": "shouldmelee",
+                                            "cooldownMin": 0,
+                                            "cooldownMax": 0
+                                        },
+                                        {
+                                            "type": "condition_script",
+                                            "id": "riotshieldshouldtacticalwalk",
+                                            "scriptFunction": "riotshieldshouldtacticalwalk",
+                                            "cooldownMin": 0,
+                                            "cooldownMax": 0
+                                        },
+                                        {
+                                            "type": "condition_script",
+                                            "id": "locomotionbehaviorcondition",
+                                            "scriptFunction": "locomotionbehaviorcondition",
+                                            "cooldownMin": 0,
+                                            "cooldownMax": 0
+                                        },
+                                        {
+                                            "type": "condition_service_script",
+                                            "id": "refillammoifneededservice",
+                                            "scriptFunction": "refillammoifneededservice",
+                                            "cooldownMin": 0,
+                                            "cooldownMax": 0
+                                        },
+                                        {
+                                            "type": "behavior_state_machine",
+                                            "id": "tacticalwalkstatemachine"
+                                        }
+                                    ]
+                                }
+                            ]
+                        },
+                        {
+                            "type": "selector",
+                            "id": "exposedbehaviorselector",
+                            "children": [
+                                {
+                                    "type": "sequence",
+                                    "id": "exposedstandupfornearbyenemybehavior",
+                                    "children": [
+                                        {
+                                            "type": "condition_script_negate",
+                                            "id": "isatcoverstrictcondition",
+                                            "scriptFunction": "isatcoverstrictcondition",
+                                            "cooldownMin": 0,
+                                            "cooldownMax": 0
+                                        },
+                                        {
+                                            "type": "condition_script",
+                                            "id": "hasenemy",
+                                            "scriptFunction": "hasenemy",
+                                            "cooldownMin": 0,
+                                            "cooldownMax": 0
+                                        },
+                                        {
+                                            "type": "condition_script",
+                                            "id": "hascloseenemy",
+                                            "scriptFunction": "hascloseenemy",
+                                            "cooldownMin": 0,
+                                            "cooldownMax": 0
+                                        },
+                                        {
+                                            "type": "condition_script",
+                                            "id": "notstandingcondition",
+                                            "scriptFunction": "notstandingcondition",
+                                            "cooldownMin": 0,
+                                            "cooldownMax": 0
+                                        },
+                                        {
+                                            "type": "action",
+                                            "id": "defaultaction",
+                                            "ActionName": "defaultaction",
+                                            "ASMStateName": "changestance@exposed",
+                                            "actionNotify": "exposed",
+                                            "StartFunction": "preparetochangestancetostand",
+                                            "TerminateFunction": "cleanupchangestancetostand",
+                                            "loopingAction": 0,
+                                            "actionTimeMax": 0
+                                        }
+                                    ]
+                                },
+                                {
+                                    "type": "selector",
+                                    "id": "aivsaimeleesharedbehavior",
+                                    "children": [
+                                        {
+                                            "type": "sequence",
+                                            "id": "aivsaimeleebehavior",
+                                            "children": [
+                                                {
+                                                    "type": "condition_script",
+                                                    "id": "hasaivsaienemy",
+                                                    "scriptFunction": "hasaivsaienemy",
+                                                    "cooldownMin": 0,
+                                                    "cooldownMax": 0
+                                                },
+                                                {
+                                                    "type": "condition_service_script",
+                                                    "id": "decideinitiator",
+                                                    "scriptFunction": "decideinitiator",
+                                                    "cooldownMin": 0,
+                                                    "cooldownMax": 0
+                                                },
+                                                {
+                                                    "type": "condition_script",
+                                                    "id": "isinitiator",
+                                                    "scriptFunction": "isinitiator",
+                                                    "cooldownMin": 0,
+                                                    "cooldownMax": 0
+                                                },
+                                                {
+                                                    "type": "condition_service_script",
+                                                    "id": "chooseaivsaimeleeanimations",
+                                                    "scriptFunction": "chooseaivsaimeleeanimations",
+                                                    "cooldownMin": 0,
+                                                    "cooldownMax": 0
+                                                },
+                                                {
+                                                    "type": "condition_script",
+                                                    "id": "hascloseaivsaienemy",
+                                                    "scriptFunction": "hascloseaivsaienemy",
+                                                    "cooldownMin": 0,
+                                                    "cooldownMax": 0
+                                                },
+                                                {
+                                                    "type": "action",
+                                                    "id": "aivsaimeleeaction",
+                                                    "ActionName": "aivsaimeleeaction",
+                                                    "ASMStateName": "void@debug",
+                                                    "loopingAction": 0,
+                                                    "actionTimeMax": 0
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "type": "sequence",
+                                            "id": "getinpositionforaivsaimelee",
+                                            "children": [
+                                                {
+                                                    "type": "condition_script",
+                                                    "id": "haspotentalaivsaimeleeenemy",
+                                                    "scriptFunction": "haspotentalaivsaimeleeenemy",
+                                                    "cooldownMin": 0,
+                                                    "cooldownMax": 0
+                                                },
+                                                {
+                                                    "type": "condition_script",
+                                                    "id": "shouldchargemelee",
+                                                    "scriptFunction": "shouldchargemelee",
+                                                    "cooldownMin": 0,
+                                                    "cooldownMax": 0
+                                                },
+                                                {
+                                                    "type": "parallel",
+                                                    "id": "parallel",
+                                                    "children": [
+                                                        {
+                                                            "type": "condition_script_negate",
+                                                            "id": "iscloseenoughforaivsaimelee",
+                                                            "scriptFunction": "iscloseenoughforaivsaimelee",
+                                                            "cooldownMin": 0,
+                                                            "cooldownMax": 0
+                                                        },
+                                                        {
+                                                            "type": "action",
+                                                            "id": "getinpostionformeleeaction",
+                                                            "ActionName": "defaultaction",
+                                                            "ASMStateName": "charge_melee@exposed",
+                                                            "actionNotify": "charge",
+                                                            "StartFunction": "setupchargemeleeattack",
+                                                            "TerminateFunction": "cleanupchargemelee",
+                                                            "loopingAction": 0,
+                                                            "actionTimeMax": 0
+                                                        }
+                                                    ]
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                },
+                                {
+                                    "type": "sequence",
+                                    "id": "exposedmutexmeleebehavior",
+                                    "children": [
+                                        {
+                                            "type": "condition_script",
+                                            "id": "shouldmelee",
+                                            "scriptFunction": "shouldmelee",
+                                            "cooldownMin": 0,
+                                            "cooldownMax": 0
+                                        },
+                                        {
+                                            "type": "selector",
+                                            "id": "exposedmeleetypeselector",
+                                            "children": [
+                                                {
+                                                    "type": "sequence",
+                                                    "id": "exposedmutexmeleebehavior",
+                                                    "children": [
+                                                        {
+                                                            "type": "condition_script",
+                                                            "id": "shouldnormalmelee",
+                                                            "scriptFunction": "shouldnormalmelee",
+                                                            "cooldownMin": 0,
+                                                            "cooldownMax": 0
+                                                        },
+                                                        {
+                                                            "type": "action",
+                                                            "id": "meleeenemyaction",
+                                                            "ActionName": "defaultaction",
+                                                            "ASMStateName": "melee@exposed",
+                                                            "actionNotify": "attack_melee",
+                                                            "StartFunction": "prepareforexposedmelee",
+                                                            "TerminateFunction": "cleanupchargemeleeattack",
+                                                            "loopingAction": 0,
+                                                            "actionTimeMax": 0
+                                                        }
+                                                    ]
+                                                },
+                                                {
+                                                    "type": "sequence",
+                                                    "id": "exposedchargemutexmeleebehavior",
+                                                    "children": [
+                                                        {
+                                                            "type": "condition_script",
+                                                            "id": "shouldchargemelee",
+                                                            "scriptFunction": "shouldchargemelee",
+                                                            "cooldownMin": 0,
+                                                            "cooldownMax": 0
+                                                        },
+                                                        {
+                                                            "type": "action",
+                                                            "id": "exposedchargemeleeaction",
+                                                            "ActionName": "defaultaction",
+                                                            "ASMStateName": "charge_melee@exposed",
+                                                            "actionNotify": "charge",
+                                                            "StartFunction": "setupchargemeleeattack",
+                                                            "TerminateFunction": "cleanupchargemelee",
+                                                            "loopingAction": 0,
+                                                            "actionTimeMax": 0
+                                                        }
+                                                    ]
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                },
+                                {
+                                    "type": "parallel",
+                                    "id": "exposedbehaviors",
+                                    "children": [
+                                        {
+                                            "type": "condition_script_negate",
+                                            "id": "locomotionbehaviorcondition",
+                                            "scriptFunction": "locomotionbehaviorcondition",
+                                            "cooldownMin": 0,
+                                            "cooldownMax": 0
+                                        },
+                                        {
+                                            "type": "condition_script_negate",
+                                            "id": "shouldmelee",
+                                            "scriptFunction": "shouldmelee",
+                                            "cooldownMin": 0,
+                                            "cooldownMax": 0
+                                        },
+                                        {
+                                            "type": "condition_service_script",
+                                            "id": "tryreacquireifneeded",
+                                            "scriptFunction": "tryreacquireservice",
+                                            "cooldownMin": 200,
+                                            "cooldownMax": 200
+                                        },
+                                        {
+                                            "type": "selector",
+                                            "id": "selector",
+                                            "children": [
+                                                {
+                                                    "type": "sequence",
+                                                    "id": "exposedreloadbehavior",
+                                                    "children": [
+                                                        {
+                                                            "type": "condition_script",
+                                                            "id": "haslowammo",
+                                                            "scriptFunction": "haslowammo",
+                                                            "cooldownMin": 0,
+                                                            "cooldownMax": 0
+                                                        },
+                                                        {
+                                                            "type": "action",
+                                                            "id": "defaultaction",
+                                                            "ActionName": "defaultaction",
+                                                            "ASMStateName": "reload@exposed",
+                                                            "actionNotify": "reload",
+                                                            "TerminateFunction": "refillammoifneededservice",
+                                                            "loopingAction": 0,
+                                                            "actionTimeMax": 0
+                                                        }
+                                                    ]
+                                                },
+                                                {
+                                                    "type": "sequence",
+                                                    "id": "exposedshootbehavior",
+                                                    "children": [
+                                                        {
+                                                            "type": "condition_script",
+                                                            "id": "hasenemy",
+                                                            "scriptFunction": "hasenemy",
+                                                            "cooldownMin": 0,
+                                                            "cooldownMax": 0
+                                                        },
+                                                        {
+                                                            "type": "parallel",
+                                                            "id": "parallel",
+                                                            "children": [
+                                                                {
+                                                                    "type": "condition_script",
+                                                                    "id": "hasammo",
+                                                                    "scriptFunction": "hasammo",
+                                                                    "cooldownMin": 0,
+                                                                    "cooldownMax": 0
+                                                                },
+                                                                {
+                                                                    "type": "selector",
+                                                                    "id": "selector",
+                                                                    "children": [
+                                                                        {
+                                                                            "type": "parallel",
+                                                                            "id": "parallel",
+                                                                            "children": [
+                                                                                {
+                                                                                    "type": "condition_script",
+                                                                                    "id": "shouldstopmoving",
+                                                                                    "scriptFunction": "shouldstopmoving",
+                                                                                    "cooldownMin": 0,
+                                                                                    "cooldownMax": 0
+                                                                                },
+                                                                                {
+                                                                                    "type": "action",
+                                                                                    "id": "shootatenemydontmoveaction",
+                                                                                    "ActionName": "defaultaction",
+                                                                                    "ASMStateName": "shoot@exposed",
+                                                                                    "StartFunction": "setpathmovedelayedrandom",
+                                                                                    "loopingAction": 0,
+                                                                                    "actionTimeMax": 0
+                                                                                }
+                                                                            ]
+                                                                        },
+                                                                        {
+                                                                            "type": "action",
+                                                                            "id": "shootenemyaction",
+                                                                            "ActionName": "defaultaction",
+                                                                            "ASMStateName": "shoot@exposed",
+                                                                            "StartFunction": "releaseclaimnode",
+                                                                            "loopingAction": 0,
+                                                                            "actionTimeMax": 0
+                                                                        }
+                                                                    ]
+                                                                }
+                                                            ]
+                                                        }
+                                                    ]
+                                                },
+                                                {
+                                                    "type": "sequence",
+                                                    "id": "exposedidlebehavior",
+                                                    "children": [
+                                                        {
+                                                            "type": "parallel",
+                                                            "id": "parallel",
+                                                            "children": [
+                                                                {
+                                                                    "type": "condition_script_negate",
+                                                                    "id": "hasenemy",
+                                                                    "scriptFunction": "hasenemy",
+                                                                    "cooldownMin": 0,
+                                                                    "cooldownMax": 0
+                                                                },
+                                                                {
+                                                                    "type": "action",
+                                                                    "id": "defaultaction",
+                                                                    "ActionName": "defaultaction",
+                                                                    "ASMStateName": "idle@exposed",
+                                                                    "StartFunction": "releaseclaimnode",
+                                                                    "loopingAction": 0,
+                                                                    "actionTimeMax": 0
+                                                                }
+                                                            ]
+                                                        }
+                                                    ]
+                                                },
+                                                {
+                                                    "type": "sequence",
+                                                    "id": "exposedunarmedbehavior",
+                                                    "children": [
+                                                        {
+                                                            "type": "condition_script",
+                                                            "id": "isunarmed",
+                                                            "scriptFunction": "isunarmed",
+                                                            "cooldownMin": 0,
+                                                            "cooldownMax": 0
+                                                        },
+                                                        {
+                                                            "type": "action",
+                                                            "id": "unarmedidleaction",
+                                                            "ActionName": "defaultaction",
+                                                            "ASMStateName": "idle@exposed",
+                                                            "StartFunction": "releaseclaimnode",
+                                                            "loopingAction": 0,
+                                                            "actionTimeMax": 0
+                                                        }
+                                                    ]
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "type": "action",
+            "id": "debugvoidaction",
+            "ActionName": "defaultaction",
+            "ASMStateName": "void@debug",
+            "loopingAction": 0,
+            "actionTimeMax": 0
+        }
+    ]
+}

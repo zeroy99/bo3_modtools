@@ -1,0 +1,916 @@
+{
+    "type": "selector",
+    "id": "zombie",
+    "children": [
+        {
+            "type": "sequence",
+            "id": "zombiedeathbehavior",
+            "children": [
+                {
+                    "type": "condition_script",
+                    "id": "waskilled",
+                    "interruptName": "death",
+                    "cooldownMin": 0,
+                    "cooldownMax": 0
+                },
+                {
+                    "type": "action",
+                    "id": "deathaction",
+                    "ActionName": "defaultaction",
+                    "ASMStateName": "death@zombie",
+                    "actionNotify": "death",
+                    "StartFunction": "zombiedeathaction",
+                    "TerminateFunction": "startragdoll",
+                    "loopingAction": 0,
+                    "actionTimeMax": 0
+                }
+            ]
+        },
+        {
+            "type": "sequence",
+            "id": "traversebehavior",
+            "children": [
+                {
+                    "type": "condition_script",
+                    "id": "shouldtraverse",
+                    "scriptFunction": "locomotionshouldtraverse",
+                    "interruptName": "traverse",
+                    "cooldownMin": 0,
+                    "cooldownMax": 0
+                },
+                {
+                    "type": "condition_script",
+                    "id": "zombiehaslegs",
+                    "scriptFunction": "zombiehaslegs",
+                    "cooldownMin": 0,
+                    "cooldownMax": 0
+                },
+                {
+                    "type": "action",
+                    "id": "traverseaction",
+                    "ActionName": "zombietraverseaction",
+                    "ASMStateName": "traverse@zombie",
+                    "loopingAction": 0,
+                    "actionTimeMax": 0
+                }
+            ]
+        },
+        {
+            "type": "sequence",
+            "id": "crawlertraversebehavior",
+            "children": [
+                {
+                    "type": "condition_script",
+                    "id": "shouldtraverse",
+                    "scriptFunction": "locomotionshouldtraverse",
+                    "interruptName": "traverse",
+                    "cooldownMin": 0,
+                    "cooldownMax": 0
+                },
+                {
+                    "type": "condition_script_negate",
+                    "id": "zombiehaslegs",
+                    "scriptFunction": "zombiehaslegs",
+                    "cooldownMin": 0,
+                    "cooldownMax": 0
+                },
+                {
+                    "type": "action",
+                    "id": "traverseaction",
+                    "ActionName": "zombietraverseaction",
+                    "ASMStateName": "traverse_crawler@zombie",
+                    "loopingAction": 0,
+                    "actionTimeMax": 0
+                }
+            ]
+        },
+        {
+            "type": "parallel",
+            "id": "idlespawnbehavior",
+            "children": [
+                {
+                    "type": "condition_script_negate",
+                    "id": "isspawndone",
+                    "scriptFunction": "zombieisthinkdone",
+                    "cooldownMin": 0,
+                    "cooldownMax": 0
+                },
+                {
+                    "type": "action",
+                    "id": "idleaction",
+                    "ActionName": "zombieidleaction",
+                    "ASMStateName": "idle@zombie",
+                    "loopingAction": 1,
+                    "actionTimeMax": 0
+                }
+            ]
+        },
+        {
+            "type": "parallel",
+            "id": "nonplayableareabehavior",
+            "children": [
+                {
+                    "type": "condition_script_negate",
+                    "id": "inplayablearea",
+                    "scriptFunction": "inplayablearea",
+                    "cooldownMin": 0,
+                    "cooldownMax": 0
+                },
+                {
+                    "type": "selector",
+                    "id": "nonplayableareaselector",
+                    "children": [
+                        {
+                            "type": "sequence",
+                            "id": "skipteardownbehavior",
+                            "children": [
+                                {
+                                    "type": "condition_script",
+                                    "id": "shouldskipteardown",
+                                    "scriptFunction": "shouldskipteardown",
+                                    "cooldownMin": 0,
+                                    "cooldownMax": 0
+                                },
+                                {
+                                    "type": "parallel",
+                                    "id": "movetoplayablearea",
+                                    "children": [
+                                        {
+                                            "type": "condition_service_script",
+                                            "id": "findfleshservice",
+                                            "scriptFunction": "zombiefindfleshservice",
+                                            "cooldownMin": 0,
+                                            "cooldownMax": 0
+                                        },
+                                        {
+                                            "type": "condition_service_script",
+                                            "id": "enteredplayableservice",
+                                            "scriptFunction": "zombieenteredplayableservice",
+                                            "cooldownMin": 500,
+                                            "cooldownMax": 1000
+                                        },
+                                        {
+                                            "type": "action",
+                                            "id": "moveaction",
+                                            "ActionName": "zombiemoveaction",
+                                            "ASMStateName": "move@zombie",
+                                            "loopingAction": 1,
+                                            "actionTimeMax": 0
+                                        }
+                                    ]
+                                }
+                            ]
+                        },
+                        {
+                            "type": "selector",
+                            "id": "gotoentranceselector",
+                            "children": [
+                                {
+                                    "type": "sequence",
+                                    "id": "gotoentrancebehavior",
+                                    "children": [
+                                        {
+                                            "type": "condition_script_negate",
+                                            "id": "gottoentrance",
+                                            "scriptFunction": "zombiegottoentrance",
+                                            "cooldownMin": 0,
+                                            "cooldownMax": 0
+                                        },
+                                        {
+                                            "type": "condition_service_script",
+                                            "id": "findnodesservice",
+                                            "scriptFunction": "findnodesservice",
+                                            "cooldownMin": 0,
+                                            "cooldownMax": 0
+                                        },
+                                        {
+                                            "type": "parallel",
+                                            "id": "movetoentrance",
+                                            "children": [
+                                                {
+                                                    "type": "condition_script_negate",
+                                                    "id": "isatentrance",
+                                                    "scriptFunction": "zombieisatentrance",
+                                                    "cooldownMin": 0,
+                                                    "cooldownMax": 0
+                                                },
+                                                {
+                                                    "type": "action",
+                                                    "id": "movetoentranceaction",
+                                                    "ActionName": "zombiemovetoentranceaction",
+                                                    "ASMStateName": "move@zombie",
+                                                    "loopingAction": 1,
+                                                    "actionTimeMax": 0
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        },
+                        {
+                            "type": "sequence",
+                            "id": "atentrancebehavior",
+                            "children": [
+                                {
+                                    "type": "condition_script",
+                                    "id": "gottoentrance",
+                                    "scriptFunction": "zombiegottoentrance",
+                                    "cooldownMin": 0,
+                                    "cooldownMax": 0
+                                },
+                                {
+                                    "type": "condition_script_negate",
+                                    "id": "gottoattackspot",
+                                    "scriptFunction": "zombiegottoattackspot",
+                                    "cooldownMin": 0,
+                                    "cooldownMax": 0
+                                },
+                                {
+                                    "type": "selector",
+                                    "id": "atentranceselector",
+                                    "children": [
+                                        {
+                                            "type": "sequence",
+                                            "id": "gotoattackspotbehavior",
+                                            "children": [
+                                                {
+                                                    "type": "condition_service_script",
+                                                    "id": "updateattackspotservice",
+                                                    "scriptFunction": "updateattackspotservice",
+                                                    "cooldownMin": 0,
+                                                    "cooldownMax": 0
+                                                },
+                                                {
+                                                    "type": "parallel",
+                                                    "id": "movetoattackspot",
+                                                    "children": [
+                                                        {
+                                                            "type": "condition_script",
+                                                            "id": "hasattackspot",
+                                                            "scriptFunction": "zombiehasattackspotalready",
+                                                            "cooldownMin": 0,
+                                                            "cooldownMax": 0
+                                                        },
+                                                        {
+                                                            "type": "condition_script_negate",
+                                                            "id": "isatattackspot",
+                                                            "scriptFunction": "zombieisatgoal",
+                                                            "cooldownMin": 0,
+                                                            "cooldownMax": 0
+                                                        },
+                                                        {
+                                                            "type": "action",
+                                                            "id": "movetoattackspotaction",
+                                                            "ActionName": "zombiemovetoattackspotaction",
+                                                            "ASMStateName": "move@zombie",
+                                                            "loopingAction": 1,
+                                                            "actionTimeMax": 0
+                                                        }
+                                                    ]
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "type": "sequence",
+                                            "id": "tauntbehavior",
+                                            "children": [
+                                                {
+                                                    "type": "condition_script_negate",
+                                                    "id": "hasattackspot",
+                                                    "scriptFunction": "zombiehasattackspotalready",
+                                                    "cooldownMin": 0,
+                                                    "cooldownMax": 0
+                                                },
+                                                {
+                                                    "type": "condition_script",
+                                                    "id": "shouldtaunt",
+                                                    "scriptFunction": "zombieshouldtaunt",
+                                                    "cooldownMin": 0,
+                                                    "cooldownMax": 0
+                                                },
+                                                {
+                                                    "type": "action",
+                                                    "id": "tauntaction",
+                                                    "ActionName": "zombietauntaction",
+                                                    "ASMStateName": "taunt@zombie",
+                                                    "actionNotify": "taunt",
+                                                    "loopingAction": 0,
+                                                    "actionTimeMax": 0
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "type": "sequence",
+                                            "id": "idleentrancebehavior",
+                                            "children": [
+                                                {
+                                                    "type": "condition_script_negate",
+                                                    "id": "hasattackspot",
+                                                    "scriptFunction": "zombiehasattackspotalready",
+                                                    "cooldownMin": 0,
+                                                    "cooldownMax": 0
+                                                },
+                                                {
+                                                    "type": "action",
+                                                    "id": "idleaction",
+                                                    "ActionName": "zombieidleaction",
+                                                    "ASMStateName": "idle@zombie",
+                                                    "loopingAction": 0,
+                                                    "actionTimeMax": 500
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        },
+                        {
+                            "type": "sequence",
+                            "id": "tearboardbehavior",
+                            "children": [
+                                {
+                                    "type": "condition_script",
+                                    "id": "hasattackspot",
+                                    "scriptFunction": "zombiehasattackspotalready",
+                                    "cooldownMin": 0,
+                                    "cooldownMax": 0
+                                },
+                                {
+                                    "type": "condition_script",
+                                    "id": "shouldtearboard",
+                                    "scriptFunction": "zombieshouldtear",
+                                    "cooldownMin": 0,
+                                    "cooldownMax": 0
+                                },
+                                {
+                                    "type": "sequence",
+                                    "id": "tearboard",
+                                    "children": [
+                                        {
+                                            "type": "condition_service_script",
+                                            "id": "getchunkservice",
+                                            "scriptFunction": "getchunkservice",
+                                            "cooldownMin": 0,
+                                            "cooldownMax": 0
+                                        },
+                                        {
+                                            "type": "condition_script",
+                                            "id": "ischunkvalid",
+                                            "scriptFunction": "ischunkvalid",
+                                            "cooldownMin": 0,
+                                            "cooldownMax": 0
+                                        },
+                                        {
+                                            "type": "action",
+                                            "id": "grabboardaction",
+                                            "ActionName": "grabboardaction",
+                                            "ASMStateName": "grab@zombie",
+                                            "actionNotify": "teardown",
+                                            "loopingAction": 0,
+                                            "actionTimeMax": 0
+                                        },
+                                        {
+                                            "type": "action",
+                                            "id": "pullboardaction",
+                                            "ActionName": "pullboardaction",
+                                            "ASMStateName": "pull@zombie",
+                                            "loopingAction": 0,
+                                            "actionTimeMax": 0
+                                        },
+                                        {
+                                            "type": "selector",
+                                            "id": "selector",
+                                            "children": [
+                                                {
+                                                    "type": "sequence",
+                                                    "id": "attackthroughboardsbehavior",
+                                                    "children": [
+                                                        {
+                                                            "type": "condition_script",
+                                                            "id": "shouldattackthroughboards",
+                                                            "scriptFunction": "zombieshouldattackthroughboards",
+                                                            "cooldownMin": 0,
+                                                            "cooldownMax": 0
+                                                        },
+                                                        {
+                                                            "type": "action",
+                                                            "id": "attackthroughboardsaction",
+                                                            "ActionName": "zombieattackthroughboardsaction",
+                                                            "ASMStateName": "meleebehindboards@zombie",
+                                                            "actionNotify": "attack_melee",
+                                                            "loopingAction": 0,
+                                                            "actionTimeMax": 0
+                                                        }
+                                                    ]
+                                                },
+                                                {
+                                                    "type": "sequence",
+                                                    "id": "tauntbehavior",
+                                                    "children": [
+                                                        {
+                                                            "type": "condition_script",
+                                                            "id": "shouldtaunt",
+                                                            "scriptFunction": "zombieshouldtaunt",
+                                                            "cooldownMin": 0,
+                                                            "cooldownMax": 0
+                                                        },
+                                                        {
+                                                            "type": "action",
+                                                            "id": "tauntaction",
+                                                            "ActionName": "zombietauntaction",
+                                                            "ASMStateName": "taunt@zombie",
+                                                            "actionNotify": "taunt",
+                                                            "loopingAction": 0,
+                                                            "actionTimeMax": 0
+                                                        }
+                                                    ]
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        },
+                        {
+                            "type": "sequence",
+                            "id": "idleboardbehavior",
+                            "children": [
+                                {
+                                    "type": "condition_script",
+                                    "id": "hasattackspot",
+                                    "scriptFunction": "zombiehasattackspotalready",
+                                    "cooldownMin": 0,
+                                    "cooldownMax": 0
+                                },
+                                {
+                                    "type": "condition_script",
+                                    "id": "shouldtearboard",
+                                    "scriptFunction": "zombieshouldtear",
+                                    "cooldownMin": 0,
+                                    "cooldownMax": 0
+                                },
+                                {
+                                    "type": "condition_script_negate",
+                                    "id": "ischunkvalid",
+                                    "scriptFunction": "ischunkvalid",
+                                    "cooldownMin": 0,
+                                    "cooldownMax": 0
+                                },
+                                {
+                                    "type": "action",
+                                    "id": "idleaction",
+                                    "ActionName": "zombieidleaction",
+                                    "ASMStateName": "idle@zombie",
+                                    "loopingAction": 0,
+                                    "actionTimeMax": 0
+                                }
+                            ]
+                        },
+                        {
+                            "type": "sequence",
+                            "id": "enterplayableareabehavior",
+                            "children": [
+                                {
+                                    "type": "condition_script",
+                                    "id": "shouldenterplayable",
+                                    "scriptFunction": "zombieshouldenterplayable",
+                                    "cooldownMin": 0,
+                                    "cooldownMax": 0
+                                },
+                                {
+                                    "type": "action",
+                                    "id": "mantleaction",
+                                    "ActionName": "zombiemantleaction",
+                                    "ASMStateName": "barricadeenter@zombie",
+                                    "loopingAction": 0,
+                                    "actionTimeMax": 0
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "type": "parallel",
+            "id": "playableareabehavior",
+            "children": [
+                {
+                    "type": "condition_service_script",
+                    "id": "jukeservice",
+                    "scriptFunction": "zombiejukeservice",
+                    "cooldownMin": 0,
+                    "cooldownMax": 0
+                },
+                {
+                    "type": "condition_script",
+                    "id": "inplayablearea",
+                    "scriptFunction": "inplayablearea",
+                    "cooldownMin": 0,
+                    "cooldownMax": 0
+                },
+                {
+                    "type": "condition_service_script",
+                    "id": "findfleshservice",
+                    "scriptFunction": "zombiefindfleshservice",
+                    "cooldownMin": 0,
+                    "cooldownMax": 0
+                },
+                {
+                    "type": "condition_service_script",
+                    "id": "crawlercollisionservice",
+                    "scriptFunction": "zombiecrawlercollisionservice",
+                    "cooldownMin": 250,
+                    "cooldownMax": 500
+                },
+                {
+                    "type": "selector",
+                    "id": "playableareaselector",
+                    "children": [
+                        {
+                            "type": "sequence",
+                            "id": "zombieknockdownbehavior",
+                            "children": [
+                                {
+                                    "type": "condition_script",
+                                    "id": "zombieshouldknockdown",
+                                    "scriptFunction": "zombieshouldknockdown",
+                                    "cooldownMin": 0,
+                                    "cooldownMax": 0
+                                },
+                                {
+                                    "type": "action",
+                                    "id": "zombieknockdownaction",
+                                    "ActionName": "defaultaction",
+                                    "ASMStateName": "knockdown@zombie",
+                                    "StartFunction": "zombieknockdownactionstart",
+                                    "loopingAction": 0,
+                                    "actionTimeMax": 0
+                                },
+                                {
+                                    "type": "action",
+                                    "id": "zombiegetupaction",
+                                    "ActionName": "defaultaction",
+                                    "ASMStateName": "getup@zombie",
+                                    "TerminateFunction": "zombiegetupactionterminate",
+                                    "loopingAction": 0,
+                                    "actionTimeMax": 0
+                                }
+                            ]
+                        },
+                        {
+                            "type": "sequence",
+                            "id": "painlowgbehavior",
+                            "children": [
+                                {
+                                    "type": "condition_script",
+                                    "id": "shouldmovelowg",
+                                    "scriptFunction": "shouldmovelowg",
+                                    "cooldownMin": 0,
+                                    "cooldownMax": 0
+                                },
+                                {
+                                    "type": "condition_script",
+                                    "id": "shouldshowpain",
+                                    "scriptFunction": "iszombiewalking",
+                                    "interruptName": "pain",
+                                    "cooldownMin": 0,
+                                    "cooldownMax": 0
+                                },
+                                {
+                                    "type": "action",
+                                    "id": "painaction",
+                                    "ActionName": "defaultaction",
+                                    "ASMStateName": "pain_lowg@zombie",
+                                    "loopingAction": 0,
+                                    "actionTimeMax": 350
+                                }
+                            ]
+                        },
+                        {
+                            "type": "sequence",
+                            "id": "painbehavior",
+                            "children": [
+                                {
+                                    "type": "condition_script",
+                                    "id": "shouldshowpain",
+                                    "scriptFunction": "iszombiewalking",
+                                    "interruptName": "pain",
+                                    "cooldownMin": 0,
+                                    "cooldownMax": 0
+                                },
+                                {
+                                    "type": "action",
+                                    "id": "painaction",
+                                    "ActionName": "defaultaction",
+                                    "ASMStateName": "pain@zombie",
+                                    "loopingAction": 0,
+                                    "actionTimeMax": 350
+                                }
+                            ]
+                        },
+                        {
+                            "type": "parallel",
+                            "id": "zombiestunbehavior",
+                            "children": [
+                                {
+                                    "type": "condition_script",
+                                    "id": "shouldbestunned",
+                                    "scriptFunction": "zombieshouldstun",
+                                    "cooldownMin": 0,
+                                    "cooldownMax": 0
+                                },
+                                {
+                                    "type": "action",
+                                    "id": "stunaction",
+                                    "ActionName": "defaultaction",
+                                    "ASMStateName": "stun_tesla@zombie",
+                                    "StartFunction": "zombiestunactionstart",
+                                    "TerminateFunction": "zombiestunactionend",
+                                    "loopingAction": 1,
+                                    "actionTimeMax": 4000
+                                }
+                            ]
+                        },
+                        {
+                            "type": "sequence",
+                            "id": "zombiejukebehavior",
+                            "children": [
+                                {
+                                    "type": "condition_script",
+                                    "id": "shouldjuke",
+                                    "scriptFunction": "zombieshouldjuke",
+                                    "cooldownMin": 0,
+                                    "cooldownMax": 0
+                                },
+                                {
+                                    "type": "condition_script_negate",
+                                    "id": "shouldbestunned",
+                                    "scriptFunction": "zombieshouldstun",
+                                    "cooldownMin": 0,
+                                    "cooldownMax": 0
+                                },
+                                {
+                                    "type": "condition_script_negate",
+                                    "id": "zombieisbeinggrappled",
+                                    "scriptFunction": "zombieisbeinggrappled",
+                                    "cooldownMin": 0,
+                                    "cooldownMax": 0
+                                },
+                                {
+                                    "type": "action",
+                                    "id": "jukeaction",
+                                    "ActionName": "defaultaction",
+                                    "ASMStateName": "juke@zombie",
+                                    "StartFunction": "zombiejukeactionstart",
+                                    "loopingAction": 0,
+                                    "actionTimeMax": 0
+                                }
+                            ]
+                        },
+                        {
+                            "type": "parallel",
+                            "id": "moveawaybehavior",
+                            "children": [
+                                {
+                                    "type": "condition_script",
+                                    "id": "shouldmoveaway",
+                                    "scriptFunction": "zombieshouldmoveaway",
+                                    "cooldownMin": 0,
+                                    "cooldownMax": 0
+                                },
+                                {
+                                    "type": "action",
+                                    "id": "moveawayaction",
+                                    "ActionName": "zombiemoveaway",
+                                    "ASMStateName": "move@zombie",
+                                    "loopingAction": 1,
+                                    "actionTimeMax": 0
+                                }
+                            ]
+                        },
+                        {
+                            "type": "sequence",
+                            "id": "meleejumpattackbehavior",
+                            "children": [
+                                {
+                                    "type": "condition_script",
+                                    "id": "shouldmeleejumpattack",
+                                    "scriptFunction": "zombieshouldjumpmelee",
+                                    "cooldownMin": 0,
+                                    "cooldownMax": 0
+                                },
+                                {
+                                    "type": "condition_script_negate",
+                                    "id": "shouldmoveaway",
+                                    "scriptFunction": "zombieshouldmoveaway",
+                                    "cooldownMin": 0,
+                                    "cooldownMax": 0
+                                },
+                                {
+                                    "type": "action",
+                                    "id": "meleejumpattackaction",
+                                    "ActionName": "defaultaction",
+                                    "ASMStateName": "melee_jump@zombie",
+                                    "actionNotify": "attack_melee",
+                                    "loopingAction": 0,
+                                    "actionTimeMax": 0
+                                }
+                            ]
+                        },
+                        {
+                            "type": "parallel",
+                            "id": "meleeattackbehavior",
+                            "children": [
+                                {
+                                    "type": "condition_script",
+                                    "id": "shouldmeleeattack",
+                                    "scriptFunction": "zombieshouldmelee",
+                                    "cooldownMin": 0,
+                                    "cooldownMax": 0
+                                },
+                                {
+                                    "type": "condition_script_negate",
+                                    "id": "shouldmoveaway",
+                                    "scriptFunction": "zombieshouldmoveaway",
+                                    "cooldownMin": 0,
+                                    "cooldownMax": 0
+                                },
+                                {
+                                    "type": "action",
+                                    "id": "meleeattackaction",
+                                    "ActionName": "defaultaction",
+                                    "ASMStateName": "melee@zombie",
+                                    "actionNotify": "attack_melee",
+                                    "loopingAction": 0,
+                                    "actionTimeMax": 0
+                                }
+                            ]
+                        },
+                        {
+                            "type": "parallel",
+                            "id": "movebehavior",
+                            "children": [
+                                {
+                                    "type": "condition_script",
+                                    "id": "shouldmove",
+                                    "scriptFunction": "locomotionbehaviorcondition",
+                                    "cooldownMin": 0,
+                                    "cooldownMax": 0
+                                },
+                                {
+                                    "type": "condition_script_negate",
+                                    "id": "zombieshouldknockdown",
+                                    "scriptFunction": "zombieshouldknockdown",
+                                    "cooldownMin": 0,
+                                    "cooldownMax": 0
+                                },
+                                {
+                                    "type": "condition_script_negate",
+                                    "id": "shouldmoveaway",
+                                    "scriptFunction": "zombieshouldmoveaway",
+                                    "cooldownMin": 0,
+                                    "cooldownMax": 0
+                                },
+                                {
+                                    "type": "condition_script_negate",
+                                    "id": "shouldbestunned",
+                                    "scriptFunction": "zombieshouldstun",
+                                    "cooldownMin": 0,
+                                    "cooldownMax": 0
+                                },
+                                {
+                                    "type": "condition_script_negate",
+                                    "id": "shouldjuke",
+                                    "scriptFunction": "zombieshouldjuke",
+                                    "cooldownMin": 0,
+                                    "cooldownMax": 0
+                                },
+                                {
+                                    "type": "condition_script_negate",
+                                    "id": "shouldmeleejumpattack",
+                                    "scriptFunction": "zombieshouldjumpmelee",
+                                    "cooldownMin": 0,
+                                    "cooldownMax": 0
+                                },
+                                {
+                                    "type": "condition_script_negate",
+                                    "id": "shouldmeleeattack",
+                                    "scriptFunction": "zombieshouldmelee",
+                                    "cooldownMin": 0,
+                                    "cooldownMax": 0
+                                },
+                                {
+                                    "type": "selector",
+                                    "id": "selector",
+                                    "children": [
+                                        {
+                                            "type": "parallel",
+                                            "id": "movelowg",
+                                            "children": [
+                                                {
+                                                    "type": "condition_script",
+                                                    "id": "shouldmovelowg",
+                                                    "scriptFunction": "shouldmovelowg",
+                                                    "cooldownMin": 0,
+                                                    "cooldownMax": 0
+                                                },
+                                                {
+                                                    "type": "action",
+                                                    "id": "movelowgaction",
+                                                    "ActionName": "zombiemoveaction",
+                                                    "ASMStateName": "move_lowg@zombie",
+                                                    "loopingAction": 1,
+                                                    "actionTimeMax": 0
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "type": "parallel",
+                                            "id": "movenormal",
+                                            "children": [
+                                                {
+                                                    "type": "condition_script_negate",
+                                                    "id": "shouldmovelowg",
+                                                    "scriptFunction": "shouldmovelowg",
+                                                    "cooldownMin": 0,
+                                                    "cooldownMax": 0
+                                                },
+                                                {
+                                                    "type": "action",
+                                                    "id": "moveaction",
+                                                    "ActionName": "zombiemoveaction",
+                                                    "ASMStateName": "move@zombie",
+                                                    "loopingAction": 1,
+                                                    "actionTimeMax": 0
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        },
+                        {
+                            "type": "parallel",
+                            "id": "idlebehavior",
+                            "children": [
+                                {
+                                    "type": "condition_script_negate",
+                                    "id": "zombieshouldknockdown",
+                                    "scriptFunction": "zombieshouldknockdown",
+                                    "cooldownMin": 0,
+                                    "cooldownMax": 0
+                                },
+                                {
+                                    "type": "condition_script_negate",
+                                    "id": "shouldmoveaway",
+                                    "scriptFunction": "zombieshouldmoveaway",
+                                    "cooldownMin": 0,
+                                    "cooldownMax": 0
+                                },
+                                {
+                                    "type": "condition_script_negate",
+                                    "id": "shouldmeleejumpattack",
+                                    "scriptFunction": "zombieshouldjumpmelee",
+                                    "cooldownMin": 0,
+                                    "cooldownMax": 0
+                                },
+                                {
+                                    "type": "condition_script_negate",
+                                    "id": "shouldmeleeattack",
+                                    "scriptFunction": "zombieshouldmelee",
+                                    "cooldownMin": 0,
+                                    "cooldownMax": 0
+                                },
+                                {
+                                    "type": "condition_script_negate",
+                                    "id": "shouldmove",
+                                    "scriptFunction": "locomotionbehaviorcondition",
+                                    "cooldownMin": 0,
+                                    "cooldownMax": 0
+                                },
+                                {
+                                    "type": "action",
+                                    "id": "idleaction",
+                                    "ActionName": "zombieidleaction",
+                                    "ASMStateName": "idle@zombie",
+                                    "loopingAction": 1,
+                                    "actionTimeMax": 0
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "type": "action",
+            "id": "debugvoidaction",
+            "ActionName": "defaultaction",
+            "ASMStateName": "void@debug",
+            "loopingAction": 0,
+            "actionTimeMax": 0
+        }
+    ]
+}

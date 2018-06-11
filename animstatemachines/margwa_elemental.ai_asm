@@ -1,0 +1,135 @@
+{
+    "states": {
+        "debug": {
+            "substates": {
+                "void": {
+                    "animation_selector": "void@debug"
+                }
+            }
+        },
+        "margwa": {
+            "substates": {
+                "death": {
+                    "animation_selector": "death@margwa",
+                    "terminal": true
+                },
+                "electric_defend_in": {
+                    "animation_selector": "electric_defend_in@margwa"
+                },
+                "electric_defend_out": {
+                    "animation_selector": "electric_defend_out@margwa"
+                },
+                "electric_ground_attack": {
+                    "animation_selector": "electric_ground_attack@margwa"
+                },
+                "electric_shoot_attack": {
+                    "animation_selector": "electric_shoot_attack@margwa"
+                },
+                "electric_spawn": {
+                    "animation_selector": "electric_spawn@margwa"
+                },
+                "fire_attack": {
+                    "animation_selector": "fire_attack@margwa"
+                },
+                "fire_defend_in": {
+                    "animation_selector": "fire_defend_in@margwa"
+                },
+                "fire_defend_out": {
+                    "animation_selector": "fire_defend_out@margwa"
+                },
+                "fire_spawn": {
+                    "animation_selector": "fire_spawn@margwa"
+                },
+                "idle": {
+                    "animation_selector": "idle@margwa",
+                    "transitions": {
+                        "move@margwa": {
+                            "animation_selector": "pain@margwa>move"
+                        }
+                    }
+                },
+                "light_attack": {
+                    "animation_selector": "light_attack@margwa"
+                },
+                "light_defend_in": {
+                    "animation_selector": "light_defend_in@margwa"
+                },
+                "light_defend_out": {
+                    "animation_selector": "light_defend_out@margwa"
+                },
+                "light_spawn": {
+                    "animation_selector": "light_spawn@margwa"
+                },
+                "move": {
+                    "animation_selector": "move@margwa",
+                    "transition_decorator": "evaluatehumanturnanimations",
+                    "loopsync": true,
+                    "cleanloop": true,
+                    "multipledelta": true
+                },
+                "octobomb_attack": {
+                    "animation_selector": "octobomb_attack@margwa",
+                    "loopsync": true
+                },
+                "pain": {
+                    "animation_selector": "pain@margwa",
+                    "transitions": {
+                        "move@margwa": {
+                            "animation_selector": "pain@margwa>move"
+                        }
+                    }
+                },
+                "react_idgun": {
+                    "animation_selector": "react_idgun@margwa"
+                },
+                "react_stun": {
+                    "animation_selector": "react_stun@margwa"
+                },
+                "react_sword": {
+                    "animation_selector": "react_sword@margwa"
+                },
+                "shadow_attack_in": {
+                    "animation_selector": "shadow_attack_in@margwa"
+                },
+                "shadow_attack_loop": {
+                    "animation_selector": "shadow_attack_loop@margwa",
+                    "loopsync": true,
+                    "cleanloop": true,
+                    "multipledelta": true
+                },
+                "shadow_attack_out": {
+                    "animation_selector": "shadow_attack_out@margwa"
+                },
+                "shadow_defend_in": {
+                    "animation_selector": "shadow_defend_in@margwa"
+                },
+                "shadow_defend_out": {
+                    "animation_selector": "shadow_defend_out@margwa"
+                },
+                "shadow_spawn": {
+                    "animation_selector": "shadow_spawn@margwa"
+                },
+                "smash_attack": {
+                    "animation_selector": "smash_attack@margwa",
+                    "transitions": {
+                        "move@margwa": {
+                            "animation_selector": "pain@margwa>move"
+                        }
+                    }
+                },
+                "spawn": {
+                    "animation_selector": "spawn@margwa"
+                },
+                "swipe_attack": {
+                    "animation_selector": "swipe_attack@margwa"
+                },
+                "teleport": {
+                    "animation_selector": "teleport@margwa"
+                },
+                "traverse": {
+                    "animation_selector": "traverse@margwa"
+                }
+            }
+        }
+    }
+}

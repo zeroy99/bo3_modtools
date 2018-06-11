@@ -1,0 +1,155 @@
+{
+    "type": "selector",
+    "id": "doa warlord",
+    "children": [
+        {
+            "type": "sequence",
+            "id": "deathbehavior",
+            "children": [
+                {
+                    "type": "condition_script",
+                    "id": "waskilled",
+                    "interruptName": "death",
+                    "cooldownMin": 0,
+                    "cooldownMax": 0
+                },
+                {
+                    "type": "action",
+                    "id": "defaultaction",
+                    "ActionName": "doalocomotiondeathaction",
+                    "ASMStateName": "death@zombie",
+                    "actionNotify": "death",
+                    "loopingAction": 0,
+                    "actionTimeMax": 0
+                }
+            ]
+        },
+        {
+            "type": "parallel",
+            "id": "behaviors",
+            "children": [
+                {
+                    "type": "condition_service_script",
+                    "id": "update goal",
+                    "scriptFunction": "doawarlordupdatetogoal",
+                    "cooldownMin": 250,
+                    "cooldownMax": 250
+                },
+                {
+                    "type": "selector",
+                    "id": "available behaviors",
+                    "children": [
+                        {
+                            "type": "parallel",
+                            "id": "specialattackbehavior",
+                            "children": [
+                                {
+                                    "type": "condition_script",
+                                    "id": "shouldspecialattack",
+                                    "scriptFunction": "doawarlordshouldsdospecial",
+                                    "cooldownMin": 0,
+                                    "cooldownMax": 0
+                                },
+                                {
+                                    "type": "action",
+                                    "id": "specialattackaction",
+                                    "ActionName": "doawarlordspecialaction",
+                                    "ASMStateName": "special@zombie",
+                                    "actionNotify": "attack_special",
+                                    "loopingAction": 0,
+                                    "actionTimeMax": 0
+                                }
+                            ]
+                        },
+                        {
+                            "type": "parallel",
+                            "id": "meleeattackbehavior",
+                            "children": [
+                                {
+                                    "type": "condition_script",
+                                    "id": "shouldmeleeattack",
+                                    "scriptFunction": "doaactorshouldmelee",
+                                    "cooldownMin": 0,
+                                    "cooldownMax": 0
+                                },
+                                {
+                                    "type": "action",
+                                    "id": "meleeattackaction",
+                                    "ActionName": "doameleeaction",
+                                    "ASMStateName": "melee@zombie",
+                                    "actionNotify": "attack_melee",
+                                    "loopingAction": 0,
+                                    "actionTimeMax": 0
+                                }
+                            ]
+                        },
+                        {
+                            "type": "parallel",
+                            "id": "movebehavior",
+                            "children": [
+                                {
+                                    "type": "condition_script",
+                                    "id": "shouldmove",
+                                    "scriptFunction": "doaactorshouldmove",
+                                    "cooldownMin": 0,
+                                    "cooldownMax": 0
+                                },
+                                {
+                                    "type": "condition_script_negate",
+                                    "id": "shouldmeleeattack",
+                                    "scriptFunction": "doaactorshouldmelee",
+                                    "cooldownMin": 0,
+                                    "cooldownMax": 0
+                                },
+                                {
+                                    "type": "action",
+                                    "id": "moveaction",
+                                    "ActionName": "doazombiemoveaction",
+                                    "ASMStateName": "move@zombie",
+                                    "loopingAction": 1,
+                                    "actionTimeMax": 0
+                                }
+                            ]
+                        },
+                        {
+                            "type": "parallel",
+                            "id": "idlebehavior",
+                            "children": [
+                                {
+                                    "type": "condition_script_negate",
+                                    "id": "shouldmove",
+                                    "scriptFunction": "doaactorshouldmove",
+                                    "cooldownMin": 0,
+                                    "cooldownMax": 0
+                                },
+                                {
+                                    "type": "condition_script_negate",
+                                    "id": "shouldmeleeattack",
+                                    "scriptFunction": "doaactorshouldmelee",
+                                    "cooldownMin": 0,
+                                    "cooldownMax": 0
+                                },
+                                {
+                                    "type": "action",
+                                    "id": "idleaction",
+                                    "ActionName": "doazombieidleaction",
+                                    "ASMStateName": "idle@zombie",
+                                    "loopingAction": 1,
+                                    "actionTimeMax": 0
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "type": "action",
+            "id": "debugvoidaction",
+            "ActionName": "doavoidaction",
+            "ASMStateName": "void@debug",
+            "loopingAction": 0,
+            "actionTimeMax": 0
+        }
+    ]
+}

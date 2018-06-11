@@ -1,0 +1,52 @@
+{
+    "states": {
+        "aggressive": {
+            "substates": {
+                "enter": {
+                    "animation_selector": "enter@aggressive"
+                },
+                "exit": {
+                    "animation_selector": "exit@aggressive"
+                },
+                "locomotion": {
+                    "animation_selector": "locomotion@aggressive",
+                    "loopsync": true,
+                    "parametric2d": true,
+                    "coderate": true,
+                    "speedblend": true
+                }
+            }
+        },
+        "movement": {
+            "substates": {
+                "locomotion": {
+                    "animation_selector": "locomotion@movement",
+                    "loopsync": true,
+                    "parametric2d": true,
+                    "coderate": true,
+                    "speedblend": true
+                }
+            }
+        },
+        "stationary": {
+            "substates": {
+                "death": {
+                    "animation_selector": "death@stationary"
+                },
+                "fire": {
+                    "animation_selector": "fire@stationary",
+                    "animdrivenlocomotion": true,
+                    "transitions": {
+                        "aggressive": {
+                            "animation_selector": "enter@aggressive"
+                        }
+                    }
+                },
+                "melee": {
+                    "animation_selector": "melee@stationary",
+                    "animdrivenlocomotion": true
+                }
+            }
+        }
+    }
+}

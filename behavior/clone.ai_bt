@@ -1,0 +1,71 @@
+{
+    "type": "selector",
+    "id": "selector",
+    "children": [
+        {
+            "type": "sequence",
+            "id": "deathbehavior",
+            "children": [
+                {
+                    "type": "condition_script",
+                    "id": "hasbeenkilled",
+                    "interruptName": "death",
+                    "cooldownMin": 0,
+                    "cooldownMax": 0
+                },
+                {
+                    "type": "action",
+                    "id": "defaultaction",
+                    "ActionName": "defaultaction",
+                    "ASMStateName": "exposed@death",
+                    "actionNotify": "death",
+                    "StartFunction": "startragdoll",
+                    "loopingAction": 0,
+                    "actionTimeMax": 0
+                }
+            ]
+        },
+        {
+            "type": "parallel",
+            "id": "idlebehavior",
+            "children": [
+                {
+                    "type": "condition_script_negate",
+                    "id": "shouldmove",
+                    "scriptFunction": "locomotionbehaviorcondition",
+                    "cooldownMin": 0,
+                    "cooldownMax": 0
+                },
+                {
+                    "type": "action",
+                    "id": "idle",
+                    "ActionName": "defaultaction",
+                    "ASMStateName": "idle@exposed",
+                    "loopingAction": 1,
+                    "actionTimeMax": 0
+                }
+            ]
+        },
+        {
+            "type": "parallel",
+            "id": "movebehavior",
+            "children": [
+                {
+                    "type": "condition_script",
+                    "id": "shouldmove",
+                    "scriptFunction": "locomotionbehaviorcondition",
+                    "cooldownMin": 0,
+                    "cooldownMax": 0
+                },
+                {
+                    "type": "action",
+                    "id": "move",
+                    "ActionName": "defaultaction",
+                    "ASMStateName": "move@locomotion",
+                    "loopingAction": 1,
+                    "actionTimeMax": 0
+                }
+            ]
+        }
+    ]
+}

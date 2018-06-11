@@ -1,0 +1,85 @@
+{
+    "states": {
+        "debug": {
+            "substates": {
+                "void": {
+                    "animation_selector": "void@debug"
+                }
+            }
+        },
+        "mechz": {
+            "substates": {
+                "berserk": {
+                    "animation_selector": "berserk@mechz"
+                },
+                "death": {
+                    "animation_selector": "death@mechz",
+                    "terminal": true
+                },
+                "idle": {
+                    "animation_selector": "idle@mechz"
+                },
+                "melee": {
+                    "animation_selector": "melee@mechz"
+                },
+                "melee_trap": {
+                    "animation_selector": "melee_trap@mechz"
+                },
+                "move": {
+                    "animation_selector": "move@mechz",
+                    "loopsync": true,
+                    "cleanloop": true,
+                    "multipledelta": true
+                },
+                "pain": {
+                    "animation_selector": "pain@mechz"
+                },
+                "prep_grenade": {
+                    "animation_selector": "prep_grenade@mechz",
+                    "aim_selector": "aim_additive@shoot_grenade"
+                },
+                "shoot_flame": {
+                    "animation_selector": "shoot_flame@mechz",
+                    "aim_selector": "aim_additive@shoot_flame"
+                },
+                "shoot_flame_run": {
+                    "animation_selector": "shoot_flame_run@mechz",
+                    "aim_selector": "aim_additive@shoot_flame_run",
+                    "loopsync": true,
+                    "cleanloop": true,
+                    "multipledelta": true
+                },
+                "shoot_flame_sweep": {
+                    "animation_selector": "shoot_flame_sweep@mechz"
+                },
+                "shoot_grenade": {
+                    "animation_selector": "shoot_grenade@mechz",
+                    "aim_selector": "aim_additive@shoot_grenade"
+                },
+                "stumble_in": {
+                    "animation_selector": "stumble_in@mechz"
+                },
+                "stumble_loop": {
+                    "animation_selector": "stumble_loop@mechz",
+                    "loopsync": true
+                },
+                "stumble_out": {
+                    "animation_selector": "stumble_out@mechz"
+                },
+                "stun_in": {
+                    "animation_selector": "stun_in@mechz"
+                },
+                "stun_loop": {
+                    "animation_selector": "stun_loop@mechz",
+                    "loopsync": true
+                },
+                "stun_out": {
+                    "animation_selector": "stun_out@mechz"
+                },
+                "traverse": {
+                    "animation_selector": "traverse@mechz"
+                }
+            }
+        }
+    }
+}

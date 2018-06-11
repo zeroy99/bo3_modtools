@@ -1,0 +1,162 @@
+{
+    "states": {
+        "gun": {
+            "substates": {
+                "sweep": {
+                    "animation_selector": "loop@gun_sweep",
+                    "loopsync": true,
+                    "transitions": {
+                        "jump": {
+                            "animation_selector": "launch@jump"
+                        },
+                        "movement": {
+                            "animation_selector": "outro@gun_sweep"
+                        }
+                    }
+                }
+            }
+        },
+        "jump": {
+            "substates": {
+                "fall": {
+                    "animation_selector": "fall@jump"
+                },
+                "inair": {
+                    "animation_selector": "inair@jump"
+                },
+                "land": {
+                    "animation_selector": "land@jump",
+                    "animdrivenlocomotion": true
+                },
+                "land_turn": {
+                    "animation_selector": "land_turn@jump",
+                    "animdrivenlocomotion": true
+                }
+            }
+        },
+        "movement": {
+            "substates": {
+                "juke_l": {
+                    "animation_selector": "juke_l@movement",
+                    "animdrivenlocomotion": true,
+                    "transitions": {
+                        "jump": {
+                            "animation_selector": "launch@jump"
+                        }
+                    }
+                },
+                "juke_r": {
+                    "animation_selector": "juke_r@movement",
+                    "animdrivenlocomotion": true,
+                    "transitions": {
+                        "jump": {
+                            "animation_selector": "launch@jump"
+                        }
+                    }
+                },
+                "locomotion": {
+                    "animation_selector": "locomotion@movement",
+                    "loopsync": true,
+                    "parametric2d": true,
+                    "coderate": true,
+                    "transitions": {
+                        "gun": {
+                            "animation_selector": "intro@gun_sweep"
+                        },
+                        "jump": {
+                            "animation_selector": "launch@jump"
+                        }
+                    }
+                },
+                "locomotion_rocketup": {
+                    "animation_selector": "locomotion_rocketup@movement",
+                    "loopsync": true,
+                    "parametric2d": true,
+                    "coderate": true,
+                    "transitions": {
+                        "gun": {
+                            "animation_selector": "intro@gun_sweep"
+                        },
+                        "jump": {
+                            "animation_selector": "launch@jump"
+                        }
+                    }
+                }
+            }
+        },
+        "pain": {
+            "substates": {
+                "damage_1": {
+                    "animation_selector": "damage_1@pain",
+                    "animdrivenlocomotion": true,
+                    "transitions": {
+                        "jump": {
+                            "animation_selector": "launch@jump"
+                        }
+                    }
+                },
+                "damage_2": {
+                    "animation_selector": "damage_2@pain",
+                    "animdrivenlocomotion": true,
+                    "transitions": {
+                        "jump": {
+                            "animation_selector": "launch@jump"
+                        }
+                    }
+                },
+                "damage_3": {
+                    "animation_selector": "damage_3@pain",
+                    "animdrivenlocomotion": true,
+                    "transitions": {
+                        "jump": {
+                            "animation_selector": "launch@jump"
+                        }
+                    }
+                },
+                "damage_4": {
+                    "animation_selector": "damage_4@pain",
+                    "animdrivenlocomotion": true,
+                    "transitions": {
+                        "jump": {
+                            "animation_selector": "launch@jump"
+                        }
+                    }
+                },
+                "normal": {
+                    "animation_selector": "normal@pain",
+                    "transitions": {
+                        "jump": {
+                            "animation_selector": "launch@jump"
+                        }
+                    }
+                }
+            }
+        },
+        "stationary": {
+            "substates": {
+                "arm_rocket": {
+                    "animation_selector": "armrockets@stationary",
+                    "animdrivenlocomotion": true,
+                    "transitions": {
+                        "jump": {
+                            "animation_selector": "launch@jump"
+                        }
+                    }
+                },
+                "death": {
+                    "animation_selector": "death@stationary",
+                    "animdrivenlocomotion": true
+                },
+                "javelin": {
+                    "animation_selector": "javelin@stationary",
+                    "animdrivenlocomotion": true,
+                    "transitions": {
+                        "jump": {
+                            "animation_selector": "launch@jump"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

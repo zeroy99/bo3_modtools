@@ -1,0 +1,579 @@
+{
+    "type": "selector",
+    "id": "zombie",
+    "children": [
+        {
+            "type": "selector",
+            "id": "zombiedeathbehavior",
+            "children": [
+                {
+                    "type": "sequence",
+                    "id": "idgun_blackhole",
+                    "children": [
+                        {
+                            "type": "condition_script",
+                            "id": "wascrushedbyinterdimensionalgunblackhole",
+                            "scriptFunction": "wascrushedbyinterdimensionalgunblackhole",
+                            "interruptName": "death",
+                            "cooldownMin": 0,
+                            "cooldownMax": 0
+                        },
+                        {
+                            "type": "action",
+                            "id": "idgundeathaction",
+                            "ActionName": "defaultaction",
+                            "ASMStateName": "death_idgun_blackhole@zombie",
+                            "actionNotify": "death",
+                            "StartFunction": "zombiedeathaction",
+                            "loopingAction": 0,
+                            "actionTimeMax": 0
+                        }
+                    ]
+                },
+                {
+                    "type": "sequence",
+                    "id": "defaultdeathbehavior",
+                    "children": [
+                        {
+                            "type": "condition_script",
+                            "id": "waskilled",
+                            "interruptName": "death",
+                            "cooldownMin": 0,
+                            "cooldownMax": 0
+                        },
+                        {
+                            "type": "selector",
+                            "id": "deathselector",
+                            "children": [
+                                {
+                                    "type": "sequence",
+                                    "id": "runningdeath",
+                                    "children": [
+                                        {
+                                            "type": "condition_script",
+                                            "id": "shouldmove",
+                                            "scriptFunction": "locomotionbehaviorcondition",
+                                            "cooldownMin": 0,
+                                            "cooldownMax": 0
+                                        },
+                                        {
+                                            "type": "action",
+                                            "id": "movingdeathaction",
+                                            "ActionName": "defaultaction",
+                                            "ASMStateName": "moving_death@zombie",
+                                            "actionNotify": "death",
+                                            "StartFunction": "apothicondeathstart",
+                                            "TerminateFunction": "apothicondeathterminate",
+                                            "loopingAction": 0,
+                                            "actionTimeMax": 0
+                                        }
+                                    ]
+                                },
+                                {
+                                    "type": "action",
+                                    "id": "deathaction",
+                                    "ActionName": "defaultaction",
+                                    "ASMStateName": "death@zombie",
+                                    "actionNotify": "death",
+                                    "StartFunction": "apothicondeathstart",
+                                    "TerminateFunction": "apothicondeathterminate",
+                                    "loopingAction": 0,
+                                    "actionTimeMax": 0
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "type": "sequence",
+            "id": "idgun",
+            "children": [
+                {
+                    "type": "condition_script",
+                    "id": "waskilledbyinterdimensionalgun",
+                    "scriptFunction": "waskilledbyinterdimensionalgun",
+                    "cooldownMin": 0,
+                    "cooldownMax": 0
+                },
+                {
+                    "type": "action",
+                    "id": "idgundeathaction",
+                    "ActionName": "defaultaction",
+                    "ASMStateName": "death_idgun@zombie",
+                    "StartFunction": "zombiedeathaction",
+                    "UpdateFunction": "zombieidgundeathupdate",
+                    "loopingAction": 1,
+                    "actionTimeMax": 0
+                }
+            ]
+        },
+        {
+            "type": "sequence",
+            "id": "traversebehavior",
+            "children": [
+                {
+                    "type": "condition_script",
+                    "id": "shouldtraverse",
+                    "scriptFunction": "locomotionshouldtraverse",
+                    "interruptName": "traverse",
+                    "cooldownMin": 0,
+                    "cooldownMax": 0
+                },
+                {
+                    "type": "action",
+                    "id": "traverseaction",
+                    "ActionName": "defaultaction",
+                    "ASMStateName": "traverse@zombie",
+                    "loopingAction": 0,
+                    "actionTimeMax": 0
+                }
+            ]
+        },
+        {
+            "type": "parallel",
+            "id": "idlespawnbehavior",
+            "children": [
+                {
+                    "type": "condition_script_negate",
+                    "id": "isspawndone",
+                    "scriptFunction": "zombieisthinkdone",
+                    "cooldownMin": 0,
+                    "cooldownMax": 0
+                },
+                {
+                    "type": "action",
+                    "id": "idleaction",
+                    "ActionName": "zombieidleaction",
+                    "ASMStateName": "idle@zombie",
+                    "loopingAction": 1,
+                    "actionTimeMax": 0
+                }
+            ]
+        },
+        {
+            "type": "parallel",
+            "id": "combatbehavior",
+            "children": [
+                {
+                    "type": "condition_service_script",
+                    "id": "apothiconpreemptivejukeservice",
+                    "scriptFunction": "apothiconpreemptivejukeservice",
+                    "cooldownMin": 0,
+                    "cooldownMax": 0
+                },
+                {
+                    "type": "condition_service_script",
+                    "id": "apothiconknockdownservice",
+                    "scriptFunction": "apothiconknockdownservice",
+                    "cooldownMin": 0,
+                    "cooldownMax": 0
+                },
+                {
+                    "type": "condition_service_script",
+                    "id": "zombiefindfleshservice",
+                    "scriptFunction": "zombiefindfleshservice",
+                    "cooldownMin": 0,
+                    "cooldownMax": 0
+                },
+                {
+                    "type": "selector",
+                    "id": "combatbehaviorselector",
+                    "children": [
+                        {
+                            "type": "sequence",
+                            "id": "painsequence",
+                            "children": [
+                                {
+                                    "type": "selector",
+                                    "id": "painorjukereactionbehavior",
+                                    "children": [
+                                        {
+                                            "type": "sequence",
+                                            "id": "jukepainbehavior",
+                                            "children": [
+                                                {
+                                                    "type": "condition_script",
+                                                    "id": "apothiconcanjuke",
+                                                    "scriptFunction": "apothiconcanjuke",
+                                                    "interruptName": "pain",
+                                                    "cooldownMin": 0,
+                                                    "cooldownMax": 0
+                                                },
+                                                {
+                                                    "type": "action",
+                                                    "id": "jukeaction",
+                                                    "ActionName": "defaultaction",
+                                                    "ASMStateName": "juke@zombie",
+                                                    "StartFunction": "apothiconjukeinit",
+                                                    "TerminateFunction": "apothiconfuriousmodeinit",
+                                                    "loopingAction": 0,
+                                                    "actionTimeMax": 0
+                                                },
+                                                {
+                                                    "type": "condition_script",
+                                                    "id": "apothiconcanbamfafterjuke",
+                                                    "scriptFunction": "apothiconcanbamfafterjuke",
+                                                    "cooldownMin": 0,
+                                                    "cooldownMax": 0
+                                                },
+                                                {
+                                                    "type": "action",
+                                                    "id": "bamflungeforward",
+                                                    "ActionName": "defaultaction",
+                                                    "ASMStateName": "lunge_forward@bamf_melee",
+                                                    "StartFunction": "apothiconbamfinit",
+                                                    "loopingAction": 0,
+                                                    "actionTimeMax": 0
+                                                },
+                                                {
+                                                    "type": "sequence",
+                                                    "id": "tauntbehavior",
+                                                    "children": [
+                                                        {
+                                                            "type": "condition_script_negate",
+                                                            "id": "apothiconshouldmeleecondition",
+                                                            "scriptFunction": "apothiconshouldmeleecondition",
+                                                            "cooldownMin": 0,
+                                                            "cooldownMax": 0
+                                                        },
+                                                        {
+                                                            "type": "condition_script",
+                                                            "id": "apothiconshouldtauntatplayer",
+                                                            "scriptFunction": "apothiconshouldtauntatplayer",
+                                                            "cooldownMin": 0,
+                                                            "cooldownMax": 0
+                                                        },
+                                                        {
+                                                            "type": "action",
+                                                            "id": "tauntaction",
+                                                            "ActionName": "defaultaction",
+                                                            "ASMStateName": "taunt@zombie",
+                                                            "StartFunction": "apothicontauntatplayerevent",
+                                                            "loopingAction": 0,
+                                                            "actionTimeMax": 0
+                                                        }
+                                                    ]
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "type": "sequence",
+                                            "id": "apothiconpainaction",
+                                            "children": [
+                                                {
+                                                    "type": "condition_script",
+                                                    "id": "shouldshowpain",
+                                                    "scriptFunction": "zombieshoulddisplaypain",
+                                                    "interruptName": "pain",
+                                                    "cooldownMin": 0,
+                                                    "cooldownMax": 0
+                                                },
+                                                {
+                                                    "type": "action",
+                                                    "id": "painaction",
+                                                    "ActionName": "defaultaction",
+                                                    "ASMStateName": "pain@zombie",
+                                                    "loopingAction": 0,
+                                                    "actionTimeMax": 450
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        },
+                        {
+                            "type": "parallel",
+                            "id": "zombiestunbehavior",
+                            "children": [
+                                {
+                                    "type": "condition_script",
+                                    "id": "shouldbestunned",
+                                    "scriptFunction": "zombieshouldstun",
+                                    "cooldownMin": 0,
+                                    "cooldownMax": 0
+                                },
+                                {
+                                    "type": "condition_script_negate",
+                                    "id": "waskilledbyinterdimensionalgun",
+                                    "scriptFunction": "waskilledbyinterdimensionalgun",
+                                    "cooldownMin": 0,
+                                    "cooldownMax": 0
+                                },
+                                {
+                                    "type": "action",
+                                    "id": "stunaction",
+                                    "ActionName": "defaultaction",
+                                    "ASMStateName": "stun_tesla@zombie",
+                                    "StartFunction": "zombiestunactionstart",
+                                    "TerminateFunction": "zombiestunactionend",
+                                    "loopingAction": 1,
+                                    "actionTimeMax": 4000
+                                }
+                            ]
+                        },
+                        {
+                            "type": "parallel",
+                            "id": "moveawaybehavior",
+                            "children": [
+                                {
+                                    "type": "condition_script",
+                                    "id": "shouldmoveaway",
+                                    "scriptFunction": "zombieshouldmoveaway",
+                                    "cooldownMin": 0,
+                                    "cooldownMax": 0
+                                },
+                                {
+                                    "type": "condition_script_negate",
+                                    "id": "waskilledbyinterdimensionalgun",
+                                    "scriptFunction": "waskilledbyinterdimensionalgun",
+                                    "cooldownMin": 0,
+                                    "cooldownMax": 0
+                                },
+                                {
+                                    "type": "action",
+                                    "id": "moveawayaction",
+                                    "ActionName": "zombiemoveaway",
+                                    "ASMStateName": "move@zombie",
+                                    "loopingAction": 1,
+                                    "actionTimeMax": 0
+                                }
+                            ]
+                        },
+                        {
+                            "type": "sequence",
+                            "id": "meleebehaviorselector",
+                            "children": [
+                                {
+                                    "type": "condition_script",
+                                    "id": "apothiconcanmeleeattack",
+                                    "scriptFunction": "apothiconcanmeleeattack",
+                                    "cooldownMin": 0,
+                                    "cooldownMax": 0
+                                },
+                                {
+                                    "type": "selector",
+                                    "id": "meleebehaviorselector",
+                                    "children": [
+                                        {
+                                            "type": "sequence",
+                                            "id": "meleeattackbehavior",
+                                            "children": [
+                                                {
+                                                    "type": "condition_script",
+                                                    "id": "apothiconshouldmeleecondition",
+                                                    "scriptFunction": "apothiconshouldmeleecondition",
+                                                    "cooldownMin": 0,
+                                                    "cooldownMax": 0
+                                                },
+                                                {
+                                                    "type": "condition_script_negate",
+                                                    "id": "shouldmoveaway",
+                                                    "scriptFunction": "zombieshouldmoveaway",
+                                                    "cooldownMin": 0,
+                                                    "cooldownMax": 0
+                                                },
+                                                {
+                                                    "type": "action",
+                                                    "id": "meleeattackaction",
+                                                    "ActionName": "defaultaction",
+                                                    "ASMStateName": "melee@zombie",
+                                                    "actionNotify": "attack_melee",
+                                                    "loopingAction": 0,
+                                                    "actionTimeMax": 0
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "type": "sequence",
+                                            "id": "bamfmeleeattackbehavior",
+                                            "children": [
+                                                {
+                                                    "type": "condition_script",
+                                                    "id": "apothiconcanbamf",
+                                                    "scriptFunction": "apothiconcanbamf",
+                                                    "cooldownMin": 0,
+                                                    "cooldownMax": 0
+                                                },
+                                                {
+                                                    "type": "action",
+                                                    "id": "bamflungeforward",
+                                                    "ActionName": "defaultaction",
+                                                    "ASMStateName": "lunge_forward@bamf_melee",
+                                                    "StartFunction": "apothiconbamfinit",
+                                                    "loopingAction": 0,
+                                                    "actionTimeMax": 0
+                                                },
+                                                {
+                                                    "type": "sequence",
+                                                    "id": "tauntbehavior",
+                                                    "children": [
+                                                        {
+                                                            "type": "condition_script_negate",
+                                                            "id": "apothiconshouldmeleecondition",
+                                                            "scriptFunction": "apothiconshouldmeleecondition",
+                                                            "cooldownMin": 0,
+                                                            "cooldownMax": 0
+                                                        },
+                                                        {
+                                                            "type": "condition_script",
+                                                            "id": "apothiconshouldtauntatplayer",
+                                                            "scriptFunction": "apothiconshouldtauntatplayer",
+                                                            "cooldownMin": 0,
+                                                            "cooldownMax": 0
+                                                        },
+                                                        {
+                                                            "type": "action",
+                                                            "id": "tauntaction",
+                                                            "ActionName": "defaultaction",
+                                                            "ASMStateName": "taunt@zombie",
+                                                            "StartFunction": "apothicontauntatplayerevent",
+                                                            "loopingAction": 0,
+                                                            "actionTimeMax": 0
+                                                        }
+                                                    ]
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        },
+                        {
+                            "type": "selector",
+                            "id": "preemptivejukebehavior",
+                            "children": [
+                                {
+                                    "type": "sequence",
+                                    "id": "preemptingjuke",
+                                    "children": [
+                                        {
+                                            "type": "condition_script",
+                                            "id": "apothiconpreemptivejukepending",
+                                            "scriptFunction": "apothiconpreemptivejukepending",
+                                            "cooldownMin": 0,
+                                            "cooldownMax": 0
+                                        },
+                                        {
+                                            "type": "action",
+                                            "id": "jukeaction",
+                                            "ActionName": "defaultaction",
+                                            "ASMStateName": "juke@zombie",
+                                            "StartFunction": "apothiconjukeinit",
+                                            "TerminateFunction": "apothiconpreemptivejukedone",
+                                            "loopingAction": 0,
+                                            "actionTimeMax": 0
+                                        }
+                                    ]
+                                }
+                            ]
+                        },
+                        {
+                            "type": "parallel",
+                            "id": "movebehavior",
+                            "children": [
+                                {
+                                    "type": "condition_script_negate",
+                                    "id": "apothiconpreemptivejukepending",
+                                    "scriptFunction": "apothiconpreemptivejukepending",
+                                    "cooldownMin": 0,
+                                    "cooldownMax": 0
+                                },
+                                {
+                                    "type": "condition_script",
+                                    "id": "shouldmove",
+                                    "scriptFunction": "locomotionbehaviorcondition",
+                                    "cooldownMin": 0,
+                                    "cooldownMax": 0
+                                },
+                                {
+                                    "type": "condition_script_negate",
+                                    "id": "shouldmoveaway",
+                                    "scriptFunction": "zombieshouldmoveaway",
+                                    "cooldownMin": 0,
+                                    "cooldownMax": 0
+                                },
+                                {
+                                    "type": "condition_script_negate",
+                                    "id": "apothiconcanmeleeattack",
+                                    "scriptFunction": "apothiconcanmeleeattack",
+                                    "cooldownMin": 0,
+                                    "cooldownMax": 0
+                                },
+                                {
+                                    "type": "condition_script_negate",
+                                    "id": "waskilledbyinterdimensionalgun",
+                                    "scriptFunction": "waskilledbyinterdimensionalgun",
+                                    "cooldownMin": 0,
+                                    "cooldownMax": 0
+                                },
+                                {
+                                    "type": "action",
+                                    "id": "moveaction",
+                                    "ActionName": "defaultaction",
+                                    "ASMStateName": "move@zombie",
+                                    "StartFunction": "apothiconmovestart",
+                                    "TerminateFunction": "apothiconmoveupdate",
+                                    "loopingAction": 1,
+                                    "actionTimeMax": 0
+                                }
+                            ]
+                        },
+                        {
+                            "type": "parallel",
+                            "id": "idlebehavior",
+                            "children": [
+                                {
+                                    "type": "condition_script_negate",
+                                    "id": "shouldmoveaway",
+                                    "scriptFunction": "zombieshouldmoveaway",
+                                    "cooldownMin": 0,
+                                    "cooldownMax": 0
+                                },
+                                {
+                                    "type": "condition_script_negate",
+                                    "id": "apothiconcanmeleeattack",
+                                    "scriptFunction": "apothiconcanmeleeattack",
+                                    "cooldownMin": 0,
+                                    "cooldownMax": 0
+                                },
+                                {
+                                    "type": "condition_script_negate",
+                                    "id": "shouldmove",
+                                    "scriptFunction": "locomotionbehaviorcondition",
+                                    "cooldownMin": 0,
+                                    "cooldownMax": 0
+                                },
+                                {
+                                    "type": "condition_script_negate",
+                                    "id": "waskilledbyinterdimensionalgun",
+                                    "scriptFunction": "waskilledbyinterdimensionalgun",
+                                    "cooldownMin": 0,
+                                    "cooldownMax": 0
+                                },
+                                {
+                                    "type": "action",
+                                    "id": "idleaction",
+                                    "ActionName": "zombieidleaction",
+                                    "ASMStateName": "idle@zombie",
+                                    "loopingAction": 1,
+                                    "actionTimeMax": 0
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "type": "action",
+            "id": "debugvoidaction",
+            "ActionName": "defaultaction",
+            "ASMStateName": "void@debug",
+            "loopingAction": 0,
+            "actionTimeMax": 0
+        }
+    ]
+}

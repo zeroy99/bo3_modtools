@@ -1,0 +1,58 @@
+{
+    "states": {
+        "attack": {
+            "substates": {
+                "dodge_left": {
+                    "animation_selector": "dodge_left@attack"
+                },
+                "dodge_right": {
+                    "animation_selector": "dodge_right@attack"
+                },
+                "fire": {
+                    "animation_selector": "fire@attack"
+                },
+                "fire_succession": {
+                    "animation_selector": "fire_succession@attack"
+                }
+            }
+        },
+        "death": {
+            "substates": {
+                "normal": {
+                    "animation_selector": "normal@death"
+                },
+                "suicide_charge": {
+                    "animation_selector": "suicide_charge@death",
+                    "loopsync": true
+                },
+                "suicide_intro": {
+                    "animation_selector": "suicide_intro@death"
+                }
+            }
+        },
+        "default": {
+            "substates": {
+                "hit": {
+                    "animation_selector": "hit@default"
+                },
+                "idle": {
+                    "animation_selector": "idle@default",
+                    "loopsync": true
+                },
+                "intro": {
+                    "animation_selector": "intro@default"
+                }
+            }
+        },
+        "movement": {
+            "substates": {
+                "locomotion": {
+                    "animation_selector": "locomotion@movement",
+                    "loopsync": true,
+                    "parametric2d": true,
+                    "speedblend": true
+                }
+            }
+        }
+    }
+}

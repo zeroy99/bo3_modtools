@@ -1,0 +1,664 @@
+{
+    "type": "selector",
+    "id": "mechz",
+    "children": [
+        {
+            "type": "parallel",
+            "id": "mechzbehaviormain",
+            "children": [
+                {
+                    "type": "condition_service_script",
+                    "id": "tombmechzgetjumpposservice",
+                    "scriptFunction": "tombmechzgetjumpposservice",
+                    "cooldownMin": 0,
+                    "cooldownMax": 0
+                },
+                {
+                    "type": "condition_service_script",
+                    "id": "tombmechzgettanktagservice",
+                    "scriptFunction": "tombmechzgettanktagservice",
+                    "cooldownMin": 0,
+                    "cooldownMax": 0
+                },
+                {
+                    "type": "condition_service_script",
+                    "id": "mechztargetservice",
+                    "scriptFunction": "mechztargetservice",
+                    "cooldownMin": 500,
+                    "cooldownMax": 1000
+                },
+                {
+                    "type": "condition_service_script",
+                    "id": "mechzgrenadeservice",
+                    "scriptFunction": "mechzgrenadeservice",
+                    "cooldownMin": 0,
+                    "cooldownMax": 0
+                },
+                {
+                    "type": "condition_service_script",
+                    "id": "mechzberserkknockdownservice",
+                    "scriptFunction": "mechzberserkknockdownservice",
+                    "cooldownMin": 200,
+                    "cooldownMax": 200
+                },
+                {
+                    "type": "selector",
+                    "id": "mechzbehaviorselector",
+                    "children": [
+                        {
+                            "type": "sequence",
+                            "id": "mechzdeathbehavior",
+                            "children": [
+                                {
+                                    "type": "condition_script",
+                                    "id": "waskilled",
+                                    "interruptName": "death",
+                                    "cooldownMin": 0,
+                                    "cooldownMax": 0
+                                },
+                                {
+                                    "type": "action",
+                                    "id": "deathaction",
+                                    "ActionName": "defaultaction",
+                                    "ASMStateName": "death@mechz",
+                                    "actionNotify": "death",
+                                    "StartFunction": "mechzdeathstart",
+                                    "TerminateFunction": "startragdoll",
+                                    "loopingAction": 0,
+                                    "actionTimeMax": 0
+                                }
+                            ]
+                        },
+                        {
+                            "type": "sequence",
+                            "id": "mechztraversebehavior",
+                            "children": [
+                                {
+                                    "type": "condition_script",
+                                    "id": "shouldtraverse",
+                                    "scriptFunction": "locomotionshouldtraverse",
+                                    "interruptName": "traverse",
+                                    "cooldownMin": 0,
+                                    "cooldownMax": 0
+                                },
+                                {
+                                    "type": "action",
+                                    "id": "traverseaction",
+                                    "ActionName": "traverseactionstart",
+                                    "ASMStateName": "traverse@mechz",
+                                    "loopingAction": 0,
+                                    "actionTimeMax": 0
+                                }
+                            ]
+                        },
+                        {
+                            "type": "sequence",
+                            "id": "mechzpainbehavior",
+                            "children": [
+                                {
+                                    "type": "condition_script",
+                                    "id": "shouldshowpain",
+                                    "scriptFunction": "mechzshouldshowpain",
+                                    "cooldownMin": 0,
+                                    "cooldownMax": 0
+                                },
+                                {
+                                    "type": "action",
+                                    "id": "painaction",
+                                    "ActionName": "defaultaction",
+                                    "ASMStateName": "pain@mechz",
+                                    "StartFunction": "mechzpainstart",
+                                    "TerminateFunction": "mechzpainterminate",
+                                    "loopingAction": 0,
+                                    "actionTimeMax": 0
+                                }
+                            ]
+                        },
+                        {
+                            "type": "sequence",
+                            "id": "mechzstompedbyrobotbehavior",
+                            "children": [
+                                {
+                                    "type": "condition_script",
+                                    "id": "tombmechzwasrobotstomped",
+                                    "scriptFunction": "tombmechzwasrobotstomped",
+                                    "cooldownMin": 0,
+                                    "cooldownMax": 0
+                                },
+                                {
+                                    "type": "action",
+                                    "id": "tombmechzrobotstompactionstart",
+                                    "ActionName": "defaultaction",
+                                    "ASMStateName": "robot_stomped_in@mechz",
+                                    "StartFunction": "tombmechzrobotstompactionstart",
+                                    "loopingAction": 0,
+                                    "actionTimeMax": 0
+                                },
+                                {
+                                    "type": "action",
+                                    "id": "tombmechzrobotstompactionloop",
+                                    "ActionName": "tombmechzrobotstompactionloop",
+                                    "ASMStateName": "robot_stomped_loop@mechz",
+                                    "loopingAction": 0,
+                                    "actionTimeMax": 0
+                                },
+                                {
+                                    "type": "action",
+                                    "id": "tombmechzrobotstompactionend",
+                                    "ActionName": "defaultaction",
+                                    "ASMStateName": "robot_stomped_out@mechz",
+                                    "TerminateFunction": "tombmechzrobotstompactionend",
+                                    "loopingAction": 0,
+                                    "actionTimeMax": 0
+                                }
+                            ]
+                        },
+                        {
+                            "type": "sequence",
+                            "id": "mechzhitbytankbehavior",
+                            "children": [
+                                {
+                                    "type": "condition_script",
+                                    "id": "tombmechzwasknockeddownbytank",
+                                    "scriptFunction": "tombmechzwasknockeddownbytank",
+                                    "cooldownMin": 0,
+                                    "cooldownMax": 0
+                                },
+                                {
+                                    "type": "action",
+                                    "id": "tombmechztankknockdownactionstart",
+                                    "ActionName": "defaultaction",
+                                    "ASMStateName": "hit_by_tank_in@mechz",
+                                    "StartFunction": "tombmechztankknockdownactionstart",
+                                    "loopingAction": 0,
+                                    "actionTimeMax": 0
+                                },
+                                {
+                                    "type": "action",
+                                    "id": "tombmechztankknockdownactionloop",
+                                    "ActionName": "tombmechztankknockdownactionloop",
+                                    "ASMStateName": "hit_by_tank_loop@mechz",
+                                    "loopingAction": 0,
+                                    "actionTimeMax": 0
+                                },
+                                {
+                                    "type": "action",
+                                    "id": "tombmechztankknockdownactionend",
+                                    "ActionName": "defaultaction",
+                                    "ASMStateName": "hit_by_tank_out@mechz",
+                                    "TerminateFunction": "tombmechztankknockdownactionend",
+                                    "loopingAction": 0,
+                                    "actionTimeMax": 0
+                                }
+                            ]
+                        },
+                        {
+                            "type": "sequence",
+                            "id": "mechzstunbehavior",
+                            "children": [
+                                {
+                                    "type": "condition_script_negate",
+                                    "id": "shouldshowpain",
+                                    "scriptFunction": "mechzshouldshowpain",
+                                    "cooldownMin": 0,
+                                    "cooldownMax": 0
+                                },
+                                {
+                                    "type": "condition_script",
+                                    "id": "shouldstun",
+                                    "scriptFunction": "mechzshouldstun",
+                                    "cooldownMin": 0,
+                                    "cooldownMax": 0
+                                },
+                                {
+                                    "type": "action",
+                                    "id": "stuninaction",
+                                    "ActionName": "defaultaction",
+                                    "ASMStateName": "stun_in@mechz",
+                                    "loopingAction": 0,
+                                    "actionTimeMax": 0
+                                },
+                                {
+                                    "type": "action",
+                                    "id": "stunloopaction",
+                                    "ActionName": "mechzstunloop",
+                                    "ASMStateName": "stun_loop@mechz",
+                                    "loopingAction": 0,
+                                    "actionTimeMax": 0
+                                },
+                                {
+                                    "type": "action",
+                                    "id": "stunoutaction",
+                                    "ActionName": "defaultaction",
+                                    "ASMStateName": "stun_out@mechz",
+                                    "loopingAction": 0,
+                                    "actionTimeMax": 0
+                                }
+                            ]
+                        },
+                        {
+                            "type": "sequence",
+                            "id": "mechzstumblebehavior",
+                            "children": [
+                                {
+                                    "type": "condition_script_negate",
+                                    "id": "shouldshowpain",
+                                    "scriptFunction": "mechzshouldshowpain",
+                                    "cooldownMin": 0,
+                                    "cooldownMax": 0
+                                },
+                                {
+                                    "type": "condition_script",
+                                    "id": "shouldstumble",
+                                    "scriptFunction": "mechzshouldstumble",
+                                    "cooldownMin": 0,
+                                    "cooldownMax": 0
+                                },
+                                {
+                                    "type": "action",
+                                    "id": "stumbleinaction",
+                                    "ActionName": "defaultaction",
+                                    "ASMStateName": "stumble_in@mechz",
+                                    "loopingAction": 0,
+                                    "actionTimeMax": 0
+                                },
+                                {
+                                    "type": "action",
+                                    "id": "stumbleloopaction",
+                                    "ActionName": "mechzstumbleloop",
+                                    "ASMStateName": "stumble_loop@mechz",
+                                    "loopingAction": 0,
+                                    "actionTimeMax": 0
+                                },
+                                {
+                                    "type": "action",
+                                    "id": "stumbleoutaction",
+                                    "ActionName": "defaultaction",
+                                    "ASMStateName": "stumble_out@mechz",
+                                    "loopingAction": 0,
+                                    "actionTimeMax": 0
+                                }
+                            ]
+                        },
+                        {
+                            "type": "sequence",
+                            "id": "mechzgoberserkbehavior",
+                            "children": [
+                                {
+                                    "type": "condition_script_negate",
+                                    "id": "shouldshowpain",
+                                    "scriptFunction": "mechzshouldshowpain",
+                                    "cooldownMin": 0,
+                                    "cooldownMax": 0
+                                },
+                                {
+                                    "type": "condition_script",
+                                    "id": "shouldturnberserk",
+                                    "scriptFunction": "mechzshouldturnberserk",
+                                    "cooldownMin": 0,
+                                    "cooldownMax": 0
+                                },
+                                {
+                                    "type": "action",
+                                    "id": "playberserkintroanimation",
+                                    "ActionName": "defaultaction",
+                                    "ASMStateName": "berserk@mechz",
+                                    "TerminateFunction": "mechzplayedberserkintro",
+                                    "loopingAction": 0,
+                                    "actionTimeMax": 0
+                                }
+                            ]
+                        },
+                        {
+                            "type": "parallel",
+                            "id": "mechzbehavior",
+                            "children": [
+                                {
+                                    "type": "condition_script_negate",
+                                    "id": "tombmechzwasrobotstomped",
+                                    "scriptFunction": "tombmechzwasrobotstomped",
+                                    "cooldownMin": 0,
+                                    "cooldownMax": 0
+                                },
+                                {
+                                    "type": "condition_script_negate",
+                                    "id": "tombmechzwasknockeddownbytank",
+                                    "scriptFunction": "tombmechzwasknockeddownbytank",
+                                    "cooldownMin": 0,
+                                    "cooldownMax": 0
+                                },
+                                {
+                                    "type": "condition_script_negate",
+                                    "id": "shouldshowpain",
+                                    "scriptFunction": "mechzshouldshowpain",
+                                    "cooldownMin": 0,
+                                    "cooldownMax": 0
+                                },
+                                {
+                                    "type": "condition_script_negate",
+                                    "id": "shouldstun",
+                                    "scriptFunction": "mechzshouldstun",
+                                    "cooldownMin": 0,
+                                    "cooldownMax": 0
+                                },
+                                {
+                                    "type": "condition_script_negate",
+                                    "id": "shouldstumble",
+                                    "scriptFunction": "mechzshouldstumble",
+                                    "cooldownMin": 0,
+                                    "cooldownMax": 0
+                                },
+                                {
+                                    "type": "condition_script_negate",
+                                    "id": "shouldturnberserk",
+                                    "scriptFunction": "mechzshouldturnberserk",
+                                    "cooldownMin": 0,
+                                    "cooldownMax": 0
+                                },
+                                {
+                                    "type": "selector",
+                                    "id": "mechzselector",
+                                    "children": [
+                                        {
+                                            "type": "parallel",
+                                            "id": "movebehavior",
+                                            "children": [
+                                                {
+                                                    "type": "condition_script",
+                                                    "id": "shouldmove",
+                                                    "scriptFunction": "locomotionbehaviorcondition",
+                                                    "cooldownMin": 0,
+                                                    "cooldownMax": 0
+                                                },
+                                                {
+                                                    "type": "condition_script_negate",
+                                                    "id": "shouldmelee",
+                                                    "scriptFunction": "mechzshouldmelee",
+                                                    "cooldownMin": 0,
+                                                    "cooldownMax": 0
+                                                },
+                                                {
+                                                    "type": "condition_script_negate",
+                                                    "id": "tombmechzshouldjump",
+                                                    "scriptFunction": "tombmechzshouldjump",
+                                                    "cooldownMin": 0,
+                                                    "cooldownMax": 0
+                                                },
+                                                {
+                                                    "type": "condition_script_negate",
+                                                    "id": "mechzshouldshootflame",
+                                                    "scriptFunction": "mechzshouldshootflame",
+                                                    "cooldownMin": 0,
+                                                    "cooldownMax": 0
+                                                },
+                                                {
+                                                    "type": "condition_script_negate",
+                                                    "id": "zmmechzshouldshootclaw",
+                                                    "scriptFunction": "zmmechzshouldshootclaw",
+                                                    "cooldownMin": 0,
+                                                    "cooldownMax": 0
+                                                },
+                                                {
+                                                    "type": "action",
+                                                    "id": "moveaction",
+                                                    "ActionName": "defaultaction",
+                                                    "ASMStateName": "move@mechz",
+                                                    "loopingAction": 1,
+                                                    "actionTimeMax": 0
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "type": "sequence",
+                                            "id": "meleebehavior",
+                                            "children": [
+                                                {
+                                                    "type": "condition_script",
+                                                    "id": "shouldmelee",
+                                                    "scriptFunction": "mechzshouldmelee",
+                                                    "cooldownMin": 0,
+                                                    "cooldownMax": 0
+                                                },
+                                                {
+                                                    "type": "action",
+                                                    "id": "meleeaction",
+                                                    "ActionName": "defaultaction",
+                                                    "ASMStateName": "melee@mechz",
+                                                    "StartFunction": "mechzattackstart",
+                                                    "loopingAction": 0,
+                                                    "actionTimeMax": 0
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "type": "sequence",
+                                            "id": "tankmovingbehavior",
+                                            "children": [
+                                                {
+                                                    "type": "condition_script",
+                                                    "id": "tombmechzshouldjump",
+                                                    "scriptFunction": "tombmechzshouldjump",
+                                                    "cooldownMin": 0,
+                                                    "cooldownMax": 0
+                                                },
+                                                {
+                                                    "type": "action",
+                                                    "id": "tombmechzjumpupaction",
+                                                    "ActionName": "defaultaction",
+                                                    "ASMStateName": "jump_tank_in@mechz",
+                                                    "StartFunction": "tombmechzjumpupactionstart",
+                                                    "TerminateFunction": "tombmechzjumpupactionterminate",
+                                                    "loopingAction": 0,
+                                                    "actionTimeMax": 0
+                                                },
+                                                {
+                                                    "type": "action",
+                                                    "id": "tombmechzjumphoveraction",
+                                                    "ActionName": "tombmechzjumphoveraction",
+                                                    "ASMStateName": "jump_tank_loop@mechz",
+                                                    "loopingAction": 0,
+                                                    "actionTimeMax": 0
+                                                },
+                                                {
+                                                    "type": "action",
+                                                    "id": "tombmechzjumpdownaction",
+                                                    "ActionName": "defaultaction",
+                                                    "ASMStateName": "jump_tank_out@mechz",
+                                                    "StartFunction": "tombmechzjumpdownactionstart",
+                                                    "TerminateFunction": "tombmechzjumpdownactionterminate",
+                                                    "loopingAction": 0,
+                                                    "actionTimeMax": 0
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "type": "parallel",
+                                            "id": "attacktankbehavior",
+                                            "children": [
+                                                {
+                                                    "type": "condition_script_negate",
+                                                    "id": "shouldmelee",
+                                                    "scriptFunction": "mechzshouldmelee",
+                                                    "cooldownMin": 0,
+                                                    "cooldownMax": 0
+                                                },
+                                                {
+                                                    "type": "condition_script_negate",
+                                                    "id": "tombmechzshouldjump",
+                                                    "scriptFunction": "tombmechzshouldjump",
+                                                    "cooldownMin": 0,
+                                                    "cooldownMax": 0
+                                                },
+                                                {
+                                                    "type": "condition_script",
+                                                    "id": "tombmechzshouldshootflameattank",
+                                                    "scriptFunction": "tombmechzshouldshootflameattank",
+                                                    "cooldownMin": 0,
+                                                    "cooldownMax": 0
+                                                },
+                                                {
+                                                    "type": "action",
+                                                    "id": "tombmechzattacktank",
+                                                    "ActionName": "tombmechzshootflameattankaction",
+                                                    "ASMStateName": "face_tank@mechz",
+                                                    "loopingAction": 1,
+                                                    "actionTimeMax": 0
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "type": "sequence",
+                                            "id": "shootflamebehavior",
+                                            "children": [
+                                                {
+                                                    "type": "condition_script_negate",
+                                                    "id": "shouldmelee",
+                                                    "scriptFunction": "mechzshouldmelee",
+                                                    "cooldownMin": 0,
+                                                    "cooldownMax": 0
+                                                },
+                                                {
+                                                    "type": "condition_script",
+                                                    "id": "mechzshouldshootflame",
+                                                    "scriptFunction": "mechzshouldshootflame",
+                                                    "cooldownMin": 0,
+                                                    "cooldownMax": 0
+                                                },
+                                                {
+                                                    "type": "action",
+                                                    "id": "mechzshootflame",
+                                                    "ActionName": "mechzshootflameaction",
+                                                    "ASMStateName": "shoot_flame_run@mechz",
+                                                    "loopingAction": 0,
+                                                    "actionTimeMax": 0
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "type": "sequence",
+                                            "id": "shootflamesweepbehavior",
+                                            "children": [
+                                                {
+                                                    "type": "condition_script_negate",
+                                                    "id": "shouldmelee",
+                                                    "scriptFunction": "mechzshouldmelee",
+                                                    "cooldownMin": 0,
+                                                    "cooldownMax": 0
+                                                },
+                                                {
+                                                    "type": "condition_script",
+                                                    "id": "mechzshouldshootflamesweep",
+                                                    "scriptFunction": "mechzshouldshootflamesweep",
+                                                    "cooldownMin": 0,
+                                                    "cooldownMax": 0
+                                                },
+                                                {
+                                                    "type": "action",
+                                                    "id": "mechzshootflamesweep",
+                                                    "ActionName": "defaultaction",
+                                                    "ASMStateName": "shoot_flame_sweep@mechz",
+                                                    "StartFunction": "mechzshootflame",
+                                                    "TerminateFunction": "mechzstopflame",
+                                                    "UpdateFunction": "mechzupdateflame",
+                                                    "loopingAction": 0,
+                                                    "actionTimeMax": 0
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "type": "sequence",
+                                            "id": "shootclawbehavior",
+                                            "children": [
+                                                {
+                                                    "type": "condition_script_negate",
+                                                    "id": "shouldmelee",
+                                                    "scriptFunction": "mechzshouldmelee",
+                                                    "cooldownMin": 0,
+                                                    "cooldownMax": 0
+                                                },
+                                                {
+                                                    "type": "condition_script",
+                                                    "id": "zmmechzshouldshootclaw",
+                                                    "scriptFunction": "zmmechzshouldshootclaw",
+                                                    "cooldownMin": 0,
+                                                    "cooldownMax": 0
+                                                },
+                                                {
+                                                    "type": "action",
+                                                    "id": "zmmechzshootclawintro",
+                                                    "ActionName": "defaultaction",
+                                                    "ASMStateName": "shoot_claw_intro@mechz",
+                                                    "loopingAction": 0,
+                                                    "actionTimeMax": 0
+                                                },
+                                                {
+                                                    "type": "action",
+                                                    "id": "zmmechzshootclaw",
+                                                    "ActionName": "zmmechzshootclawaction",
+                                                    "ASMStateName": "shoot_claw@mechz",
+                                                    "loopingAction": 0,
+                                                    "actionTimeMax": 0
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "type": "parallel",
+                                            "id": "idlebehavior",
+                                            "children": [
+                                                {
+                                                    "type": "condition_script_negate",
+                                                    "id": "tombmechzshouldjump",
+                                                    "scriptFunction": "tombmechzshouldjump",
+                                                    "cooldownMin": 0,
+                                                    "cooldownMax": 0
+                                                },
+                                                {
+                                                    "type": "condition_script_negate",
+                                                    "id": "tombmechzshouldshootflameattank",
+                                                    "scriptFunction": "tombmechzshouldshootflameattank",
+                                                    "cooldownMin": 0,
+                                                    "cooldownMax": 0
+                                                },
+                                                {
+                                                    "type": "condition_script_negate",
+                                                    "id": "shouldmove",
+                                                    "scriptFunction": "locomotionbehaviorcondition",
+                                                    "cooldownMin": 0,
+                                                    "cooldownMax": 0
+                                                },
+                                                {
+                                                    "type": "condition_script_negate",
+                                                    "id": "shouldmelee",
+                                                    "scriptFunction": "mechzshouldmelee",
+                                                    "cooldownMin": 0,
+                                                    "cooldownMax": 0
+                                                },
+                                                {
+                                                    "type": "action",
+                                                    "id": "idleaction",
+                                                    "ActionName": "defaultaction",
+                                                    "ASMStateName": "idle@mechz",
+                                                    "StartFunction": "mechzidlestart",
+                                                    "loopingAction": 1,
+                                                    "actionTimeMax": 0
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "type": "action",
+            "id": "debugvoidaction",
+            "ActionName": "defaultaction",
+            "ASMStateName": "void@debug",
+            "loopingAction": 0,
+            "actionTimeMax": 0
+        }
+    ]
+}

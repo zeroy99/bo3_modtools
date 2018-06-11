@@ -1,0 +1,53 @@
+{
+    "states": {
+        "death": {
+            "substates": {
+                "exposed": {
+                    "animation_selector": "exposed@death",
+                    "terminal": true,
+                    "requires_ragdoll_notetrack": true
+                }
+            }
+        },
+        "debug": {
+            "substates": {
+                "void": {
+                    "animation_selector": "void@debug"
+                }
+            }
+        },
+        "exposed": {
+            "substates": {
+                "idle": {
+                    "animation_selector": "idle@exposed",
+                    "shoot_selector": "thunderwall@exposed",
+                    "loopsync": true,
+                    "multipledelta": true
+                },
+                "melee": {
+                    "animation_selector": "melee@exposed"
+                }
+            }
+        },
+        "locomotion": {
+            "substates": {
+                "move": {
+                    "animation_selector": "move@locomotion",
+                    "shoot_selector": "thunderwall@exposed",
+                    "loopsync": true,
+                    "multipledelta": true
+                }
+            }
+        },
+        "traversal": {
+            "substates": {
+                "teleport_in": {
+                    "animation_selector": "teleport_in@zombie"
+                },
+                "teleport_out": {
+                    "animation_selector": "teleport_out@zombie"
+                }
+            }
+        }
+    }
+}

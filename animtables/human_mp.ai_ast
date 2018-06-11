@@ -1,0 +1,8 @@
+idle@exposed,
+_blend_in_time,_blend_out_time,_animation_alias,_animation_mocomp,
+0.2,0.2,stand_idle,mocomp_generic_animation,
+,
+move@locomotion,
+_blend_in_time,_blend_out_time,_animation_alias,_animation_mocomp,
+0.2,0.2,combatrun_forward,mocomp_move@locomotion,
+,

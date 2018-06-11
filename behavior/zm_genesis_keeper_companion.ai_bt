@@ -1,0 +1,157 @@
+{
+    "type": "selector",
+    "id": "soldier",
+    "children": [
+        {
+            "type": "sequence",
+            "id": "deathbehavior",
+            "children": [
+                {
+                    "type": "condition_script",
+                    "id": "waskilled",
+                    "interruptName": "death",
+                    "cooldownMin": 0,
+                    "cooldownMax": 0
+                },
+                {
+                    "type": "action",
+                    "id": "defaultaction",
+                    "ActionName": "defaultaction",
+                    "ASMStateName": "exposed@death",
+                    "actionNotify": "death",
+                    "TerminateFunction": "startragdoll",
+                    "loopingAction": 0,
+                    "actionTimeMax": 0
+                }
+            ]
+        },
+        {
+            "type": "sequence",
+            "id": "keepertraversebehavior",
+            "children": [
+                {
+                    "type": "condition_script",
+                    "id": "shouldtraverse",
+                    "scriptFunction": "locomotionshouldtraverse",
+                    "interruptName": "traverse",
+                    "cooldownMin": 0,
+                    "cooldownMax": 0
+                },
+                {
+                    "type": "action",
+                    "id": "teleportout",
+                    "ActionName": "defaultaction",
+                    "ASMStateName": "teleport_out@traversal",
+                    "loopingAction": 0,
+                    "actionTimeMax": 0
+                },
+                {
+                    "type": "action",
+                    "id": "teleportin",
+                    "ActionName": "defaultaction",
+                    "ASMStateName": "teleport_in@traversal",
+                    "loopingAction": 0,
+                    "actionTimeMax": 0
+                }
+            ]
+        },
+        {
+            "type": "parallel",
+            "id": "combatbehaviormain",
+            "children": [
+                {
+                    "type": "condition_service_script",
+                    "id": "keepercompanionmovementservice",
+                    "scriptFunction": "keepercompanionmovementservice",
+                    "cooldownMin": 0,
+                    "cooldownMax": 0
+                },
+                {
+                    "type": "condition_service_script",
+                    "id": "keepercompanionupdateleader",
+                    "scriptFunction": "keepercompanionupdateleader",
+                    "cooldownMin": 0,
+                    "cooldownMax": 0
+                },
+                {
+                    "type": "selector",
+                    "id": "combatbehaviorselector",
+                    "children": [
+                        {
+                            "type": "parallel",
+                            "id": "locomotionbehavior",
+                            "children": [
+                                {
+                                    "type": "condition_service_script",
+                                    "id": "keeperupdatethunderwallattackparams",
+                                    "scriptFunction": "keeperupdatethunderwallattackparams",
+                                    "cooldownMin": 0,
+                                    "cooldownMax": 0
+                                },
+                                {
+                                    "type": "condition_service_script",
+                                    "id": "keepercompanionkeepsupdatemovementmode",
+                                    "scriptFunction": "keepercompanionkeepsupdatemovementmode",
+                                    "cooldownMin": 0,
+                                    "cooldownMax": 0
+                                },
+                                {
+                                    "type": "condition_script",
+                                    "id": "locomotionbehaviorcondition",
+                                    "scriptFunction": "locomotionbehaviorcondition",
+                                    "cooldownMin": 0,
+                                    "cooldownMax": 0
+                                },
+                                {
+                                    "type": "action",
+                                    "id": "moveaction",
+                                    "ActionName": "defaultaction",
+                                    "ASMStateName": "move@locomotion",
+                                    "loopingAction": 1,
+                                    "actionTimeMax": 0
+                                }
+                            ]
+                        },
+                        {
+                            "type": "parallel",
+                            "id": "exposedbehaviors",
+                            "children": [
+                                {
+                                    "type": "condition_script_negate",
+                                    "id": "locomotionbehaviorcondition",
+                                    "scriptFunction": "locomotionbehaviorcondition",
+                                    "cooldownMin": 0,
+                                    "cooldownMax": 0
+                                },
+                                {
+                                    "type": "condition_service_script",
+                                    "id": "keeperupdatethunderwallattackparams",
+                                    "scriptFunction": "keeperupdatethunderwallattackparams",
+                                    "cooldownMin": 0,
+                                    "cooldownMax": 0
+                                },
+                                {
+                                    "type": "action",
+                                    "id": "idleaction",
+                                    "ActionName": "defaultaction",
+                                    "ASMStateName": "idle@exposed",
+                                    "StartFunction": "releaseclaimnode",
+                                    "loopingAction": 0,
+                                    "actionTimeMax": 0
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "type": "action",
+            "id": "debugvoidaction",
+            "ActionName": "defaultaction",
+            "ASMStateName": "void@debug",
+            "loopingAction": 0,
+            "actionTimeMax": 0
+        }
+    ]
+}

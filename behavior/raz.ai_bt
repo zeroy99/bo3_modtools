@@ -1,0 +1,352 @@
+{
+    "type": "selector",
+    "id": "raz",
+    "children": [
+        {
+            "type": "parallel",
+            "id": "razbehaviormain",
+            "children": [
+                {
+                    "type": "condition_service_script",
+                    "id": "razsprintservice",
+                    "scriptFunction": "razsprintservice",
+                    "cooldownMin": 1000,
+                    "cooldownMax": 1000
+                },
+                {
+                    "type": "condition_service_script",
+                    "id": "raztargetservice",
+                    "scriptFunction": "raztargetservice",
+                    "cooldownMin": 500,
+                    "cooldownMax": 1000
+                },
+                {
+                    "type": "selector",
+                    "id": "razbehaviorselector",
+                    "children": [
+                        {
+                            "type": "sequence",
+                            "id": "razdeathbehavior",
+                            "children": [
+                                {
+                                    "type": "condition_script",
+                                    "id": "waskilled",
+                                    "interruptName": "death",
+                                    "cooldownMin": 0,
+                                    "cooldownMax": 0
+                                },
+                                {
+                                    "type": "action",
+                                    "id": "deathaction",
+                                    "ActionName": "defaultaction",
+                                    "ASMStateName": "death@raz",
+                                    "actionNotify": "death",
+                                    "StartFunction": "razstartdeath",
+                                    "TerminateFunction": "startragdoll",
+                                    "loopingAction": 0,
+                                    "actionTimeMax": 0
+                                }
+                            ]
+                        },
+                        {
+                            "type": "sequence",
+                            "id": "raztraversewindowbehavior",
+                            "children": [
+                                {
+                                    "type": "condition_script",
+                                    "id": "shouldtraversewindow",
+                                    "scriptFunction": "razshouldtraversewindow",
+                                    "cooldownMin": 0,
+                                    "cooldownMax": 0
+                                },
+                                {
+                                    "type": "action",
+                                    "id": "traversewindowaction",
+                                    "ActionName": "defaultaction",
+                                    "ASMStateName": "jump_throw_window@raz",
+                                    "StartFunction": "razstarttraversewindow",
+                                    "TerminateFunction": "razfinishtraversewindow",
+                                    "loopingAction": 0,
+                                    "actionTimeMax": 0
+                                }
+                            ]
+                        },
+                        {
+                            "type": "sequence",
+                            "id": "raztraversebehavior",
+                            "children": [
+                                {
+                                    "type": "condition_script",
+                                    "id": "shouldtraverse",
+                                    "scriptFunction": "locomotionshouldtraverse",
+                                    "interruptName": "traverse",
+                                    "cooldownMin": 0,
+                                    "cooldownMax": 0
+                                },
+                                {
+                                    "type": "action",
+                                    "id": "traverseaction",
+                                    "ActionName": "traverseactionstart",
+                                    "ASMStateName": "traverse@raz",
+                                    "loopingAction": 0,
+                                    "actionTimeMax": 0
+                                }
+                            ]
+                        },
+                        {
+                            "type": "sequence",
+                            "id": "razdragonshieldpainbehavior",
+                            "children": [
+                                {
+                                    "type": "condition_script",
+                                    "id": "shouldshowshieldpain",
+                                    "scriptFunction": "razshouldshowshieldpain",
+                                    "interruptName": "pain",
+                                    "cooldownMin": 0,
+                                    "cooldownMax": 0
+                                },
+                                {
+                                    "type": "action",
+                                    "id": "paindragonshieldaction",
+                                    "ActionName": "defaultaction",
+                                    "ASMStateName": "dragonshield_pain@raz",
+                                    "loopingAction": 0,
+                                    "actionTimeMax": 0
+                                }
+                            ]
+                        },
+                        {
+                            "type": "sequence",
+                            "id": "razgoberserkbehavior",
+                            "children": [
+                                {
+                                    "type": "condition_script",
+                                    "id": "razshouldgoberserk",
+                                    "scriptFunction": "razshouldgoberserk",
+                                    "cooldownMin": 0,
+                                    "cooldownMax": 0
+                                },
+                                {
+                                    "type": "action",
+                                    "id": "razgoberserk",
+                                    "ActionName": "defaultaction",
+                                    "ASMStateName": "go_berserk@raz",
+                                    "TerminateFunction": "razgoneberserk",
+                                    "loopingAction": 0,
+                                    "actionTimeMax": 0
+                                }
+                            ]
+                        },
+                        {
+                            "type": "sequence",
+                            "id": "razarmorpainbehavior",
+                            "children": [
+                                {
+                                    "type": "condition_script",
+                                    "id": "shouldshowspecialpain",
+                                    "scriptFunction": "razshouldshowspecialpain",
+                                    "cooldownMin": 0,
+                                    "cooldownMax": 0
+                                },
+                                {
+                                    "type": "action",
+                                    "id": "painspecialaction",
+                                    "ActionName": "defaultaction",
+                                    "ASMStateName": "special_pain@raz",
+                                    "TerminateFunction": "raztookpain",
+                                    "loopingAction": 0,
+                                    "actionTimeMax": 0
+                                }
+                            ]
+                        },
+                        {
+                            "type": "parallel",
+                            "id": "razbehavior",
+                            "children": [
+                                {
+                                    "type": "condition_script_negate",
+                                    "id": "razshouldshowspecialpain",
+                                    "scriptFunction": "razshouldshowspecialpain",
+                                    "cooldownMin": 0,
+                                    "cooldownMax": 0
+                                },
+                                {
+                                    "type": "condition_script_negate",
+                                    "id": "razshouldgoberserk",
+                                    "scriptFunction": "razshouldgoberserk",
+                                    "cooldownMin": 0,
+                                    "cooldownMax": 0
+                                },
+                                {
+                                    "type": "selector",
+                                    "id": "razselector",
+                                    "children": [
+                                        {
+                                            "type": "sequence",
+                                            "id": "shootgroundtorpedobehavior",
+                                            "children": [
+                                                {
+                                                    "type": "condition_script_negate",
+                                                    "id": "shouldmelee",
+                                                    "scriptFunction": "razshouldmelee",
+                                                    "cooldownMin": 0,
+                                                    "cooldownMax": 0
+                                                },
+                                                {
+                                                    "type": "condition_script",
+                                                    "id": "shouldshootgroundtorpedo",
+                                                    "scriptFunction": "razshouldshootgroundtorpedo",
+                                                    "cooldownMin": 0,
+                                                    "cooldownMax": 0
+                                                },
+                                                {
+                                                    "type": "action",
+                                                    "id": "shootgroundtorpedo",
+                                                    "ActionName": "defaultaction",
+                                                    "ASMStateName": "ground_torpedo@raz",
+                                                    "TerminateFunction": "razfinishgroundtorpedo",
+                                                    "loopingAction": 0,
+                                                    "actionTimeMax": 0
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "type": "sequence",
+                                            "id": "meleebehavior",
+                                            "children": [
+                                                {
+                                                    "type": "condition_script",
+                                                    "id": "shouldmelee",
+                                                    "scriptFunction": "razshouldmelee",
+                                                    "cooldownMin": 0,
+                                                    "cooldownMax": 0
+                                                },
+                                                {
+                                                    "type": "action",
+                                                    "id": "meleeaction",
+                                                    "ActionName": "defaultaction",
+                                                    "ASMStateName": "melee@raz",
+                                                    "StartFunction": "razstartmelee",
+                                                    "TerminateFunction": "razfinishmelee",
+                                                    "loopingAction": 0,
+                                                    "actionTimeMax": 0
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "type": "sequence",
+                                            "id": "razpainbehavior",
+                                            "children": [
+                                                {
+                                                    "type": "condition_script",
+                                                    "id": "shouldshowpain",
+                                                    "scriptFunction": "razshouldshowpain",
+                                                    "interruptName": "pain",
+                                                    "cooldownMin": 0,
+                                                    "cooldownMax": 0
+                                                },
+                                                {
+                                                    "type": "action",
+                                                    "id": "painaction",
+                                                    "ActionName": "defaultaction",
+                                                    "ASMStateName": "pain@raz",
+                                                    "loopingAction": 0,
+                                                    "actionTimeMax": 160
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "type": "parallel",
+                                            "id": "movebehavior",
+                                            "children": [
+                                                {
+                                                    "type": "condition_script",
+                                                    "id": "shouldmove",
+                                                    "scriptFunction": "locomotionbehaviorcondition",
+                                                    "cooldownMin": 0,
+                                                    "cooldownMax": 0
+                                                },
+                                                {
+                                                    "type": "condition_script_negate",
+                                                    "id": "shouldmelee",
+                                                    "scriptFunction": "razshouldmelee",
+                                                    "cooldownMin": 0,
+                                                    "cooldownMax": 0
+                                                },
+                                                {
+                                                    "type": "condition_script_negate",
+                                                    "id": "shouldshootgroundtorpedo",
+                                                    "scriptFunction": "razshouldshootgroundtorpedo",
+                                                    "cooldownMin": 0,
+                                                    "cooldownMax": 0
+                                                },
+                                                {
+                                                    "type": "action",
+                                                    "id": "moveaction",
+                                                    "ActionName": "defaultaction",
+                                                    "ASMStateName": "move@raz",
+                                                    "loopingAction": 1,
+                                                    "actionTimeMax": 0
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "type": "parallel",
+                                            "id": "idlebehavior",
+                                            "children": [
+                                                {
+                                                    "type": "condition_script_negate",
+                                                    "id": "razshouldtraversewindow",
+                                                    "scriptFunction": "razshouldtraversewindow",
+                                                    "cooldownMin": 0,
+                                                    "cooldownMax": 0
+                                                },
+                                                {
+                                                    "type": "condition_script_negate",
+                                                    "id": "shouldshootgroundtorpedo",
+                                                    "scriptFunction": "razshouldshootgroundtorpedo",
+                                                    "cooldownMin": 0,
+                                                    "cooldownMax": 0
+                                                },
+                                                {
+                                                    "type": "condition_script_negate",
+                                                    "id": "shouldmove",
+                                                    "scriptFunction": "locomotionbehaviorcondition",
+                                                    "cooldownMin": 0,
+                                                    "cooldownMax": 0
+                                                },
+                                                {
+                                                    "type": "condition_script_negate",
+                                                    "id": "shouldmelee",
+                                                    "scriptFunction": "razshouldmelee",
+                                                    "cooldownMin": 0,
+                                                    "cooldownMax": 0
+                                                },
+                                                {
+                                                    "type": "action",
+                                                    "id": "idleaction",
+                                                    "ActionName": "defaultaction",
+                                                    "ASMStateName": "idle@raz",
+                                                    "loopingAction": 1,
+                                                    "actionTimeMax": 0
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "type": "action",
+            "id": "debugvoidaction",
+            "ActionName": "defaultaction",
+            "ASMStateName": "void@debug",
+            "loopingAction": 0,
+            "actionTimeMax": 0
+        }
+    ]
+}

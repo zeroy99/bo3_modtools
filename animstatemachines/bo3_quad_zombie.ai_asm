@@ -1,0 +1,71 @@
+{
+    "states": {
+        "debug": {
+            "substates": {
+                "void": {
+                    "animation_selector": "void@debug"
+                }
+            }
+        },
+        "procedural": {
+            "substates": {
+                "air": {
+                    "animation_selector": "air@procedural_traversal",
+                    "loopsync": true
+                },
+                "jump": {
+                    "animation_selector": "jump@procedural_traversal"
+                },
+                "land": {
+                    "animation_selector": "land@procedural_traversal"
+                }
+            }
+        },
+        "wall": {
+            "substates": {
+                "crawl": {
+                    "animation_selector": "crawl@wall",
+                    "loopsync": true,
+                    "cleanloop": true,
+                    "multipledelta": true
+                },
+                "intro": {
+                    "animation_selector": "intro@wall"
+                },
+                "jump_off": {
+                    "animation_selector": "jump_off@wall"
+                }
+            }
+        },
+        "zombie": {
+            "substates": {
+                "death": {
+                    "animation_selector": "death@zombie",
+                    "terminal": true,
+                    "requires_ragdoll_notetrack": true
+                },
+                "idle": {
+                    "animation_selector": "idle@zombie"
+                },
+                "melee": {
+                    "animation_selector": "melee@zombie"
+                },
+                "move": {
+                    "animation_selector": "move@zombie",
+                    "loopsync": true,
+                    "cleanloop": true,
+                    "multipledelta": true
+                },
+                "pain": {
+                    "animation_selector": "pain@zombie",
+                    "loopsync": true,
+                    "cleanloop": true,
+                    "multipledelta": true
+                },
+                "traverse": {
+                    "animation_selector": "traverse@zombie"
+                }
+            }
+        }
+    }
+}

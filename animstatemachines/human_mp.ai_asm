@@ -1,0 +1,19 @@
+{
+    "states": {
+        "exposed": {
+            "substates": {
+                "idle": {
+                    "animation_selector": "idle@exposed"
+                }
+            }
+        },
+        "locomotion": {
+            "substates": {
+                "move": {
+                    "animation_selector": "move@locomotion",
+                    "loopsync": true
+                }
+            }
+        }
+    }
+}

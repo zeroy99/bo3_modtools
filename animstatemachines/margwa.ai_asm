@@ -1,0 +1,75 @@
+{
+    "states": {
+        "debug": {
+            "substates": {
+                "void": {
+                    "animation_selector": "void@debug"
+                }
+            }
+        },
+        "margwa": {
+            "substates": {
+                "death": {
+                    "animation_selector": "death@margwa",
+                    "terminal": true
+                },
+                "idle": {
+                    "animation_selector": "idle@margwa",
+                    "transitions": {
+                        "move@margwa": {
+                            "animation_selector": "pain@margwa>move"
+                        }
+                    }
+                },
+                "move": {
+                    "animation_selector": "move@margwa",
+                    "transition_decorator": "evaluatehumanturnanimations",
+                    "loopsync": true,
+                    "cleanloop": true,
+                    "multipledelta": true
+                },
+                "octobomb_attack": {
+                    "animation_selector": "octobomb_attack@margwa",
+                    "loopsync": true
+                },
+                "pain": {
+                    "animation_selector": "pain@margwa",
+                    "transitions": {
+                        "move@margwa": {
+                            "animation_selector": "pain@margwa>move"
+                        }
+                    }
+                },
+                "react_idgun": {
+                    "animation_selector": "react_idgun@margwa"
+                },
+                "react_stun": {
+                    "animation_selector": "react_stun@margwa"
+                },
+                "react_sword": {
+                    "animation_selector": "react_sword@margwa"
+                },
+                "smash_attack": {
+                    "animation_selector": "smash_attack@margwa",
+                    "transitions": {
+                        "move@margwa": {
+                            "animation_selector": "pain@margwa>move"
+                        }
+                    }
+                },
+                "spawn": {
+                    "animation_selector": "spawn@margwa"
+                },
+                "swipe_attack": {
+                    "animation_selector": "swipe_attack@margwa"
+                },
+                "teleport": {
+                    "animation_selector": "teleport@margwa"
+                },
+                "traverse": {
+                    "animation_selector": "traverse@margwa"
+                }
+            }
+        }
+    }
+}

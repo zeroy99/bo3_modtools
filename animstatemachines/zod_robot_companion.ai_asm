@@ -1,0 +1,157 @@
+{
+    "states": {
+        "death": {
+            "substates": {
+                "electrified_exposed": {
+                    "animation_selector": "electrified_exposed@death",
+                    "terminal": true,
+                    "requires_ragdoll_notetrack": true
+                },
+                "explosive_exposed": {
+                    "animation_selector": "explosive_exposed@death",
+                    "terminal": true,
+                    "requires_ragdoll_notetrack": true
+                },
+                "explosive_locomotion": {
+                    "animation_selector": "explosive_locomotion@death",
+                    "terminal": true,
+                    "requires_ragdoll_notetrack": true
+                },
+                "exposed": {
+                    "animation_selector": "exposed@death",
+                    "terminal": true,
+                    "requires_ragdoll_notetrack": true
+                },
+                "gib": {
+                    "animation_selector": "gib@death",
+                    "terminal": true,
+                    "requires_ragdoll_notetrack": true
+                },
+                "locomotion": {
+                    "animation_selector": "locomotion@death",
+                    "terminal": true,
+                    "requires_ragdoll_notetrack": true
+                }
+            }
+        },
+        "debug": {
+            "substates": {
+                "void": {
+                    "animation_selector": "void@debug"
+                }
+            }
+        },
+        "exposed": {
+            "substates": {
+                "changestance": {
+                    "animation_selector": "changestance@exposed",
+                    "aim_selector": "aim_additive@exposed"
+                },
+                "charge_melee": {
+                    "animation_selector": "charge_melee@exposed"
+                },
+                "charge_melee_attack": {
+                    "animation_selector": "charge_melee_attack@exposed"
+                },
+                "idle": {
+                    "animation_selector": "idle@exposed",
+                    "transitions": {
+                        "shoot@exposed": {
+                            "animation_selector": "idle@exposed>shoot@exposed"
+                        }
+                    }
+                },
+                "juke": {
+                    "animation_selector": "juke@exposed",
+                    "aim_selector": "aim_additive@exposed",
+                    "shoot_selector": "shoot_additive@exposed",
+                    "force_fire": true
+                },
+                "melee": {
+                    "animation_selector": "melee@exposed"
+                },
+                "pain": {
+                    "animation_selector": "pain@exposed",
+                    "aim_selector": "aim_additive@exposed",
+                    "shoot_selector": "shoot_additive@exposed"
+                },
+                "reload": {
+                    "animation_selector": "reload@exposed"
+                },
+                "shoot": {
+                    "animation_selector": "shoot_idle@exposed",
+                    "aim_selector": "aim_additive@exposed",
+                    "shoot_selector": "shoot_additive@exposed",
+                    "allow_transdec_aim": true
+                },
+                "throw_grenade": {
+                    "animation_selector": "throw_grenade@exposed"
+                }
+            }
+        },
+        "locomotion": {
+            "substates": {
+                "charge": {
+                    "animation_selector": "charge@locomotion",
+                    "loopsync": true
+                },
+                "charge_in_melee": {
+                    "animation_selector": "charge_in_melee@locomotion"
+                },
+                "charge_in_pain": {
+                    "animation_selector": "charge_in_pain@locomotion",
+                    "loopsync": true
+                },
+                "move": {
+                    "animation_selector": "tactical_shoot@locomotion",
+                    "loopsync": true,
+                    "multipledelta": true
+                },
+                "pain": {
+                    "animation_selector": "pain@locomotion",
+                    "aim_selector": "aim_additive@exposed"
+                },
+                "shoot": {
+                    "animation_selector": "shoot@locomotion",
+                    "aim_selector": "aim_additive@locomotion",
+                    "shoot_selector": "shoot_additive@locomotion",
+                    "loopsync": true,
+                    "multipledelta": true
+                }
+            }
+        },
+        "special_pain": {
+            "substates": {
+                "pain": {
+                    "animation_selector": "pain@special_pain"
+                }
+            }
+        },
+        "tactical_locomotion": {
+            "substates": {
+                "pain": {
+                    "animation_selector": "pain@tactical_locomotion",
+                    "aim_selector": "tactical_aim_additive@locomotion",
+                    "loopsync": true
+                },
+                "sprint_transition": {
+                    "animation_selector": "sprint_transition@tactical_locomotion"
+                },
+                "walk": {
+                    "animation_selector": "tactical_shoot@locomotion",
+                    "aim_selector": "tactical_aim_additive@locomotion",
+                    "shoot_selector": "shoot_additive@locomotion",
+                    "loopsync": true,
+                    "multipledelta": true
+                }
+            }
+        },
+        "traversal": {
+            "substates": {
+                "combat_traverse": {
+                    "animation_selector": "combat_traverse@traversal"
+                }
+            }
+        }
+    }
+}
